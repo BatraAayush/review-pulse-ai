@@ -1,5 +1,7 @@
 # ReviewPulse AI — Smart QR & NFC Google Review SaaS Platform
 
+🌐 **Live Application:** [https://review-pulse-ai-ab.vercel.app](https://review-pulse-ai-ab.vercel.app)
+
 ReviewPulse AI is a production-grade multi-tenant SaaS application that enables local brick-and-mortar storefronts (restaurants, clinics, salons, fitness studios, automotive shops) to capture authentic 5-star Google Reviews via high-resolution QR table stands and NFC tap plates, while intercepting negative reviews (1–3 stars) into a private resolution inbox.
 
 ---
