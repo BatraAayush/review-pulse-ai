@@ -1,0 +1,117 @@
+// Prisma schema for ReviewPulse AI
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  name         String
+  role         String     @default("OWNER") // "SUPER_ADMIN" | "OWNER"
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  businesses   Business[]
+}
+
+model Business {
+  id                  String            @id @default(cuid())
+  slug                String            @unique
+  name                String
+  category            String            @default("restaurant")
+  tagline             String?
+  address             String?
+  phone               String?
+  googlePlaceId       String?
+  googleReviewUrl     String?
+  logoUrl             String?
+  primaryColor        String            @default("#6366f1")
+  activePlan          String            @default("pro") // starter, pro, enterprise
+  status              String            @default("active") // active, paused
+  subscriptionStatus  String            @default("trial") // trial, active, past_due, canceled
+  trialEndsAt         DateTime?
+  subscriptionCycle   String?           @default("monthly") // monthly, annual
+  subscriptionRenewsAt DateTime?
+  welcomeMessage      String            @default("How was your experience with us today?")
+  customPromptMessage String?
+  ownerId             String
+  owner               User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  smartChips          SmartChip[]
+  scanEvents          ScanEvent[]
+  privateFeedbacks    PrivateFeedback[]
+  transactions        PaymentTransaction[]
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+}
+
+model SmartChip {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  label      String
+  category   String
+  phrase     String
+  icon       String?
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+}
+
+model ScanEvent {
+  id             String   @id @default(cuid())
+  businessId     String
+  business       Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  timestamp      DateTime @default(now())
+  ipAddress      String?
+  userAgent      String?
+  deviceType     String   @default("mobile") // ios, android, desktop
+  ratingSelected Int?
+  actionTaken    String   @default("scanned") // scanned, copied_to_google, private_feedback, bounced
+  selectedChips  String?  // JSON string
+  reviewLength   Int      @default(0)
+}
+
+model PrivateFeedback {
+  id              String   @id @default(cuid())
+  businessId      String
+  business        Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerName    String?
+  customerContact String?
+  rating          Int
+  feedbackText    String
+  status          String   @default("unread") // unread, resolved
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model PasswordResetOtp {
+  id        String   @id @default(cuid())
+  email     String
+  otp       String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model PaymentTransaction {
+  id            String   @id @default(cuid())
+  businessId    String
+  business      Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  orderId       String   @unique
+  paymentId     String?
+  signature     String?
+  amount        Int      // in paise (e.g. 49900 = ₹499)
+  currency      String   @default("INR")
+  status        String   @default("pending") // pending, captured, failed
+  plan          String   // starter, pro, enterprise
+  billingCycle  String   @default("monthly") // monthly, annual
+  paymentMethod String?  // upi, card, netbanking, test_simulator
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
