@@ -63,24 +63,32 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Ensure business has subscription fields even if cached Prisma model omitted them
-    if (business && ((business as any).subscriptionStatus === undefined || (business as any).trialEndsAt === undefined)) {
+    // Ensure business has subscription & bypass fields even if cached Prisma model omitted them
+    if (business && ((business as any).subscriptionStatus === undefined || (business as any).trialEndsAt === undefined || (business as any).bypassAiReview === undefined)) {
       try {
         const rawBiz = await prisma.$queryRawUnsafe<any[]>(
-          `SELECT subscriptionStatus, trialEndsAt, subscriptionCycle, subscriptionRenewsAt FROM Business WHERE id = '${business.id}' LIMIT 1`
+          `SELECT "subscriptionStatus", "trialEndsAt", "subscriptionCycle", "subscriptionRenewsAt", "bypassAiReview" FROM "Business" WHERE id = '${business.id}' LIMIT 1`
         );
         if (rawBiz && rawBiz[0]) {
           (business as any).subscriptionStatus = rawBiz[0].subscriptionStatus || 'pending_payment';
           (business as any).trialEndsAt = rawBiz[0].trialEndsAt;
           (business as any).subscriptionCycle = rawBiz[0].subscriptionCycle || 'monthly';
           (business as any).subscriptionRenewsAt = rawBiz[0].subscriptionRenewsAt;
+          (business as any).bypassAiReview = Boolean(rawBiz[0].bypassAiReview);
         }
-      } catch {}
+      } catch (e) {
+        console.error('Stats rawBiz query error:', e);
+      }
     }
 
     const [totalScans, googleConversions, privateFeedbacks, scans, transactions] = await Promise.all([
       prisma.scanEvent.count({ where: { businessId: business.id } }),
-      prisma.scanEvent.count({ where: { businessId: business.id, actionTaken: 'copied_to_google' } }),
+      prisma.scanEvent.count({
+        where: {
+          businessId: business.id,
+          actionTaken: { in: ['copied_to_google', 'direct_google_redirect'] },
+        },
+      }),
       prisma.privateFeedback.findMany({
         where: { businessId: business.id },
         orderBy: { createdAt: 'desc' },

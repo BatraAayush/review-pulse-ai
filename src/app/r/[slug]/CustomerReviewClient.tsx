@@ -13,7 +13,9 @@ import {
   RefreshCw, 
   ShieldCheck,
   MapPin,
-  Loader2
+  Loader2,
+  Zap,
+  ArrowRight
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { INITIAL_BUSINESSES } from '@/lib/mock-data';
@@ -22,6 +24,7 @@ import { isImageLogo, getCategoryEmoji } from '@/lib/logo';
 
 interface CustomerReviewClientProps {
   slug: string;
+  initialDirect?: boolean;
 }
 
 interface SmartChipItem {
@@ -47,6 +50,7 @@ interface BusinessData {
   welcomeMessage?: string;
   customPromptMessage?: string;
   smartChips: SmartChipItem[];
+  bypassAiReview?: boolean;
 }
 
 function escapeRegExp(str: string) {
@@ -95,7 +99,7 @@ function addPhraseToReview(text: string, phrase: string, businessName: string): 
   return `${formattedText} ${formattedPhrase}`;
 }
 
-export default function CustomerReviewClient({ slug }: CustomerReviewClientProps) {
+export default function CustomerReviewClient({ slug, initialDirect }: CustomerReviewClientProps) {
   const { toast } = useToast();
   const fallbackBiz = INITIAL_BUSINESSES.find((b) => b.slug.toLowerCase() === slug.toLowerCase()) || null;
   const [business, setBusiness] = useState<BusinessData | null>(fallbackBiz);
@@ -103,6 +107,30 @@ export default function CustomerReviewClient({ slug }: CustomerReviewClientProps
   const [notFound, setNotFound] = useState(false);
   const [pendingActivation, setPendingActivation] = useState<{ businessName?: string } | null>(null);
   const [scanId, setScanId] = useState<string | null>(null);
+
+  // Direct Bypass state
+  const [forceShowAiFunnel, setForceShowAiFunnel] = useState(false);
+  const [clientHasDirectParam, setClientHasDirectParam] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const sp = new URLSearchParams(window.location.search);
+      const isDirectQuery =
+        sp.get('direct') === '1' ||
+        sp.get('direct') === 'true' ||
+        sp.get('bypass') === '1' ||
+        sp.get('bypass') === 'true';
+      if (isDirectQuery) {
+        setClientHasDirectParam(true);
+      }
+    }
+  }, []);
+
+  const isDirectBypass = !forceShowAiFunnel && (
+    Boolean(initialDirect) ||
+    clientHasDirectParam ||
+    Boolean(business?.bypassAiReview)
+  );
 
   const [rating, setRating] = useState<number>(5);
   const [hoveredRating, setHoveredRating] = useState<number>(0);
@@ -218,8 +246,10 @@ export default function CustomerReviewClient({ slug }: CustomerReviewClientProps
       setReviewText(`Had a great experience at ${biz.name}! Highly recommended.`);
     }
 
-    // Automatically trigger fresh AI review for this QR scan
-    handleAIPolish('generate', chipIds, biz, 5);
+    // Automatically trigger fresh AI review for this QR scan (skipped in direct mode)
+    if (!isDirectBypass) {
+      handleAIPolish('generate', chipIds, biz, 5);
+    }
   };
 
   const handleAIBtnClick = () => {
@@ -276,6 +306,10 @@ export default function CustomerReviewClient({ slug }: CustomerReviewClientProps
         const res = await fetch(`/api/r/${slug}/scan`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            isDirect: isDirectBypass,
+            actionTaken: isDirectBypass ? 'direct_google_redirect' : 'scanned',
+          }),
         });
         if (res.ok && isMounted) {
           const data = await res.json();
@@ -289,7 +323,22 @@ export default function CustomerReviewClient({ slug }: CustomerReviewClientProps
     }
     recordRealScan();
     return () => { isMounted = false; };
-  }, [slug]);
+  }, [slug, isDirectBypass]);
+
+  // 3. Direct Google Review Auto-Redirection
+  useEffect(() => {
+    if (!isDirectBypass || !business) return;
+
+    const targetUrl = getGoogleReviewUrl();
+    if (!targetUrl || targetUrl === '#') return;
+
+    // Smooth 750ms auto redirect so customer gets clear visual verification of verified portal
+    const timer = setTimeout(() => {
+      window.location.replace(targetUrl);
+    }, 750);
+
+    return () => clearTimeout(timer);
+  }, [isDirectBypass, business]);
 
   const activeRating = hoveredRating || rating;
 
@@ -514,6 +563,108 @@ export default function CustomerReviewClient({ slug }: CustomerReviewClientProps
   }
 
   const finalGoogleUrl = getGoogleReviewUrl();
+
+  // If in direct bypass mode, render the direct redirect screen
+  if (isDirectBypass) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between py-8 px-4 sm:px-6 relative overflow-hidden">
+        {/* Background ambient lighting */}
+        <div 
+          className="absolute -top-32 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-[140px] pointer-events-none opacity-30"
+          style={{ backgroundColor: business.primaryColor || '#2563eb' }}
+        />
+        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-amber-500/10 blur-[130px] rounded-full pointer-events-none" />
+
+        {/* Top bar with verified badge */}
+        <header className="relative z-10 max-w-md mx-auto w-full flex items-center justify-between text-xs text-slate-400">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-semibold text-slate-300">Verified Review Portal</span>
+          </div>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[11px] font-bold">
+            <Zap className="w-3 h-3 text-amber-400" />
+            <span>Direct to Google</span>
+          </div>
+        </header>
+
+        {/* Main card */}
+        <main className="relative z-10 max-w-md mx-auto w-full my-auto py-6">
+          <div className="rounded-3xl border border-slate-800 bg-slate-900/90 p-7 backdrop-blur-xl shadow-2xl text-center space-y-6">
+            {/* Logo or Emoji */}
+            <div className="relative mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-700/80 p-1 shadow-xl flex items-center justify-center">
+              {isImageLogo(business.logoUrl) ? (
+                <img
+                  src={business.logoUrl!}
+                  alt={business.name}
+                  className="w-full h-full object-cover rounded-xl"
+                />
+              ) : (
+                <span className="text-3xl">{business.logoUrl || getCategoryEmoji(business.category)}</span>
+              )}
+              <div className="absolute -bottom-2 -right-2 w-7 h-7 rounded-full bg-blue-600 border-2 border-slate-900 flex items-center justify-center shadow-md">
+                <CheckCircle2 className="w-4 h-4 text-white" />
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-center items-center gap-1.5 text-amber-400 mb-2">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 fill-amber-400 animate-pulse" style={{ animationDelay: `${i * 120}ms` }} />
+                ))}
+              </div>
+              <h1 className="text-2xl font-black text-white tracking-tight">{business.name}</h1>
+              {business.address && (
+                <p className="text-xs text-slate-400 mt-1 flex items-center justify-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  <span className="line-clamp-1">{business.address}</span>
+                </p>
+              )}
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-2.5">
+              <div className="flex items-center justify-center gap-2 text-sm font-bold text-slate-200">
+                <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+                <span>Opening Google Review page...</span>
+              </div>
+              <p className="text-[12px] text-slate-400 leading-relaxed">
+                Scan verified! Taking you straight to Google to post your rating for {business.name}.
+              </p>
+              <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-2">
+                <div className="h-full bg-gradient-to-r from-blue-500 via-amber-400 to-emerald-400 rounded-full animate-pulse" style={{ width: '100%' }} />
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-1">
+              <a
+                href={finalGoogleUrl}
+                onClick={() => {
+                  window.location.href = finalGoogleUrl;
+                }}
+                className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-blue-600/30 transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <span>Continue to Google Review</span>
+                <ExternalLink className="w-4 h-4" />
+              </a>
+
+              <button
+                type="button"
+                onClick={() => setForceShowAiFunnel(true)}
+                className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 transition-colors pt-2 cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                <span>Want AI writing help? Switch to AI Review Funnel</span>
+              </button>
+            </div>
+          </div>
+        </main>
+
+        {/* Footer */}
+        <footer className="relative z-10 text-center text-[11px] text-slate-500">
+          Powered by ReviewPulse AI • Verified Direct Google Reviews
+        </footer>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between py-6 px-4 sm:px-6 relative overflow-hidden">
@@ -810,8 +961,18 @@ export default function CustomerReviewClient({ slug }: CustomerReviewClientProps
 
       {/* Instant Redirect Modal Toast */}
       {showRedirectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="max-w-sm w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+          {/* Backdrop overlay */}
+          <div 
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity cursor-pointer"
+            onClick={() => setShowRedirectModal(false)}
+            aria-hidden="true"
+          />
+
+          <div 
+            className="max-w-sm w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center shadow-2xl space-y-4 relative z-10 my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="w-14 h-14 bg-emerald-500/20 text-emerald-400 rounded-2xl mx-auto flex items-center justify-center">
               <CheckCircle2 className="w-8 h-8 animate-bounce" />
             </div>

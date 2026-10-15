@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { 
   X, 
@@ -33,13 +34,38 @@ export default function GoogleReviewGuideModal({
   const pathname = usePathname();
   const showSignUpTip = isSignUp ?? (pathname ? pathname.includes('/register') : false);
 
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'gbp' | 'placeid' | 'quick'>('gbp');
   const [placeIdInput, setPlaceIdInput] = useState('');
   const [quickName, setQuickName] = useState(defaultBusinessName);
   const [quickCity, setQuickCity] = useState('');
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll and dismiss on Escape key press
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen || !mounted) return null;
 
   const handleCopy = async (text: string) => {
     try {
@@ -84,10 +110,23 @@ export default function GoogleReviewGuideModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+  const modalContent = (
+    <div 
+      role="dialog"
+      aria-modal="true"
+      aria-label="Google Review Guide"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+    >
+      {/* Blurred dark backdrop overlay with click-to-close */}
       <div 
-        className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity cursor-pointer animate-in fade-in duration-200"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+
+      {/* Modal Dialog Content */}
+      <div 
+        className="relative z-10 w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] my-auto animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -382,4 +421,6 @@ export default function GoogleReviewGuideModal({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

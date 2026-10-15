@@ -33,6 +33,7 @@ export interface Business {
   smartChips: SmartChip[];
   welcomeMessage: string;
   customPromptMessage?: string;
+  bypassAiReview?: boolean;
   createdAt: string;
 }
 

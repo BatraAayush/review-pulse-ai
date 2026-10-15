@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import QRCodeGenerator from '@/components/QRCodeGenerator';
+import SmartChipsManager from '@/components/SmartChipsManager';
 import {
   QrCode,
   TrendingUp,
@@ -20,11 +21,13 @@ import {
   Smartphone,
   CheckCircle2,
   AlertTriangle,
+  Zap,
   MapPin,
   Loader2,
   RefreshCw,
   Save,
   Check,
+  Copy,
   HelpCircle,
   User,
   Mail,
@@ -91,61 +94,6 @@ interface DashboardStatsData {
   feedbacks: PrivateFeedback[];
 }
 
-function getCategoryOptions(cat?: string) {
-  switch (cat?.toLowerCase()) {
-    case 'fitness':
-      return [
-        { value: 'Facilities', label: 'Facilities & Equipment' },
-        { value: 'Coaching', label: 'Coaching & Personal Trainers' },
-        { value: 'Hygiene', label: 'Cleanliness & Sanitization' },
-        { value: 'Workouts', label: 'Classes & Intensity' },
-        { value: 'Vibe', label: 'Community & Vibe' },
-        { value: 'Convenience', label: '24/7 Hours & Access' },
-      ];
-    case 'clinic':
-      return [
-        { value: 'Comfort', label: 'Comfort & Gentle Care' },
-        { value: 'Punctuality', label: 'Zero Waiting Time' },
-        { value: 'Facilities', label: 'High-Tech Equipment' },
-        { value: 'Staff', label: 'Compassionate Team' },
-        { value: 'Billing', label: 'Transparent Pricing' },
-      ];
-    case 'salon':
-      return [
-        { value: 'Craft', label: 'Hair Cut & Styling' },
-        { value: 'Ambience', label: 'Relaxing Spa & Wash' },
-        { value: 'Service', label: 'Attentive Stylists' },
-        { value: 'Color', label: 'Color & Highlights' },
-        { value: 'Amenities', label: 'Complimentary Drinks' },
-      ];
-    case 'automotive':
-      return [
-        { value: 'Trust', label: 'Honest Inspection' },
-        { value: 'Speed', label: 'Fast Turnaround' },
-        { value: 'Cost', label: 'Transparent Estimates' },
-        { value: 'Skill', label: 'Master Mechanics' },
-        { value: 'Service', label: 'Clean & Professional' },
-      ];
-    case 'retail':
-      return [
-        { value: 'Variety', label: 'Product Selection' },
-        { value: 'Service', label: 'Helpful Friendly Staff' },
-        { value: 'Speed', label: 'Fast Checkout' },
-        { value: 'Quality', label: 'Premium Quality' },
-        { value: 'Value', label: 'Great Prices & Deals' },
-      ];
-    default:
-      return [
-        { value: 'Taste', label: 'Delicious Food & Flavor' },
-        { value: 'Service', label: 'Warm Hospitality' },
-        { value: 'Vibe', label: 'Great Atmosphere' },
-        { value: 'Pacing', label: 'Fast Service' },
-        { value: 'Dessert', label: 'Desserts & Drinks' },
-        { value: 'Selection', label: 'Menu Variety' },
-      ];
-  }
-}
-
 function DashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -165,15 +113,6 @@ function DashboardContent() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPlanForPayment, setSelectedPlanForPayment] = useState<'starter' | 'pro' | 'enterprise'>('starter');
 
-  // Form states
-  const [newChipLabel, setNewChipLabel] = useState('');
-  const [newChipPhrase, setNewChipPhrase] = useState('');
-  const [newChipCategory, setNewChipCategory] = useState('Service');
-  const [isAddingChip, setIsAddingChip] = useState(false);
-
-  // Modal confirmation states
-  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
-  const [confirmPresetCategory, setConfirmPresetCategory] = useState<string | null>(null);
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -191,7 +130,7 @@ function DashboardContent() {
   const [editGooglePlaceId, setEditGooglePlaceId] = useState('');
   const [editWelcomeMessage, setEditWelcomeMessage] = useState('');
   const [editPrimaryColor, setEditPrimaryColor] = useState('#2563eb');
-  const [selectedPresetCategory, setSelectedPresetCategory] = useState('fitness');
+  const [editBypassAiReview, setEditBypassAiReview] = useState(false);
   const [syncChipsOnCategoryChange, setSyncChipsOnCategoryChange] = useState(true);
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
@@ -317,7 +256,6 @@ function DashboardContent() {
         if (statsData.business) {
           setEditName(statsData.business.name || '');
           setEditCategory(statsData.business.category || 'restaurant');
-          setSelectedPresetCategory(statsData.business.category || 'fitness');
           setEditSlug(statsData.business.slug || '');
           setEditLogoUrl(statsData.business.logoUrl || '');
           setEditTagline(statsData.business.tagline || '');
@@ -327,6 +265,7 @@ function DashboardContent() {
           setEditGooglePlaceId(statsData.business.googlePlaceId || '');
           setEditWelcomeMessage(statsData.business.welcomeMessage || '');
           setEditPrimaryColor(statsData.business.primaryColor || '#2563eb');
+          setEditBypassAiReview(Boolean(statsData.business.bypassAiReview));
         }
       }
     } catch (err) {
@@ -436,130 +375,6 @@ function DashboardContent() {
     }
   };
 
-  // 2. Add Smart Chip
-  const handleAddChip = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newChipLabel.trim() || !newChipPhrase.trim()) return;
-    setIsAddingChip(true);
-
-    try {
-      const res = await fetch('/api/dashboard/chips', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          label: newChipLabel.trim(),
-          phrase: newChipPhrase.trim(),
-          category: newChipCategory,
-          businessId: data?.business?.id,
-        }),
-      });
-
-      if (res.ok) {
-        toast.success(`Tag "${newChipLabel.trim()}" added successfully!`, 'Smart Tag Created');
-        setNewChipLabel('');
-        setNewChipPhrase('');
-        await loadDashboardData();
-      } else {
-        const err = await res.json().catch(() => ({}));
-        toast.error(err.error || 'Failed to add smart chip', 'Error');
-      }
-    } catch (err) {
-      console.error('Failed to add chip:', err);
-      toast.error('Network error adding chip', 'Error');
-    } finally {
-      setIsAddingChip(false);
-    }
-  };
-
-  // 3. Remove Smart Chip
-  const handleRemoveChip = async (chipId: string) => {
-    try {
-      const res = await fetch(`/api/dashboard/chips?id=${chipId}`, {
-        method: 'DELETE',
-      });
-      if (res.ok) {
-        toast.success('Smart review chip removed.', 'Chip Deleted');
-        await loadDashboardData();
-      } else {
-        toast.error('Failed to remove smart chip', 'Error');
-      }
-    } catch (err) {
-      console.error('Failed to remove chip:', err);
-      toast.error('Network error removing chip', 'Error');
-    }
-  };
-
-  // 3.1 Reset Chips to Category Defaults
-  const [isResettingChips, setIsResettingChips] = useState(false);
-  const [resetChipsSuccess, setResetChipsSuccess] = useState<string | null>(null);
-
-  const handleOpenResetModal = () => {
-    if (!data?.business) return;
-    setConfirmResetOpen(true);
-  };
-
-  const handleConfirmResetChips = async () => {
-    if (!data?.business) return;
-    const cat = data.business.category;
-    setIsResettingChips(true);
-    setResetChipsSuccess(null);
-
-    try {
-      const res = await fetch('/api/dashboard/chips', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category: cat, businessId: data.business.id }),
-      });
-
-      if (res.ok) {
-        setResetChipsSuccess(`Smart chips successfully updated for ${cat}!`);
-        toast.success(`Smart review chips reset to default ${cat.toUpperCase()} presets!`, 'Chips Reset');
-        setTimeout(() => setResetChipsSuccess(null), 3500);
-        await loadDashboardData();
-        setConfirmResetOpen(false);
-      } else {
-        const errData = await res.json().catch(() => ({}));
-        toast.error(errData.error || 'Failed to reset smart chips', 'Error');
-      }
-    } catch (err) {
-      console.error('Failed to reset chips:', err);
-      toast.error('Network error while resetting smart chips', 'Error');
-    } finally {
-      setIsResettingChips(false);
-    }
-  };
-
-  // 3.2 Apply Any Category Preset
-  const handleConfirmApplyPreset = async (catToApply: string) => {
-    if (!data?.business) return;
-    setIsResettingChips(true);
-    setResetChipsSuccess(null);
-
-    try {
-      const res = await fetch('/api/dashboard/chips', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category: catToApply, businessId: data.business.id }),
-      });
-
-      if (res.ok) {
-        setResetChipsSuccess(`Smart chips successfully updated to ${catToApply.toUpperCase()} prompts!`);
-        toast.success(`Smart chips updated to ${catToApply.toUpperCase()} preset pack!`, 'Preset Applied');
-        setTimeout(() => setResetChipsSuccess(null), 3500);
-        await loadDashboardData();
-        setConfirmPresetCategory(null);
-      } else {
-        const errData = await res.json().catch(() => ({}));
-        toast.error(errData.error || 'Failed to apply preset', 'Error');
-      }
-    } catch (err) {
-      console.error('Failed to apply category preset:', err);
-      toast.error('Network error applying preset', 'Error');
-    } finally {
-      setIsResettingChips(false);
-    }
-  };
-
   // 4. Save Business Settings (Name, Category, Slug, Google Link, Address, Phone, etc.)
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -585,6 +400,7 @@ function DashboardContent() {
           googlePlaceId: editGooglePlaceId,
           welcomeMessage: editWelcomeMessage,
           primaryColor: editPrimaryColor,
+          bypassAiReview: editBypassAiReview,
           resetChipsToCategory: syncChipsOnCategoryChange,
         }),
       });
@@ -1358,157 +1174,44 @@ function DashboardContent() {
         {/* TAB 2: QR KIT & PRINT STUDIO */}
         {activeTab === 'qr' && (
           <div className="space-y-6">
-            <div className="rounded-2xl p-6 bg-slate-900/70 border border-slate-800 shadow-xl backdrop-blur-xl">
-              <QRCodeGenerator business={business} />
-            </div>
+            <QRCodeGenerator
+              business={business}
+              onUpdateBusiness={async (updated) => {
+                if (data?.business) {
+                  setData({
+                    ...data,
+                    business: {
+                      ...data.business,
+                      ...updated,
+                    },
+                  });
+                }
+                if (updated.bypassAiReview !== undefined) {
+                  setEditBypassAiReview(updated.bypassAiReview);
+                }
+              }}
+              onNavigateToSettings={() => setActiveTab('settings')}
+            />
           </div>
         )}
 
         {/* TAB 3: SMART REVIEW CHIPS */}
         {activeTab === 'chips' && (
-          <div className="space-y-6">
-            <div className="rounded-2xl p-6 bg-slate-900/70 border border-slate-800 shadow-xl backdrop-blur-xl space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-800">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-base font-bold text-white">Smart Review Assist Prompts</h3>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                      {business.category} Funnel
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Customers tap these chips to auto-draft detailed, authentic reviews tailored to your {business.category} business.
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-xl p-1">
-                    <select
-                      value={selectedPresetCategory}
-                      onChange={(e) => setSelectedPresetCategory(e.target.value)}
-                      className="bg-transparent text-xs text-slate-200 px-2 py-1 focus:outline-none cursor-pointer"
-                    >
-                      <option value="fitness" className="bg-slate-900 text-white">🏋️ Gym / Fitness Studio</option>
-                      <option value="restaurant" className="bg-slate-900 text-white">🍕 Dining / Restaurant / Cafe</option>
-                      <option value="clinic" className="bg-slate-900 text-white">🩺 Medical / Dental Clinic</option>
-                      <option value="salon" className="bg-slate-900 text-white">💇 Salon / Spa / Barbershop</option>
-                      <option value="automotive" className="bg-slate-900 text-white">🔧 Automotive / Auto Repair</option>
-                      <option value="retail" className="bg-slate-900 text-white">🛍️ Boutique / Retail Store</option>
-                    </select>
-                    <button
-                      type="button"
-                      onClick={() => setConfirmPresetCategory(selectedPresetCategory)}
-                      disabled={isResettingChips}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-sm"
-                    >
-                      {isResettingChips ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                      <span>Apply Preset</span>
-                    </button>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleOpenResetModal}
-                    disabled={isResettingChips}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-medium cursor-pointer disabled:opacity-50 shrink-0 transition-colors"
-                  >
-                    <span>Reset to {business.category}</span>
-                  </button>
-                </div>
-              </div>
-
-              {resetChipsSuccess && (
-                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2">
-                  <Check className="w-4 h-4" />
-                  <span>{resetChipsSuccess}</span>
-                </div>
-              )}
-
-              {/* Add New Chip Form */}
-              <form onSubmit={handleAddChip} className="p-4 rounded-xl bg-slate-950/80 border border-slate-800 space-y-3">
-                <span className="text-xs font-semibold text-slate-300 block">Add New Review Tag / Highlight:</span>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <input
-                    type="text"
-                    required
-                    placeholder={
-                      business.category === 'fitness'
-                        ? 'Chip Label (e.g. 🏋️ Great Equipment)'
-                        : business.category === 'clinic'
-                        ? 'Chip Label (e.g. 🩺 Gentle Touch)'
-                        : business.category === 'salon'
-                        ? 'Chip Label (e.g. 💇 Gorgeous Cut)'
-                        : 'Chip Label (e.g. 🍕 Fast Delivery)'
-                    }
-                    value={newChipLabel}
-                    onChange={(e) => setNewChipLabel(e.target.value)}
-                    className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-                  />
-                  <select
-                    value={newChipCategory}
-                    onChange={(e) => setNewChipCategory(e.target.value)}
-                    className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
-                  >
-                    {getCategoryOptions(business.category).map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="submit"
-                    disabled={isAddingChip}
-                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-colors cursor-pointer disabled:opacity-50 shadow-md shadow-blue-500/20"
-                  >
-                    {isAddingChip ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
-                    <span>Save to Funnel</span>
-                  </button>
-                </div>
-                <input
-                  type="text"
-                  required
-                  placeholder={
-                    business.category === 'fitness'
-                      ? "Review sentence (e.g. 'The gym is always spotlessly clean, well equipped, and the trainers are super motivating!')"
-                      : business.category === 'clinic'
-                      ? "Review sentence (e.g. 'Painless dental treatment with zero waiting time and modern equipment!')"
-                      : "Review sentence (e.g. 'The food arrived piping hot, fresh, and full of authentic flavor!')"
-                  }
-                  value={newChipPhrase}
-                  onChange={(e) => setNewChipPhrase(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-                />
-              </form>
-
-              {/* Active Chips List */}
-              <div className="space-y-2 pt-2">
-                {business.smartChips?.map((chip) => (
-                  <div
-                    key={chip.id}
-                    className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 flex items-center justify-between gap-4"
-                  >
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-blue-400">{chip.label}</span>
-                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
-                          {chip.category}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-300 italic">&quot;{chip.phrase}&quot;</p>
-                    </div>
-
-                    <button
-                      onClick={() => handleRemoveChip(chip.id)}
-                      title="Remove chip"
-                      className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors shrink-0"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <SmartChipsManager
+            business={business}
+            onUpdateBusiness={async (updated) => {
+              if (data?.business) {
+                setData({
+                  ...data,
+                  business: {
+                    ...data.business,
+                    ...updated,
+                  },
+                });
+              }
+            }}
+            onReloadDashboard={loadDashboardData}
+          />
         )}
 
         {/* TAB 4: PRIVATE SHIELD FEEDBACK INBOX */}
@@ -1584,7 +1287,7 @@ function DashboardContent() {
 
         {/* TAB 5: BILLING & SUBSCRIPTION PLANS */}
         {activeTab === 'billing' && (
-          <div className="space-y-8 max-w-5xl">
+          <div className="space-y-8 w-full">
             {/* Top Overview Title */}
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-400 text-xs font-semibold mb-2">
@@ -2252,7 +1955,7 @@ function DashboardContent() {
 
         {/* TAB 6: ACCOUNT & BUSINESS SETTINGS */}
         {activeTab === 'settings' && (
-          <div className="space-y-8 max-w-4xl">
+          <div className="space-y-8 w-full">
             {/* Top overview title */}
             <div>
               <h2 className="text-xl font-bold text-white tracking-tight">Account & Business Settings</h2>
@@ -2470,9 +2173,19 @@ function DashboardContent() {
                         className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3.5 pr-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-blue-500"
                       />
                     </div>
-                    <p className="mt-1 text-[11px] text-slate-500">
-                      Public scan link: <span className="text-blue-400 font-mono">/r/{editSlug || 'your-slug'}</span>
-                    </p>
+                    <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500">
+                      <span>Public scan link: <span className="text-blue-400 font-mono">/r/{editSlug || 'your-slug'}</span></span>
+                      <a
+                        href={`/r/${editSlug || business.slug}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-400 hover:text-blue-300 font-medium inline-flex items-center gap-1 hover:underline cursor-pointer"
+                        title="Open Customer Review Portal"
+                      >
+                        <span>Open Portal</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
                   </div>
 
                   <div>
@@ -2552,24 +2265,54 @@ function DashboardContent() {
                       </button>
                     </div>
                   </div>
-                  <div className="relative">
-                    <Link2 className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
-                    <input
-                      type="text"
-                      value={editGoogleReviewUrl}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        const trimmed = val.trim();
-                        if (trimmed.startsWith('ChIJ') && !trimmed.includes('http')) {
-                          setEditGoogleReviewUrl(`https://search.google.com/local/writereview?placeid=${trimmed}`);
-                          toast.success('Place ID formatted into direct review URL!', 'Auto-Formatted');
-                        } else {
-                          setEditGoogleReviewUrl(val);
-                        }
-                      }}
-                      placeholder="https://search.google.com/local/writereview?placeid=... or g.page/r/..."
-                      className="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
-                    />
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Link2 className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                      <input
+                        type="text"
+                        value={editGoogleReviewUrl}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const trimmed = val.trim();
+                          if (trimmed.startsWith('ChIJ') && !trimmed.includes('http')) {
+                            setEditGoogleReviewUrl(`https://search.google.com/local/writereview?placeid=${trimmed}`);
+                            toast.success('Place ID formatted into direct review URL!', 'Auto-Formatted');
+                          } else {
+                            setEditGoogleReviewUrl(val);
+                          }
+                        }}
+                        placeholder="https://search.google.com/local/writereview?placeid=... or g.page/r/..."
+                        className="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+                      />
+                    </div>
+
+                    {/* Copy & Redirect Buttons */}
+                    {editGoogleReviewUrl.trim() && (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(editGoogleReviewUrl.trim());
+                            toast.success('Google review link copied to clipboard!', 'Copied');
+                          }}
+                          className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 flex items-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap"
+                          title="Copy Google Review Link"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copy</span>
+                        </button>
+
+                        <a
+                          href={editGoogleReviewUrl.trim()}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs rounded-lg border border-slate-700 transition-colors cursor-pointer flex items-center gap-1"
+                          title="Test Redirect: Open Google Review Link in New Tab"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    )}
                   </div>
 
                   {editGoogleReviewUrl.includes('writereview?business=') ? (
@@ -2591,6 +2334,62 @@ function DashboardContent() {
                       <Check className="w-3 h-3" /> Direct 5-star review link configured.
                     </p>
                   )}
+
+                  {/* Direct Google Review Bypass Setting */}
+                  <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 mt-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs font-bold text-white flex items-center gap-1.5">
+                            <Zap className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Bypass AI Review Page (Direct to Google)</span>
+                          </label>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-semibold border border-emerald-500/30">
+                            Fast Track
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 leading-snug">
+                          When enabled, camera scans of your QR stand will immediately bypass the AI assistant and open Google Reviews directly.
+                        </p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer ml-3 shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={editBypassAiReview}
+                          onChange={(e) => setEditBypassAiReview(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-10 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                      </label>
+                    </div>
+
+                    {/* Live Redirect Test Link & Destination Preview */}
+                    <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-1.5 text-slate-400 truncate flex-1 min-w-0">
+                        <span className="text-slate-500 font-medium whitespace-nowrap">Scan Destination:</span>
+                        <span className="font-mono text-slate-200 truncate">
+                          {editBypassAiReview
+                            ? (editGoogleReviewUrl.trim() || 'Google Maps Search')
+                            : `/r/${editSlug || business.slug}`}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <a
+                          href={
+                            editBypassAiReview
+                              ? (editGoogleReviewUrl.trim() || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(editName || business.name)}`)
+                              : `/r/${editSlug || business.slug}`
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-medium border border-slate-700 transition-colors cursor-pointer"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>{editBypassAiReview ? 'Test Direct Redirect' : 'Test Review Portal'}</span>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div>
@@ -2856,29 +2655,6 @@ function DashboardContent() {
         isSignUp={false}
       />
 
-      {/* Reset to Category Defaults Confirmation Modal */}
-      <ConfirmModal
-        isOpen={confirmResetOpen}
-        onClose={() => setConfirmResetOpen(false)}
-        onConfirm={handleConfirmResetChips}
-        title={`Reset to ${data?.business?.category.toUpperCase() || 'Category'} Defaults?`}
-        description={
-          <div className="space-y-2">
-            <p>
-              This will replace all your current smart chips with the curated default presets for{' '}
-              <strong className="text-white capitalize">{data?.business?.category || 'your category'}</strong>.
-            </p>
-            <p className="text-xs text-amber-400/90 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20">
-              ⚠️ Any custom tags or phrases you created will be replaced with standard high-converting review highlights.
-            </p>
-          </div>
-        }
-        confirmText={`Reset to ${data?.business?.category || 'Defaults'}`}
-        cancelText="Keep Current Chips"
-        variant="warning"
-        isLoading={isResettingChips}
-      />
-
       {/* Logout Confirmation Modal */}
       <ConfirmModal
         isOpen={confirmLogoutOpen}
@@ -2912,37 +2688,23 @@ function DashboardContent() {
         icon={<LogOut className="w-6 h-6 text-rose-400" />}
       />
 
-      {/* Apply Preset Confirmation Modal */}
-      <ConfirmModal
-        isOpen={Boolean(confirmPresetCategory)}
-        onClose={() => setConfirmPresetCategory(null)}
-        onConfirm={() => {
-          if (confirmPresetCategory) {
-            handleConfirmApplyPreset(confirmPresetCategory);
-          }
-        }}
-        title={`Apply ${confirmPresetCategory?.toUpperCase()} Preset?`}
-        description={
-          <div className="space-y-2">
-            <p>
-              This will replace your current chips with the complete prompt pack tailored for{' '}
-              <strong className="text-white capitalize">{confirmPresetCategory}</strong> businesses.
-            </p>
-            <p className="text-xs text-blue-400/90 bg-blue-500/10 p-2.5 rounded-xl border border-blue-500/20">
-              💡 Customers will see highlights and review keywords optimized specifically for this industry.
-            </p>
-          </div>
-        }
-        confirmText={`Apply ${confirmPresetCategory || 'Preset'} Pack`}
-        cancelText="Cancel"
-        variant="primary"
-        isLoading={isResettingChips}
-      />
-
       {/* ADD NEW LOCATION MODAL */}
       {showAddLocationModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="w-full max-w-lg rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 sm:p-7 space-y-6 relative overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150">
+          {/* Backdrop overlay */}
+          <div 
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity cursor-pointer"
+            onClick={() => {
+              setShowAddLocationModal(false);
+              setAddLocError(null);
+            }}
+            aria-hidden="true"
+          />
+
+          <div 
+            className="w-full max-w-lg rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 sm:p-7 space-y-6 relative z-10 overflow-hidden my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Background glow */}
             <div className="absolute -top-12 -right-12 w-40 h-40 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -3182,8 +2944,18 @@ function DashboardContent() {
 
       {/* UPGRADE / PLAN SWITCH PROMPT MODAL */}
       {showUpgradeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 sm:p-7 space-y-6 relative overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150">
+          {/* Backdrop overlay */}
+          <div 
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity cursor-pointer"
+            onClick={() => setShowUpgradeModal(false)}
+            aria-hidden="true"
+          />
+
+          <div 
+            className="w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 sm:p-7 space-y-6 relative z-10 overflow-hidden my-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">

@@ -36,6 +36,7 @@ export async function PUT(req: NextRequest) {
       status,
       resetChipsToCategory,
       logoUrl,
+      bypassAiReview,
     } = body;
 
     // Find the business owned by this user (or specific branch if multi-location)
@@ -133,6 +134,19 @@ export async function PUT(req: NextRequest) {
       },
     });
 
+    if (bypassAiReview !== undefined) {
+      try {
+        await (prisma.business as any).update({
+          where: { id: business.id },
+          data: { bypassAiReview: Boolean(bypassAiReview) },
+        });
+      } catch {
+        await prisma.$executeRawUnsafe(
+          `UPDATE "Business" SET "bypassAiReview" = ${Boolean(bypassAiReview)} WHERE id = '${business.id}'`
+        );
+      }
+    }
+
     // Check if existing chips are mismatched (e.g. food chips on a gym/salon/clinic) or empty
     const existingChips = await prisma.smartChip.findMany({
       where: { businessId: business.id },
@@ -169,6 +183,17 @@ export async function PUT(req: NextRequest) {
       include: { smartChips: { orderBy: { sortOrder: 'asc' } } },
     });
 
+    if (updated && (updated as any).bypassAiReview === undefined) {
+      try {
+        const raw = await prisma.$queryRawUnsafe<any[]>(
+          `SELECT "bypassAiReview" FROM "Business" WHERE id = '${business.id}' LIMIT 1`
+        );
+        if (raw && raw[0]) {
+          (updated as any).bypassAiReview = Boolean(raw[0].bypassAiReview);
+        }
+      } catch {}
+    }
+
     // If slug changed, update the session cookie so links and QR work immediately
     if (updatedSlug && updatedSlug !== session.businessSlug && updated) {
       await setSessionCookie({
@@ -179,9 +204,9 @@ export async function PUT(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, business: updated });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update business settings error:', error);
-    return NextResponse.json({ error: 'Failed to update business settings' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to update business settings', details: error?.message || String(error) }, { status: 500 });
   }
 }
 

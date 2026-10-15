@@ -54,6 +54,18 @@ export async function GET(
       ? `https://search.google.com/local/writereview?placeid=${business.googlePlaceId.trim()}`
       : null;
 
+    let bypassAiReviewVal = Boolean((business as any).bypassAiReview);
+    if ((business as any).bypassAiReview === undefined) {
+      try {
+        const raw = await prisma.$queryRawUnsafe<any[]>(
+          `SELECT "bypassAiReview" FROM "Business" WHERE id = '${business.id}' LIMIT 1`
+        );
+        if (raw && raw[0]) {
+          bypassAiReviewVal = Boolean(raw[0].bypassAiReview);
+        }
+      } catch {}
+    }
+
     return NextResponse.json({
       business: {
         id: business.id,
@@ -70,6 +82,7 @@ export async function GET(
         welcomeMessage: business.welcomeMessage,
         customPromptMessage: business.customPromptMessage,
         smartChips: business.smartChips,
+        bypassAiReview: bypassAiReviewVal,
       },
     });
   } catch (error) {

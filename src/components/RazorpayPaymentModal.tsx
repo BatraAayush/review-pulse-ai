@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   Check,
@@ -39,12 +40,37 @@ export default function RazorpayPaymentModal({
   onPaymentSuccess,
 }: RazorpayPaymentModalProps) {
   const { toast } = useToast();
+  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [orderData, setOrderData] = useState<any | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [copiedCard, setCopiedCard] = useState(false);
   const [copiedUpi, setCopiedUpi] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll and dismiss on Escape key press
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !loading) {
+        onClose();
+      }
+    };
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, loading, onClose]);
 
   const handleCopyCard = () => {
     navigator.clipboard.writeText('4386289407660153');
@@ -132,7 +158,7 @@ export default function RazorpayPaymentModal({
     };
   }, [isOpen, plan, billingCycle, businessId]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   // Verification helper
   const handleVerifyPayment = async (payload: {
@@ -243,9 +269,26 @@ export default function RazorpayPaymentModal({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-5 sm:p-7 space-y-5 relative">
+  const modalContent = (
+    <div 
+      role="dialog"
+      aria-modal="true"
+      aria-label="Secure Checkout & Plan Activation"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+    >
+      {/* Visual Backdrop Overlay with blur & click to dismiss */}
+      <div 
+        className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity cursor-pointer animate-in fade-in duration-200"
+        onClick={() => {
+          if (!loading) onClose();
+        }}
+        aria-hidden="true"
+      />
+
+      <div 
+        className="w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-5 sm:p-7 space-y-5 relative z-10 my-auto animate-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Glow accent */}
         <div className="absolute -top-16 -right-16 w-48 h-48 bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
 
@@ -546,4 +589,6 @@ export default function RazorpayPaymentModal({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

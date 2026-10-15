@@ -27,13 +27,25 @@ export async function POST(
       return NextResponse.json({ error: 'Business not found' }, { status: 404 });
     }
 
+    let actionTaken = 'scanned';
+    try {
+      const body = await req.json().catch(() => ({}));
+      if (body?.isDirect || body?.actionTaken === 'direct_google_redirect') {
+        actionTaken = 'direct_google_redirect';
+      } else if (body?.actionTaken) {
+        actionTaken = body.actionTaken;
+      }
+    } catch {
+      // Body empty or not json, default to scanned
+    }
+
     const scan = await prisma.scanEvent.create({
       data: {
         businessId: business.id,
         userAgent,
         ipAddress,
         deviceType,
-        actionTaken: 'scanned',
+        actionTaken,
       },
     });
 
