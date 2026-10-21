@@ -289,8 +289,8 @@ function DashboardContent() {
 
       if ((activateParam === 'true' || isPending) && data.business.subscriptionStatus !== 'active') {
         hasAutoPromptedRef.current = true;
-        const validPlan: PlanKey = (['starter', 'pro', 'enterprise'].includes(planParam) 
-          ? planParam 
+        const validPlan: PlanKey = (['starter', 'pro', 'enterprise'].includes(planParam)
+          ? planParam
           : (data.business.activePlan as PlanKey) || 'pro');
         setSelectedPlanForPayment(validPlan);
         setShowPaymentModal(true);
@@ -607,7 +607,7 @@ function DashboardContent() {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 pb-6 border-b border-slate-800">
           <div className="flex-1 min-w-0">
             <div className="flex items-start sm:items-center gap-3.5">
-              <div 
+              <div
                 className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg border border-slate-800 bg-slate-900/90 text-blue-400 shrink-0 mt-0.5 sm:mt-0 overflow-hidden"
               >
                 {isImageLogo(business.logoUrl) ? (
@@ -677,8 +677,8 @@ function DashboardContent() {
                       {business.activePlan === 'enterprise'
                         ? 'Franchise Plan (10 slots)'
                         : business.activePlan === 'pro'
-                        ? 'Pro Plan (3 slots)'
-                        : 'Starter (1 slot)'}
+                          ? 'Pro Plan (3 slots)'
+                          : 'Starter (1 slot)'}
                     </span>
                   </div>
 
@@ -696,11 +696,10 @@ function DashboardContent() {
                                 loadDashboardData(loc.id);
                               }
                             }}
-                            className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left text-xs transition-colors cursor-pointer ${
-                              isSelected
+                            className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left text-xs transition-colors cursor-pointer ${isSelected
                                 ? 'bg-blue-600/15 border border-blue-500/30 text-white font-bold'
                                 : 'hover:bg-slate-800 text-slate-300'
-                            }`}
+                              }`}
                           >
                             <div className="flex items-center gap-2.5 min-w-0 pr-2">
                               <div className="w-7 h-7 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center shrink-0 overflow-hidden text-sm">
@@ -905,7 +904,7 @@ function DashboardContent() {
 
         {/* Google Review URL Setup Warning Banner */}
         {(() => {
-          const isReviewUrlMissing = !business.googleReviewUrl || 
+          const isReviewUrlMissing = !business.googleReviewUrl ||
             business.googleReviewUrl.includes('writereview?business=') ||
             (!business.googleReviewUrl.startsWith('http') && !business.googlePlaceId);
 
@@ -966,11 +965,10 @@ function DashboardContent() {
                   setActiveTab(tab.id as typeof activeTab);
                   router.replace(`/dashboard?tab=${tab.id}`, { scroll: false });
                 }}
-                className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap cursor-pointer ${
-                  isActive
+                className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap cursor-pointer ${isActive
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
-                }`}
+                  }`}
               >
                 <Icon className="w-4 h-4" />
                 <span>{tab.label}</span>
@@ -1264,11 +1262,10 @@ function DashboardContent() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                            fb.status === 'unread'
+                          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${fb.status === 'unread'
                               ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                               : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          }`}>
+                            }`}>
                             {fb.status}
                           </span>
                           <button
@@ -1339,8 +1336,8 @@ function DashboardContent() {
                       {business.activePlan === 'starter'
                         ? 'Starter Solo Plan (₹499/mo)'
                         : business.activePlan === 'pro'
-                        ? 'Pro Growth Plan (₹999/mo)'
-                        : 'Franchise & Agency Plan (₹2,499/mo)'}
+                          ? 'Pro Growth Plan (₹999/mo)'
+                          : 'Franchise & Agency Plan (₹2,499/mo)'}
                     </h3>
                     <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
                       {isPaid
@@ -1379,16 +1376,16 @@ function DashboardContent() {
                         {business.activePlan === 'enterprise'
                           ? 'Franchise & Agency'
                           : business.activePlan === 'pro'
-                          ? 'Pro Growth'
-                          : 'Starter Solo'}
+                            ? 'Pro Growth'
+                            : 'Starter Solo'}
                       </span>
                     </div>
                     <p className="text-xs text-slate-400 mt-0.5">
                       {business.activePlan === 'enterprise'
                         ? `Your Franchise plan supports up to 10 separate gym branches, clinic outlets, or agency accounts (${currentLocCount} of 10 used).`
                         : business.activePlan === 'pro'
-                        ? `Your Pro plan supports up to 3 separate business locations (${currentLocCount} of 3 used).`
-                        : `Starter Solo supports 1 location. Upgrade to Franchise & Agency to add up to 10 branches.`}
+                          ? `Your Pro plan supports up to 3 separate business locations (${currentLocCount} of 3 used).`
+                          : `Starter Solo supports 1 location. Upgrade to Franchise & Agency to add up to 10 branches.`}
                     </p>
                   </div>
                 </div>
@@ -1411,11 +1408,10 @@ function DashboardContent() {
                     return (
                       <div
                         key={loc.id}
-                        className={`rounded-2xl p-5 border transition-all flex flex-col justify-between gap-4 ${
-                          isCurrent
+                        className={`rounded-2xl p-5 border transition-all flex flex-col justify-between gap-4 ${isCurrent
                             ? 'bg-blue-950/30 border-blue-500/50 ring-1 ring-blue-500/30 shadow-lg shadow-blue-500/10'
                             : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
-                        }`}
+                          }`}
                       >
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
@@ -1520,9 +1516,8 @@ function DashboardContent() {
                 className="w-12 h-6 rounded-full bg-slate-800 p-1 flex items-center transition-colors focus:outline-none border border-slate-700 cursor-pointer"
               >
                 <div
-                  className={`w-4 h-4 rounded-full bg-blue-600 transition-transform ${
-                    billingAnnual ? 'translate-x-6' : 'translate-x-0'
-                  }`}
+                  className={`w-4 h-4 rounded-full bg-blue-600 transition-transform ${billingAnnual ? 'translate-x-6' : 'translate-x-0'
+                    }`}
                 />
               </button>
               <span className={`text-xs font-semibold ${billingAnnual ? 'text-white' : 'text-slate-400'} flex items-center gap-1.5`}>
@@ -1542,7 +1537,7 @@ function DashboardContent() {
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                      LinkedIn Showcase & Test Payment Guide
+                      Test Payment Guide
                     </h4>
                     <p className="text-[11px] text-slate-400">
                       You or reviewers can test plan upgrades in live Razorpay test sandbox with any of these methods:
@@ -1605,11 +1600,10 @@ function DashboardContent() {
             {/* 3 Tier Pricing Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* TIER 1: STARTER SOLO */}
-              <div className={`rounded-3xl p-6 bg-slate-900/70 border space-y-5 flex flex-col justify-between transition-all ${
-                business.activePlan === 'starter'
+              <div className={`rounded-3xl p-6 bg-slate-900/70 border space-y-5 flex flex-col justify-between transition-all ${business.activePlan === 'starter'
                   ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-xl shadow-blue-500/10'
                   : 'border-slate-800 hover:border-slate-700'
-              }`}>
+                }`}>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Starter Solo</span>
@@ -1680,22 +1674,20 @@ function DashboardContent() {
                   type="button"
                   disabled={updatingPlan}
                   onClick={() => handleSwitchPlan('starter')}
-                  className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    business.activePlan === 'starter'
+                  className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${business.activePlan === 'starter'
                       ? 'bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30'
                       : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
-                  }`}
+                    }`}
                 >
                   {business.activePlan === 'starter' ? '✓ Current Plan (Test Checkout)' : 'Switch to Starter (₹499/mo)'}
                 </button>
               </div>
 
               {/* TIER 2: PRO GROWTH */}
-              <div className={`rounded-3xl p-6 bg-gradient-to-b from-slate-900 via-slate-900 to-blue-950/20 border-2 space-y-5 flex flex-col justify-between relative transition-all ${
-                business.activePlan === 'pro'
+              <div className={`rounded-3xl p-6 bg-gradient-to-b from-slate-900 via-slate-900 to-blue-950/20 border-2 space-y-5 flex flex-col justify-between relative transition-all ${business.activePlan === 'pro'
                   ? 'border-blue-500 shadow-2xl shadow-blue-500/20'
                   : 'border-blue-500/50 hover:border-blue-400'
-              }`}>
+                }`}>
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-gradient-to-r from-blue-600 to-sky-500 text-white text-[10px] font-black uppercase tracking-wider shadow-md">
                   Most Popular
                 </div>
@@ -1770,22 +1762,20 @@ function DashboardContent() {
                   type="button"
                   disabled={updatingPlan}
                   onClick={() => handleSwitchPlan('pro')}
-                  className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    business.activePlan === 'pro'
+                  className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${business.activePlan === 'pro'
                       ? 'bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30'
                       : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/25'
-                  }`}
+                    }`}
                 >
                   {business.activePlan === 'pro' ? '✓ Current Plan (Test Checkout)' : 'Switch to Pro (₹999/mo)'}
                 </button>
               </div>
 
               {/* TIER 3: FRANCHISE & AGENCY */}
-              <div className={`rounded-3xl p-6 bg-slate-900/70 border space-y-5 flex flex-col justify-between transition-all ${
-                business.activePlan === 'enterprise'
+              <div className={`rounded-3xl p-6 bg-slate-900/70 border space-y-5 flex flex-col justify-between transition-all ${business.activePlan === 'enterprise'
                   ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-xl shadow-blue-500/10'
                   : 'border-slate-800 hover:border-slate-700'
-              }`}>
+                }`}>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold uppercase tracking-wider text-blue-400">Franchise & Agency</span>
@@ -1848,11 +1838,10 @@ function DashboardContent() {
                   type="button"
                   disabled={updatingPlan}
                   onClick={() => handleSwitchPlan('enterprise')}
-                  className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                    business.activePlan === 'enterprise'
+                  className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${business.activePlan === 'enterprise'
                       ? 'bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30'
                       : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
-                  }`}
+                    }`}
                 >
                   {business.activePlan === 'enterprise' ? '✓ Current Plan (Test Checkout)' : 'Switch to Franchise (₹2,499/mo)'}
                 </button>
@@ -2108,11 +2097,10 @@ function DashboardContent() {
                               key={item.emoji}
                               type="button"
                               onClick={() => setEditLogoUrl(item.emoji)}
-                              className={`px-2.5 py-1 rounded-lg text-xs flex items-center gap-1 transition-all cursor-pointer ${
-                                editLogoUrl === item.emoji
+                              className={`px-2.5 py-1 rounded-lg text-xs flex items-center gap-1 transition-all cursor-pointer ${editLogoUrl === item.emoji
                                   ? 'bg-blue-600 text-white font-bold border border-blue-500 shadow-sm'
                                   : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
-                              }`}
+                                }`}
                               title={item.label}
                             >
                               <span>{item.emoji}</span>
@@ -2459,11 +2447,10 @@ function DashboardContent() {
                           key={item.color}
                           type="button"
                           onClick={() => setEditPrimaryColor(item.color)}
-                          className={`w-7 h-7 rounded-lg border transition-all cursor-pointer relative ${
-                            editPrimaryColor.toLowerCase() === item.color.toLowerCase()
+                          className={`w-7 h-7 rounded-lg border transition-all cursor-pointer relative ${editPrimaryColor.toLowerCase() === item.color.toLowerCase()
                               ? 'scale-110 border-white ring-2 ring-blue-500/50 shadow-md'
                               : 'border-slate-700/80 hover:scale-105 opacity-80 hover:opacity-100'
-                          }`}
+                            }`}
                           style={{ backgroundColor: item.color }}
                           title={`${item.label} (${item.color})`}
                         />
@@ -2772,7 +2759,7 @@ function DashboardContent() {
       {showAddLocationModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150">
           {/* Backdrop overlay */}
-          <div 
+          <div
             className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity cursor-pointer"
             onClick={() => {
               setShowAddLocationModal(false);
@@ -2781,7 +2768,7 @@ function DashboardContent() {
             aria-hidden="true"
           />
 
-          <div 
+          <div
             className="w-full max-w-lg rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 sm:p-7 space-y-6 relative z-10 overflow-hidden my-auto"
             onClick={(e) => e.stopPropagation()}
           >
@@ -2797,11 +2784,11 @@ function DashboardContent() {
                 <div>
                   <h3 className="text-lg font-bold text-white tracking-tight">Add New Branch Location</h3>
                   <p className="text-xs text-slate-400">
-                    {data?.business?.activePlan === 'enterprise' 
+                    {data?.business?.activePlan === 'enterprise'
                       ? 'Franchise & Agency Plan • Up to 10 locations included'
                       : data?.business?.activePlan === 'pro'
-                      ? 'Pro Growth Plan • Up to 3 locations included'
-                      : 'Starter Plan • 1 location included'}
+                        ? 'Pro Growth Plan • Up to 3 locations included'
+                        : 'Starter Plan • 1 location included'}
                   </p>
                 </div>
               </div>
@@ -3026,13 +3013,13 @@ function DashboardContent() {
       {showUpgradeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150">
           {/* Backdrop overlay */}
-          <div 
+          <div
             className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity cursor-pointer"
             onClick={() => setShowUpgradeModal(false)}
             aria-hidden="true"
           />
 
-          <div 
+          <div
             className="w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 sm:p-7 space-y-6 relative z-10 overflow-hidden my-auto"
             onClick={(e) => e.stopPropagation()}
           >

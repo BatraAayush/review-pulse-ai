@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="100%" height="100%">
+  <defs>
+    <linearGradient id="rpGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+    <linearGradient id="starGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Squircle -->
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#090d16" stroke="url(#rpGrad)" stroke-width="2.5" />
+
+  <!-- Top-Left QR Target -->
+  <rect x="11" y="11" width="18" height="18" rx="4" fill="none" stroke="#38bdf8" stroke-width="2.5" />
+  <rect x="16" y="16" width="8" height="8" rx="2" fill="#38bdf8" />
+
+  <!-- Top-Right QR Target -->
+  <rect x="35" y="11" width="18" height="18" rx="4" fill="none" stroke="#38bdf8" stroke-width="2.5" />
+  <rect x="40" y="16" width="8" height="8" rx="2" fill="#38bdf8" />
+
+  <!-- Bottom-Left QR Target -->
+  <rect x="11" y="35" width="18" height="18" rx="4" fill="none" stroke="#38bdf8" stroke-width="2.5" />
+  <rect x="16" y="40" width="8" height="8" rx="2" fill="#38bdf8" />
+
+  <!-- AI Review Sparkle / Pulse Icon in Bottom-Right -->
+  <path d="M44 32 C44 37 48 41 53 41 C48 41 44 45 44 50 C44 45 40 41 35 41 C40 41 44 37 44 32 Z" fill="url(#starGrad)" />
+  <circle cx="44" cy="41" r="1.5" fill="#ffffff" />
+</svg>
