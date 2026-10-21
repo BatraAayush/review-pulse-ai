@@ -7,7 +7,7 @@ export async function POST(
 ) {
   try {
     const { slug } = await params;
-    const { rating, selectedChips = [], reviewLength = 0, scanId } = await req.json();
+    const { rating, selectedChips = [], reviewLength = 0, scanId, actionTaken = 'copied_to_google' } = await req.json();
 
     const business = await prisma.business.findUnique({
       where: { slug: slug.toLowerCase() },
@@ -18,11 +18,13 @@ export async function POST(
       return NextResponse.json({ error: 'Business not found' }, { status: 404 });
     }
 
+    const resolvedAction = String(actionTaken || 'copied_to_google');
+
     if (scanId) {
       await prisma.scanEvent.updateMany({
         where: { id: scanId },
         data: {
-          actionTaken: 'copied_to_google',
+          actionTaken: resolvedAction,
           ratingSelected: Number(rating) || 5,
           selectedChips: JSON.stringify(selectedChips),
           reviewLength: Number(reviewLength),
@@ -32,7 +34,7 @@ export async function POST(
       await prisma.scanEvent.create({
         data: {
           businessId: business.id,
-          actionTaken: 'copied_to_google',
+          actionTaken: resolvedAction,
           ratingSelected: Number(rating) || 5,
           selectedChips: JSON.stringify(selectedChips),
           reviewLength: Number(reviewLength),

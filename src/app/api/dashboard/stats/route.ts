@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
       prisma.scanEvent.count({
         where: {
           businessId: business.id,
-          actionTaken: { in: ['copied_to_google', 'direct_google_redirect'] },
+          actionTaken: { in: ['copied_to_google', 'direct_google_redirect', 'BYPASS_TO_GOOGLE'] },
         },
       }),
       prisma.privateFeedback.findMany({

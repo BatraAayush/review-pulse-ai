@@ -124,13 +124,14 @@ export default function SuperAdminPage() {
   const [newlyArrivedIds, setNewlyArrivedIds] = useState<Set<string>>(new Set());
 
   const scansRef = useRef(scans);
-  scansRef.current = scans;
-
   const isStreamingRef = useRef(isStreaming);
-  isStreamingRef.current = isStreaming;
-
   const pendingScansRef = useRef(pendingScans);
-  pendingScansRef.current = pendingScans;
+
+  useEffect(() => {
+    scansRef.current = scans;
+    isStreamingRef.current = isStreaming;
+    pendingScansRef.current = pendingScans;
+  }, [scans, isStreaming, pendingScans]);
 
   const loadAdminData = async () => {
     try {

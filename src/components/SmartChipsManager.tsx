@@ -12,10 +12,11 @@ import {
   Search, 
   Loader2, 
   X,
-  Info
+  Info,
+  ShieldCheck
 } from 'lucide-react';
 import { useToast } from '@/components/ToastContext';
-import { Business } from '@/types';
+import { Business, BusinessCategory } from '@/types';
 import ConfirmModal from '@/components/ConfirmModal';
 import { CATEGORY_DEFAULT_CHIPS, normalizeCategory } from '@/lib/chips';
 
@@ -39,7 +40,7 @@ const INDUSTRY_CONFIG: Record<string, { label: string; icon: string; desc: strin
   clinic: {
     label: 'Healthcare & Dental Clinic',
     icon: '🩺',
-    desc: 'Emphasizes painless care, zero wait times, compassionate doctors, and transparent billing.',
+    desc: 'Focuses on clean and hygienic facilities, minimal wait times, polite staff, and clear doctor communication.',
   },
   salon: {
     label: 'Salon, Spa & Barbershop',
@@ -68,7 +69,7 @@ export default function SmartChipsManager({
   // Active filter category
   const [selectedFilterCategory, setSelectedFilterCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [showSimulator, setShowSimulator] = useState<boolean>(true);
+  const [showSimulator, setShowSimulator] = useState<boolean>(false);
 
   // Form states
   const [newChipLabel, setNewChipLabel] = useState('');
@@ -252,7 +253,7 @@ export default function SmartChipsManager({
           'Template Applied'
         );
         if (onUpdateBusiness) {
-          await onUpdateBusiness({ category: targetCat as any });
+          await onUpdateBusiness({ category: targetCat as BusinessCategory });
         }
         setShowTemplateLibrary(false);
         if (onReloadDashboard) await onReloadDashboard();
@@ -349,7 +350,7 @@ export default function SmartChipsManager({
             </div>
 
             {/* Tappable Simulator Chips */}
-            <div className="flex flex-wrap gap-2 pt-1">
+            <div className="flex flex-wrap gap-2.5 sm:gap-3 pt-1">
               {(business.smartChips || []).map((chip) => {
                 const isSelected = simulatedSelectedIds.includes(chip.id);
                 return (
@@ -357,14 +358,14 @@ export default function SmartChipsManager({
                     key={chip.id}
                     type="button"
                     onClick={() => toggleSimulatedChip(chip.id)}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer border ${
+                    className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer border active:scale-95 ${
                       isSelected
-                        ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-500/25 scale-105'
+                        ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-500/25 ring-1 ring-blue-400/40'
                         : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-700/80 hover:border-slate-600'
                     }`}
                   >
                     <span>{chip.label}</span>
-                    {isSelected && <Check className="w-3 h-3 text-white" />}
+                    {isSelected && <Check className="w-3.5 h-3.5 text-white stroke-[2.5]" />}
                   </button>
                 );
               })}
@@ -399,7 +400,7 @@ export default function SmartChipsManager({
         {/* 3. Search & Category Filter Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
           {/* Category Filter Pills */}
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
             <button
               type="button"
               onClick={() => setSelectedFilterCategory('all')}
@@ -503,6 +504,15 @@ export default function SmartChipsManager({
               </span>
               <span className="text-[11px] text-slate-500">Auto-injects sentence into Google draft</span>
             </div>
+
+            {canonicalCategory === 'clinic' && (
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-start gap-2.5">
+                <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong className="font-semibold text-amber-200">Medical Ethics Policy:</strong> Healthcare & clinic review chips must focus on operational experience (cleanliness, minimal wait times, friendly staff, clear explanations). Claims regarding cures, diagnoses, guarantees, miracles, or prescriptions are strictly prohibited.
+                </span>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>

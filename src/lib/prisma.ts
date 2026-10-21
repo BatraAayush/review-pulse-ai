@@ -5,7 +5,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 // If schema models were added during dev hot-reloading, re-instantiate client
-const isCachedClientStale = globalForPrisma.prisma && !(globalForPrisma.prisma as any).paymentTransaction;
+const isCachedClientStale = globalForPrisma.prisma && !('paymentTransaction' in globalForPrisma.prisma);
 
 export const prisma =
   (!isCachedClientStale && globalForPrisma.prisma) ? globalForPrisma.prisma :

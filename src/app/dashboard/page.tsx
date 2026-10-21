@@ -52,7 +52,8 @@ import {
   FileText,
   Calendar,
   Search,
-  LogOut
+  LogOut,
+  Palette
 } from 'lucide-react';
 import GoogleReviewGuideModal from '@/components/GoogleReviewGuideModal';
 import ConfirmModal from '@/components/ConfirmModal';
@@ -1085,6 +1086,12 @@ function DashboardContent() {
                               {scan.actionTaken === 'copied_to_google' && (
                                 <span className="text-emerald-400 font-medium">Copied review & opened Google Maps</span>
                               )}
+                              {scan.actionTaken === 'BYPASS_TO_GOOGLE' && (
+                                <span className="text-amber-400 font-medium">Public Google Review (Bypass)</span>
+                              )}
+                              {scan.actionTaken === 'direct_google_redirect' && (
+                                <span className="text-emerald-400 font-medium">Direct Google Redirect</span>
+                              )}
                               {scan.actionTaken === 'private_feedback' && (
                                 <span className="text-sky-400 font-medium">Submitted private resolution feedback</span>
                               )}
@@ -1188,6 +1195,9 @@ function DashboardContent() {
                 }
                 if (updated.bypassAiReview !== undefined) {
                   setEditBypassAiReview(updated.bypassAiReview);
+                }
+                if (updated.primaryColor !== undefined) {
+                  setEditPrimaryColor(updated.primaryColor);
                 }
               }}
               onNavigateToSettings={() => setActiveTab('settings')}
@@ -2388,6 +2398,76 @@ function DashboardContent() {
                           <span>{editBypassAiReview ? 'Test Direct Redirect' : 'Test Review Portal'}</span>
                         </a>
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Brand Theme Color Studio */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-3.5">
+                  <div className="flex items-start sm:items-center justify-between gap-3 flex-wrap">
+                    <div>
+                      <label className="block text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                        <Palette className="w-3.5 h-3.5 text-blue-400" />
+                        <span>Brand Theme Color</span>
+                      </label>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Powers your customer review portal accent glow and the &quot;Use Brand Color&quot; preset in the QR &amp; Standee studio.
+                      </p>
+                    </div>
+                    <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-slate-200">
+                      {editPrimaryColor}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-3.5 flex-wrap pt-1">
+                    {/* Native Color Picker Swatch */}
+                    <div className="flex items-center gap-2">
+                      <div className="relative w-10 h-10 rounded-xl border-2 border-slate-700 overflow-hidden shadow-inner cursor-pointer shrink-0">
+                        <input
+                          type="color"
+                          value={editPrimaryColor.startsWith('#') && editPrimaryColor.length === 7 ? editPrimaryColor : '#2563eb'}
+                          onChange={(e) => setEditPrimaryColor(e.target.value)}
+                          className="absolute -inset-2 w-16 h-16 cursor-pointer opacity-0"
+                          title="Click to open color palette"
+                        />
+                        <div
+                          className="w-full h-full transition-colors"
+                          style={{ backgroundColor: editPrimaryColor }}
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        value={editPrimaryColor}
+                        onChange={(e) => setEditPrimaryColor(e.target.value)}
+                        placeholder="#2563eb"
+                        className="w-24 bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-white font-mono focus:outline-none focus:border-blue-500 uppercase font-semibold"
+                      />
+                    </div>
+
+                    {/* Quick Brand Preset Swatches */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {[
+                        { color: '#2563eb', label: 'Electric Blue' },
+                        { color: '#e11d48', label: 'Rose Crimson' },
+                        { color: '#059669', label: 'Emerald Green' },
+                        { color: '#6366f1', label: 'Violet Indigo' },
+                        { color: '#d97706', label: 'Amber Gold' },
+                        { color: '#ec4899', label: 'Pink Fuchsia' },
+                        { color: '#0f172a', label: 'Obsidian Slate' },
+                      ].map((item) => (
+                        <button
+                          key={item.color}
+                          type="button"
+                          onClick={() => setEditPrimaryColor(item.color)}
+                          className={`w-7 h-7 rounded-lg border transition-all cursor-pointer relative ${
+                            editPrimaryColor.toLowerCase() === item.color.toLowerCase()
+                              ? 'scale-110 border-white ring-2 ring-blue-500/50 shadow-md'
+                              : 'border-slate-700/80 hover:scale-105 opacity-80 hover:opacity-100'
+                          }`}
+                          style={{ backgroundColor: item.color }}
+                          title={`${item.label} (${item.color})`}
+                        />
+                      ))}
                     </div>
                   </div>
                 </div>

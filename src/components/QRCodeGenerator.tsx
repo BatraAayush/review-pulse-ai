@@ -16,7 +16,8 @@ import {
   ArrowRight,
   RefreshCw,
   HelpCircle,
-  Palette
+  Palette,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/components/ToastContext';
 import { Business } from '@/types';
@@ -69,6 +70,42 @@ export default function QRCodeGenerator({
       }
     } catch {
       toast.error('Network error saving Google Review link', 'Error');
+    }
+  };
+
+  const [isUpdatingBrandColor, setIsUpdatingBrandColor] = useState<boolean>(false);
+
+  // Directly update business brand theme color from QR Studio
+  const handleUpdateBrandColor = async (newColor: string, alsoSetQrColor: boolean = false) => {
+    if (!newColor || newColor === business.primaryColor || isUpdatingBrandColor) return;
+    setIsUpdatingBrandColor(true);
+
+    try {
+      const res = await fetch('/api/dashboard/business', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: business.id,
+          primaryColor: newColor,
+        }),
+      });
+
+      if (res.ok) {
+        toast.success(`Brand color updated to ${newColor.toUpperCase()}!`, 'Brand Color Saved');
+        if (onUpdateBusiness) {
+          await onUpdateBusiness({ primaryColor: newColor });
+        }
+        if (alsoSetQrColor) {
+          setQrColor(newColor);
+        }
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error || 'Failed to update brand color', 'Error');
+      }
+    } catch {
+      toast.error('Network error saving brand color', 'Error');
+    } finally {
+      setIsUpdatingBrandColor(false);
     }
   };
 
@@ -219,7 +256,7 @@ export default function QRCodeGenerator({
       return;
     }
 
-    toast.info('Opening print dialog...', 'Print Table Tent');
+    toast.info("Opening print dialog... Tip: In print settings, ensure 'Background graphics' is checked for full colors & gradients.", 'Print Table Tent');
 
     // Remove any previous temporary print iframe
     const oldIframe = document.getElementById('review-pulse-print-iframe');
@@ -240,7 +277,6 @@ export default function QRCodeGenerator({
 
     const frameDoc = iframe.contentWindow?.document;
     if (!frameDoc || !iframe.contentWindow) {
-      // Fallback if iframe content window inaccessible
       window.print();
       return;
     }
@@ -249,11 +285,11 @@ export default function QRCodeGenerator({
       ? `${business.name} - Direct Google Review QR Stand`
       : `${business.name} - Google Review QR Stand`;
 
-    const footerText = isDirectBypass
-      ? '📸 Scan with camera to review us directly on Google'
-      : '📸 Scan with camera to review us on Google';
-
-    const isDark = frameStyle === 'badge';
+    const brandColor = business.primaryColor || '#2563eb';
+    const isImage = isImageLogo(business.logoUrl);
+    const logoContent = isImage
+      ? `<img src="${business.logoUrl}" alt="Logo" class="center-img ${logoShape}" />`
+      : `<span>${business.logoUrl || getCategoryEmoji(business.category)}</span>`;
 
     frameDoc.open();
     frameDoc.write(`
@@ -264,10 +300,13 @@ export default function QRCodeGenerator({
           <style>
             @page {
               size: auto;
-              margin: 15mm;
+              margin: 12mm;
             }
             * {
               box-sizing: border-box;
+              -webkit-print-color-adjust: exact !important;
+              color-adjust: exact !important;
+              print-color-adjust: exact !important;
             }
             body {
               font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -277,69 +316,240 @@ export default function QRCodeGenerator({
               justify-content: center;
               min-height: 100vh;
               margin: 0;
-              padding: 24px;
-              background-color: ${isDark ? '#0b0f19' : '#ffffff'};
-              color: ${isDark ? '#f8fafc' : '#111827'};
+              padding: 20px;
+              background-color: #ffffff !important;
               -webkit-print-color-adjust: exact !important;
               print-color-adjust: exact !important;
             }
-            .card {
-              border: 3px solid ${isDark ? '#334155' : '#111827'};
-              background-color: ${isDark ? '#030712' : '#ffffff'};
+
+            /* --- Base Stand Card --- */
+            .outer-stand {
+              width: 320px;
               border-radius: 28px;
-              padding: 40px;
               text-align: center;
-              max-width: 420px;
-              box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+              margin: 0 auto;
             }
-            .stars { color: #f59e0b; font-size: 28px; margin-bottom: 12px; }
-            h1 { font-size: 24px; font-weight: 800; margin: 0 0 8px 0; color: ${isDark ? '#ffffff' : '#111827'}; }
-            p { font-size: 14px; color: ${isDark ? '#94a3b8' : '#4b5563'}; margin: 0 0 24px 0; }
-            .badge {
+
+            /* 1. Brand Accent Style */
+            .outer-stand.accent {
+              background: linear-gradient(135deg, ${brandColor} 0%, #0f172a 100%) !important;
+              padding: 6px;
+              box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            }
+            .outer-stand.accent .inner-stand {
+              background: #020617 !important;
+              color: #ffffff;
+              border-radius: 22px;
+              padding: 24px 20px;
+              border: 1px solid rgba(255, 255, 255, 0.12);
+            }
+            .outer-stand.accent h1 { color: #ffffff; }
+            .outer-stand.accent p.cta { color: #94a3b8; }
+            .outer-stand.accent .badge-pill {
+              background: ${brandColor}40 !important;
+              border: 1px solid rgba(255, 255, 255, 0.25);
+              color: #ffffff;
+            }
+
+            /* 2. Obsidian Dark Style */
+            .outer-stand.badge {
+              background: #0f172a !important;
+              color: #ffffff;
+              border: 2px solid #1e293b;
+              border-radius: 28px;
+              padding: 6px;
+            }
+            .outer-stand.badge .inner-stand {
+              background: #020617 !important;
+              color: #ffffff;
+              border-radius: 22px;
+              padding: 24px 20px;
+              border: 1px solid #1e293b;
+            }
+            .outer-stand.badge h1 { color: #ffffff; }
+            .outer-stand.badge p.cta { color: #94a3b8; }
+            .outer-stand.badge .badge-pill {
+              background: #0f172a !important;
+              border: 1px solid #334155;
+              color: #f1f5f9;
+            }
+
+            /* 3. Modern Card Style */
+            .outer-stand.card {
+              background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%) !important;
+              color: #0f172a;
+              border: 1px solid #cbd5e1;
+              padding: 28px 20px;
+              box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+            }
+            .outer-stand.card h1 { color: #0f172a; }
+            .outer-stand.card p.cta { color: #475569; }
+
+            /* 4. Minimalist Style */
+            .outer-stand.minimal {
+              background: #ffffff !important;
+              color: #0f172a;
+              border: 4px solid #0f172a;
+              padding: 28px 20px;
+            }
+            .outer-stand.minimal h1 { color: #0f172a; }
+            .outer-stand.minimal p.cta { color: #475569; }
+
+            /* --- Shared Stand Elements --- */
+            .stars {
+              font-size: 20px;
+              letter-spacing: 3px;
+              color: #f59e0b;
+              margin-bottom: 6px;
+            }
+            h1 {
+              font-size: 16px;
+              font-weight: 800;
+              margin: 0 0 4px 0;
+              line-height: 1.25;
+              letter-spacing: -0.01em;
+            }
+            p.cta {
+              font-size: 11px;
+              margin: 0 0 14px 0;
+              line-height: 1.4;
+            }
+
+            /* --- QR Container & Center Logo --- */
+            .qr-box {
+              position: relative;
+              background: #ffffff !important;
+              padding: 12px;
+              border-radius: 18px;
               display: inline-block;
-              background: ${isDark ? '#064e3b' : '#ecfdf5'};
-              color: ${isDark ? '#6ee7b7' : '#059669'};
-              border: 1px solid ${isDark ? '#059669' : '#a7f3d0'};
+              margin: 0 auto;
+              border: 1px solid #e2e8f0;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            }
+            #qr-img {
+              width: 195px;
+              height: 195px;
+              display: block;
+              border-radius: 8px;
+            }
+            .center-logo-box {
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              width: 40px;
+              height: 40px;
+              background: #ffffff !important;
+              border: 1px solid #cbd5e1;
+              box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 18px;
+              overflow: hidden;
+              padding: 2px;
+            }
+            .center-logo-box.circle { border-radius: 50%; }
+            .center-logo-box.square { border-radius: 10px; }
+            .center-img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
+            .center-img.circle { border-radius: 50%; }
+            .center-img.square { border-radius: 8px; }
+
+            /* --- Badges & Footers --- */
+            .badge-pill {
+              margin-top: 14px;
+              display: inline-flex;
+              align-items: center;
+              gap: 6px;
+              padding: 5px 14px;
+              border-radius: 9999px;
               font-size: 11px;
               font-weight: 700;
-              text-transform: uppercase;
-              padding: 4px 12px;
-              border-radius: 9999px;
-              margin-bottom: 16px;
-              letter-spacing: 0.05em;
+              letter-spacing: 0.02em;
             }
-            .qr-wrapper {
-              background: #ffffff;
-              padding: 16px;
-              border-radius: 20px;
+            .light-indicator {
+              margin-top: 14px;
+              text-align: center;
+            }
+            .light-indicator .dot {
               display: inline-block;
-              border: 1px solid ${isDark ? '#1e293b' : '#e5e7eb'};
+              width: 7px;
+              height: 7px;
+              border-radius: 50%;
+              background-color: ${isDirectBypass ? '#f59e0b' : '#10b981'};
+              margin-right: 6px;
+              vertical-align: middle;
             }
-            img { width: 260px; height: 260px; display: block; border-radius: 8px; }
-            .footer-tip {
-              margin-top: 24px;
-              font-size: 13px;
-              font-weight: 600;
-              color: ${isDark ? '#cbd5e1' : '#111827'};
+            .light-indicator .title {
+              font-size: 11px;
+              font-weight: 800;
               text-transform: uppercase;
               letter-spacing: 0.05em;
+              color: #1e293b;
+              margin: 0;
             }
+            .light-indicator .sub {
+              font-size: 10px;
+              color: #64748b;
+              margin: 2px 0 0 0;
+            }
+
             @media print {
-              body { padding: 0; background: ${isDark ? '#0b0f19' : '#ffffff'} !important; }
-              .card { box-shadow: none; border-width: 2px; }
+              body {
+                padding: 0;
+                background-color: #ffffff !important;
+              }
+              .outer-stand {
+                box-shadow: none !important;
+              }
             }
           </style>
         </head>
         <body>
-          <div class="card">
-            <div class="stars">★★★★★</div>
-            ${isDirectBypass ? '<div class="badge">⚡ Direct Google Review</div>' : ''}
-            <h1>${business.name}</h1>
-            <p>${activeCta}</p>
-            <div class="qr-wrapper">
-              <img id="qr-img" src="${dataUrl}" alt="Scan QR Code" />
-            </div>
-            <div class="footer-tip">${footerText}</div>
+          <div class="outer-stand ${frameStyle}">
+            ${frameStyle === 'accent' || frameStyle === 'badge' ? `
+              <div class="inner-stand">
+                <div class="stars">★★★★★</div>
+                <h1>${business.name}</h1>
+                <p class="cta">${activeCta}</p>
+                <div class="qr-box">
+                  <img id="qr-img" src="${dataUrl}" alt="Scan QR Code" />
+                  ${includeCenterEmoji ? `
+                    <div class="center-logo-box ${logoShape}">
+                      ${logoContent}
+                    </div>
+                  ` : ''}
+                </div>
+                <div class="badge-pill">
+                  ${isDirectBypass ? '⚡ Direct Google Review' : '✨ Scan to Review'}
+                </div>
+              </div>
+            ` : `
+              <div class="stars">★★★★★</div>
+              <h1>${business.name}</h1>
+              <p class="cta">${activeCta}</p>
+              <div class="qr-box">
+                <img id="qr-img" src="${dataUrl}" alt="Scan QR Code" />
+                ${includeCenterEmoji ? `
+                  <div class="center-logo-box ${logoShape}">
+                    ${logoContent}
+                  </div>
+                ` : ''}
+              </div>
+              <div class="light-indicator">
+                <p class="title">
+                  <span class="dot"></span>
+                  ${isDirectBypass ? 'Fast-Track Google Review' : 'Scan with Phone Camera'}
+                </p>
+                <p class="sub">
+                  ${isDirectBypass ? 'Opens Google write-review instantly' : 'Review on Google in seconds'}
+                </p>
+              </div>
+            `}
           </div>
         </body>
       </html>
@@ -839,57 +1049,161 @@ export default function QRCodeGenerator({
               </span>
             </div>
 
-            {/* 1. Foreground Color & Brand Picker */}
+            {/* 1. Brand Theme Color Controller */}
+            <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800/90 space-y-2.5">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                      <span>Business Brand Theme Color</span>
+                    </span>
+                    <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-950 border border-slate-800 text-slate-300">
+                      {(business.primaryColor || '#2563eb').toUpperCase()}
+                    </span>
+                    {isUpdatingBrandColor && (
+                      <span className="inline-flex items-center gap-1 text-[10px] text-blue-400 font-medium">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>Saving...</span>
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    Powers your Brand Accent standee gradient, background card glow, and customer portal theme.
+                  </p>
+                </div>
+              </div>
+
+              {/* Brand Color Pickers & Presets */}
+              <div className="flex items-center gap-2 flex-wrap pt-0.5">
+                {/* Native Color Picker for Brand Color */}
+                <label 
+                  className="relative flex items-center gap-2 px-3 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-700/80 rounded-xl cursor-pointer text-xs text-slate-200 transition-all shadow-sm group"
+                  title="Click to choose custom brand color"
+                >
+                  <div 
+                    className="w-4 h-4 rounded-full border border-white/50 shadow-inner group-hover:scale-110 transition-transform shrink-0" 
+                    style={{ backgroundColor: business.primaryColor || '#2563eb' }} 
+                  />
+                  <input
+                    type="color"
+                    value={business.primaryColor?.startsWith('#') && business.primaryColor.length === 7 ? business.primaryColor : '#2563eb'}
+                    onChange={(e) => handleUpdateBrandColor(e.target.value, false)}
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                  />
+                  <span className="text-[11px] font-semibold text-slate-300 group-hover:text-white">Change Brand Color</span>
+                </label>
+
+                {/* Quick Brand Presets */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {[
+                    { color: '#2563eb', name: 'Electric Blue' },
+                    { color: '#e11d48', name: 'Rose Crimson' },
+                    { color: '#059669', name: 'Emerald Green' },
+                    { color: '#7c3aed', name: 'Royal Purple' },
+                    { color: '#d97706', name: 'Amber Gold' },
+                    { color: '#ec4899', name: 'Pink Fuchsia' },
+                    { color: '#0f172a', name: 'Obsidian Slate' },
+                  ].map((preset) => {
+                    const isCurrentBrand = (business.primaryColor || '#2563eb').toLowerCase() === preset.color.toLowerCase();
+                    return (
+                      <button
+                        key={preset.color}
+                        type="button"
+                        onClick={() => handleUpdateBrandColor(preset.color, false)}
+                        className={`w-6 h-6 rounded-lg border transition-all cursor-pointer relative ${
+                          isCurrentBrand
+                            ? 'scale-110 border-white ring-2 ring-blue-500/50 shadow-md'
+                            : 'border-slate-700 hover:scale-105 opacity-80 hover:opacity-100'
+                        }`}
+                        style={{ backgroundColor: preset.color }}
+                        title={`Set Brand Color: ${preset.name} (${preset.color})`}
+                      >
+                        {isCurrentBrand && (
+                          <span className="absolute inset-0 flex items-center justify-center text-white text-[9px] font-extrabold">✓</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* 2. QR Foreground Color */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-300 font-medium flex items-center gap-1.5">
-                  <span>QR Foreground Color</span>
+                  <span>QR Code Foreground Color</span>
                   <span className="text-[10px] text-slate-500 font-mono">({qrColor})</span>
                 </span>
-                {business.primaryColor && (
-                  <button
-                    type="button"
-                    onClick={() => setQrColor(business.primaryColor)}
-                    className="text-[11px] text-blue-400 hover:text-blue-300 font-medium hover:underline cursor-pointer flex items-center gap-1"
-                  >
-                    <span>Use Brand Color</span>
-                    <span className="w-2.5 h-2.5 rounded-full border border-white/40" style={{ backgroundColor: business.primaryColor }} />
-                  </button>
-                )}
+                
+                {/* One-click button to match QR color to Brand color */}
+                <button
+                  type="button"
+                  onClick={() => setQrColor(business.primaryColor || '#2563eb')}
+                  className={`text-[11px] font-medium transition-all cursor-pointer flex items-center gap-1.5 px-2.5 py-1 rounded-lg border ${
+                    qrColor.toLowerCase() === (business.primaryColor || '#2563eb').toLowerCase()
+                      ? 'bg-blue-600/20 text-blue-300 border-blue-500/40 font-semibold shadow-sm'
+                      : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-700 hover:text-white'
+                  }`}
+                  title="Match QR code foreground color to your business brand color"
+                >
+                  <span className="w-2.5 h-2.5 rounded-full border border-white/50" style={{ backgroundColor: business.primaryColor || '#2563eb' }} />
+                  <span>{qrColor.toLowerCase() === (business.primaryColor || '#2563eb').toLowerCase() ? 'Using Brand Color' : 'Use Brand Color'}</span>
+                  {qrColor.toLowerCase() === (business.primaryColor || '#2563eb').toLowerCase() && (
+                    <Check className="w-3 h-3 text-blue-400" />
+                  )}
+                </button>
               </div>
 
+              {/* Deduplicated QR Palette Swatches (Fixes duplicate checkmark bug) */}
               <div className="flex items-center gap-2 flex-wrap">
-                {[
-                  { color: '#0f172a', name: 'Obsidian Slate' },
-                  { color: business.primaryColor || '#6366f1', name: 'Brand Color' },
-                  { color: '#2563eb', name: 'Electric Blue' },
-                  { color: '#059669', name: 'Emerald Green' },
-                  { color: '#7c3aed', name: 'Royal Purple' },
-                  { color: '#dc2626', name: 'Crimson Red' },
-                  { color: '#d97706', name: 'Amber Gold' },
-                ].map((item, idx) => (
-                  <button
-                    key={`${item.color}-${idx}`}
-                    type="button"
-                    onClick={() => setQrColor(item.color)}
-                    className={`w-7 h-7 rounded-full border-2 transition-transform cursor-pointer relative ${
-                      qrColor.toLowerCase() === item.color.toLowerCase()
-                        ? 'scale-110 border-white ring-2 ring-blue-500/60 shadow-lg'
-                        : 'border-transparent hover:scale-105 opacity-85 hover:opacity-100'
-                    }`}
-                    style={{ backgroundColor: item.color }}
-                    title={item.name}
-                  >
-                    {qrColor.toLowerCase() === item.color.toLowerCase() && (
-                      <span className="absolute inset-0 flex items-center justify-center text-white text-[10px] font-bold">✓</span>
-                    )}
-                  </button>
-                ))}
+                {(() => {
+                  const basePresets = [
+                    { color: '#0f172a', name: 'Obsidian Slate' },
+                    { color: '#2563eb', name: 'Electric Blue' },
+                    { color: '#059669', name: 'Emerald Green' },
+                    { color: '#7c3aed', name: 'Royal Purple' },
+                    { color: '#dc2626', name: 'Crimson Red' },
+                    { color: '#d97706', name: 'Amber Gold' },
+                    { color: '#ec4899', name: 'Pink Fuchsia' },
+                  ];
+
+                  const brandHex = (business.primaryColor || '#2563eb').toLowerCase();
+                  const list = basePresets.some((p) => p.color.toLowerCase() === brandHex)
+                    ? basePresets
+                    : [{ color: business.primaryColor!, name: 'Brand Color' }, ...basePresets];
+
+                  // Deduplicate strictly by lowercase hex
+                  const deduped = Array.from(new Map(list.map((item) => [item.color.toLowerCase(), item])).values());
+
+                  return deduped.map((item) => {
+                    const isSelected = qrColor.toLowerCase() === item.color.toLowerCase();
+                    return (
+                      <button
+                        key={item.color}
+                        type="button"
+                        onClick={() => setQrColor(item.color)}
+                        className={`w-7 h-7 rounded-full border-2 transition-transform cursor-pointer relative ${
+                          isSelected
+                            ? 'scale-110 border-white ring-2 ring-blue-500/60 shadow-lg'
+                            : 'border-transparent hover:scale-105 opacity-85 hover:opacity-100'
+                        }`}
+                        style={{ backgroundColor: item.color }}
+                        title={item.name}
+                      >
+                        {isSelected && (
+                          <span className="absolute inset-0 flex items-center justify-center text-white text-[10px] font-bold">✓</span>
+                        )}
+                      </button>
+                    );
+                  })
+                })()}
 
                 {/* Custom Color Input */}
                 <label 
                   className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 rounded-xl cursor-pointer text-xs text-slate-300 transition-colors"
-                  title="Choose any custom brand hex color"
+                  title="Choose any custom QR foreground hex color"
                 >
                   <input
                     type="color"

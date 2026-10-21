@@ -40,7 +40,7 @@ export async function PUT(req: NextRequest) {
     } = body;
 
     // Find the business owned by this user (or specific branch if multi-location)
-    let business = await prisma.business.findFirst({
+    const business = await prisma.business.findFirst({
       where: session.role === 'SUPER_ADMIN' && body.id
         ? { id: body.id }
         : body.id

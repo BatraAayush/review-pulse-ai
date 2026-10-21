@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useRef } from 'react';
-import { CheckCircle2, XCircle, AlertTriangle, Sparkles, Info, X } from 'lucide-react';
+import { CheckCircle2, XCircle, AlertTriangle, Sparkles, X } from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
 
@@ -75,7 +75,9 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       addToast({ type: 'warning', title, message, duration }),
   };
 
-  globalToastTrigger = toastMethods;
+  React.useEffect(() => {
+    globalToastTrigger = toastMethods;
+  });
 
   return (
     <ToastContext.Provider value={{ toasts, addToast, removeToast, toast: toastMethods }}>
@@ -124,7 +126,7 @@ function ToastCard({
   const [isHovered, setIsHovered] = useState(false);
   const [progress, setProgress] = useState(100);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const startTimeRef = useRef<number>(Date.now());
+  const startTimeRef = useRef<number>(0);
   const remainingTimeRef = useRef<number>(toast.duration || 4000);
 
   React.useEffect(() => {

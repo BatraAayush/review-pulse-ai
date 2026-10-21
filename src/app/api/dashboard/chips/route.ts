@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { getDefaultChipsForCategory, normalizeCategory } from '@/lib/chips';
+import {
+  getDefaultChipsForCategory,
+  normalizeCategory,
+  isMedicalCategory,
+  validateMedicalChipContent,
+} from '@/lib/chips';
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,11 +27,24 @@ export async function POST(req: NextRequest) {
         : businessId
         ? { id: businessId, ownerId: session.userId }
         : { ownerId: session.userId },
-      select: { id: true },
+      select: { id: true, category: true },
     });
 
     if (!business) {
       return NextResponse.json({ error: 'Business not found' }, { status: 404 });
+    }
+
+    // Backend validation check: reject prohibited medical claim keywords for CLINIC / HEALTHCARE
+    if (isMedicalCategory(business.category)) {
+      const validation = validateMedicalChipContent(label, phrase, category);
+      if (!validation.valid) {
+        return NextResponse.json(
+          {
+            error: `Medical compliance violation: Review chips for healthcare and clinic businesses cannot contain prohibited medical claim keywords ("${validation.prohibitedWord}"). Please use operational and patient-care feedback instead (e.g., cleanliness, wait time, staff courtesy, doctor communication).`,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     const maxSort = await prisma.smartChip.aggregate({

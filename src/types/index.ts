@@ -58,7 +58,7 @@ export interface ScanEvent {
   timestamp: string | Date;
   deviceType: 'ios' | 'android' | 'desktop';
   ratingSelected?: number | null;
-  actionTaken: 'copied_to_google' | 'private_feedback' | 'bounced' | 'scanned';
+  actionTaken: 'copied_to_google' | 'private_feedback' | 'bounced' | 'scanned' | 'BYPASS_TO_GOOGLE' | 'direct_google_redirect' | string;
   selectedChips?: string[] | string | null;
   reviewLength?: number;
 }

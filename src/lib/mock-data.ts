@@ -50,15 +50,15 @@ export const INITIAL_BUSINESSES: Business[] = [
     status: 'active',
     ownerEmail: 'dr.carter@luminaspa.com',
     welcomeMessage: 'Your comfort and healthy smile mean the world to us. Let us know how your visit went!',
-    customPromptMessage: 'Tell Google how gentle your dental care was today!',
+    customPromptMessage: 'Tell Google about your scheduling, reception, and care experience today!',
     createdAt: '2025-02-04',
     smartChips: [
-      { id: 'c7', label: '🛋️ Painless Treatment', category: 'Care', phrase: 'The procedure was completely pain-free and surprisingly gentle' },
-      { id: 'c8', label: '👩‍⚕️ Caring Dental Team', category: 'Staff', phrase: 'Dr. Carter and the entire staff explained every step and put me at complete ease' },
-      { id: 'c9', label: '🔬 Ultra Modern Tech', category: 'Facility', phrase: 'State-of-the-art clinic equipment and pristine modern facility' },
-      { id: 'c10', label: '⏱️ Zero Waiting Time', category: 'Timing', phrase: 'Seen exactly on time with zero waiting room delay' },
-      { id: 'c11', label: '✨ Sparkling Results', category: 'Results', phrase: 'My teeth have never looked or felt cleaner, ecstatic with the results' },
-      { id: 'c12', label: '💎 High-End Care', category: 'Overall', phrase: 'Best dental practice in the city, highly recommended for anxious patients!' }
+      { id: 'c7', label: 'Clean and hygienic facility', category: 'Facility', phrase: 'The clinic was spotlessly clean, modern, and very hygienic.' },
+      { id: 'c8', label: 'Minimal wait time', category: 'Punctuality', phrase: 'Minimal wait time before being seen for my appointment.' },
+      { id: 'c9', label: 'Polite and helpful reception staff', category: 'Staff', phrase: 'The reception and front desk staff were polite, friendly, and helpful.' },
+      { id: 'c10', label: 'Doctor explained procedure clearly', category: 'Communication', phrase: 'The doctor explained the procedure clearly and answered all questions.' },
+      { id: 'c11', label: 'Gentle and patient doctor', category: 'Patient Care', phrase: 'The doctor was very gentle, patient, and made me feel comfortable.' },
+      { id: 'c12', label: 'Easy appointment scheduling', category: 'Scheduling', phrase: 'Easy and hassle-free appointment scheduling.' }
     ]
   },
   {
