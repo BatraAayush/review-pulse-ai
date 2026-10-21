@@ -175,38 +175,38 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => fillQuickLogin('admin@reviewpulse.ai', 'Admin@123456')}
-                className="w-full text-left px-3 py-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/80 border border-slate-700/50 text-xs flex items-center justify-between text-slate-300 transition-colors cursor-pointer"
+                className="w-full text-left px-3 py-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/80 border border-slate-700/50 text-xs flex items-center justify-between text-slate-300 transition-colors cursor-pointer gap-2"
               >
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span className="font-semibold text-white">Super Admin</span>
-                  <span className="text-slate-400 text-[11px]">(admin@reviewpulse.ai)</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span className="font-semibold text-white whitespace-nowrap">Super Admin</span>
+                  <span className="text-slate-400 text-[11px] truncate">(admin@reviewpulse.ai)</span>
                 </div>
-                <span className="text-blue-400 font-medium text-[11px]">Select</span>
+                <span className="text-blue-400 font-medium text-[11px] shrink-0">Select</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => fillQuickLogin('owner@bellarestaurant.com', 'Owner@123456')}
-                className="w-full text-left px-3 py-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/80 border border-slate-700/50 text-xs flex items-center justify-between text-slate-300 transition-colors cursor-pointer"
+                className="w-full text-left px-3 py-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/80 border border-slate-700/50 text-xs flex items-center justify-between text-slate-300 transition-colors cursor-pointer gap-2"
               >
-                <div className="flex items-center gap-2">
-                  <Store className="w-4 h-4 text-blue-400" />
-                  <span className="font-semibold text-white">Bella Restaurant Owner</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <Store className="w-4 h-4 text-blue-400 shrink-0" />
+                  <span className="font-semibold text-white truncate">Bella Restaurant Owner</span>
                 </div>
-                <span className="text-blue-400 font-medium text-[11px]">Select</span>
+                <span className="text-blue-400 font-medium text-[11px] shrink-0">Select</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => fillQuickLogin('contact@apexdental.com', 'Dental@123456')}
-                className="w-full text-left px-3 py-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/80 border border-slate-700/50 text-xs flex items-center justify-between text-slate-300 transition-colors cursor-pointer"
+                className="w-full text-left px-3 py-2 rounded-lg bg-slate-800/40 hover:bg-slate-800/80 border border-slate-700/50 text-xs flex items-center justify-between text-slate-300 transition-colors cursor-pointer gap-2"
               >
-                <div className="flex items-center gap-2">
-                  <Store className="w-4 h-4 text-sky-400" />
-                  <span className="font-semibold text-white">Apex Dental Owner</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <Store className="w-4 h-4 text-sky-400 shrink-0" />
+                  <span className="font-semibold text-white truncate">Apex Dental Owner</span>
                 </div>
-                <span className="text-blue-400 font-medium text-[11px]">Select</span>
+                <span className="text-blue-400 font-medium text-[11px] shrink-0">Select</span>
               </button>
             </div>
           </div>

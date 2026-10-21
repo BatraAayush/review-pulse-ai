@@ -743,7 +743,7 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
 
       <div className="max-w-md w-full mx-auto space-y-6 relative z-10">
         {/* Business Branding Card */}
-        <div className="rounded-3xl p-6 bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl text-center space-y-3">
+        <div className="rounded-3xl p-5 sm:p-6 bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl text-center space-y-3">
           <div className="relative inline-block">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-400 p-0.5 shadow-lg shadow-blue-500/20 mx-auto flex items-center justify-center text-3xl overflow-hidden">
               <div className="bg-slate-950 w-full h-full rounded-[14px] flex items-center justify-center overflow-hidden">
@@ -785,7 +785,7 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
         </div>
 
         {/* 1-to-5 Star Interactive Selector */}
-        <div className="rounded-3xl p-6 bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl text-center space-y-3">
+        <div className="rounded-3xl p-5 sm:p-6 bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl text-center space-y-3">
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block">
             Rate your overall experience:
           </label>
@@ -827,12 +827,12 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
               <button
                 type="button"
                 onClick={handleDirectGooglePost}
-                className="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 p-4 font-extrabold text-white shadow-xl shadow-blue-600/30 transition-all hover:brightness-110 active:scale-[0.99] cursor-pointer border border-blue-400/30"
+                className="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 p-3.5 sm:p-4 font-extrabold text-white shadow-xl shadow-blue-600/30 transition-all hover:brightness-110 active:scale-[0.99] cursor-pointer border border-blue-400/30"
               >
                 <div className="flex items-center justify-center gap-2">
-                  <Zap className="w-5 h-5 text-amber-300 fill-amber-300 transition-transform group-hover:scale-110" />
-                  <span className="text-base tracking-wide font-extrabold">Post Directly on Google (Instant)</span>
-                  <ExternalLink className="w-4 h-4 text-blue-200 group-hover:translate-x-0.5 transition-transform" />
+                  <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-amber-300 fill-amber-300 transition-transform group-hover:scale-110 shrink-0" />
+                  <span className="text-sm sm:text-base tracking-wide font-extrabold">Post Directly on Google (Instant)</span>
+                  <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-200 group-hover:translate-x-0.5 transition-transform shrink-0" />
                 </div>
                 <p className="text-[11px] text-blue-100/90 font-medium mt-1 text-center">
                   Fastest option · No text required · Opens Google Maps immediately
@@ -981,19 +981,19 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                     type="button"
                     disabled={isSubmitting || !reviewText.trim()}
                     onClick={handlePostOnGoogle}
-                    className="w-full group relative overflow-hidden rounded-2xl bg-blue-600 hover:bg-blue-500 p-4 font-extrabold text-white shadow-xl shadow-blue-600/30 transition-all hover:brightness-110 active:scale-98 disabled:opacity-50 cursor-pointer"
+                    className="w-full group relative overflow-hidden rounded-2xl bg-blue-600 hover:bg-blue-500 p-3.5 sm:p-4 font-extrabold text-white shadow-xl shadow-blue-600/30 transition-all hover:brightness-110 active:scale-98 disabled:opacity-50 cursor-pointer"
                   >
                     <div className="flex items-center justify-center gap-2">
                       {isSubmitting ? (
                         <>
                           <Loader2 className="w-5 h-5 animate-spin" />
-                          <span className="text-base tracking-wide">Preparing Google Review...</span>
+                          <span className="text-sm sm:text-base tracking-wide">Preparing Google Review...</span>
                         </>
                       ) : (
                         <>
-                          <Copy className="w-5 h-5 transition-transform group-hover:scale-110" />
-                          <span className="text-base tracking-wide">Copy & Post on Google</span>
-                          <ExternalLink className="w-4 h-4 opacity-80" />
+                          <Copy className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:scale-110 shrink-0" />
+                          <span className="text-sm sm:text-base tracking-wide">Copy & Post on Google</span>
+                          <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 opacity-80 shrink-0" />
                         </>
                       )}
                     </div>
@@ -1009,7 +1009,7 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
           </div>
         ) : (
           /* Negative Feedback Shield (Ratings <= 3) */
-          <div className="rounded-3xl p-6 bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl space-y-4">
+          <div className="rounded-3xl p-5 sm:p-6 bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl space-y-4">
             <div className="flex items-start gap-3">
               <div className="p-2 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 shrink-0">
                 <AlertCircle className="w-5 h-5" />

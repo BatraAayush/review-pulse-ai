@@ -151,11 +151,11 @@ export default function GoogleReviewGuideModal({
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-800 bg-slate-950/50 px-5 pt-3 gap-2 overflow-x-auto">
+        <div className="flex border-b border-slate-800 bg-slate-950/50 px-5 pt-3 gap-2 overflow-x-auto no-scrollbar touch-scroll">
           <button
             type="button"
             onClick={() => setActiveTab('gbp')}
-            className={`pb-3 px-3 text-xs font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+            className={`pb-3 px-3 text-xs font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeTab === 'gbp'
                 ? 'border-blue-500 text-blue-400'
                 : 'border-transparent text-slate-400 hover:text-slate-300'
@@ -166,7 +166,7 @@ export default function GoogleReviewGuideModal({
           <button
             type="button"
             onClick={() => setActiveTab('placeid')}
-            className={`pb-3 px-3 text-xs font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+            className={`pb-3 px-3 text-xs font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeTab === 'placeid'
                 ? 'border-blue-500 text-blue-400'
                 : 'border-transparent text-slate-400 hover:text-slate-300'
@@ -177,7 +177,7 @@ export default function GoogleReviewGuideModal({
           <button
             type="button"
             onClick={() => setActiveTab('quick')}
-            className={`pb-3 px-3 text-xs font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+            className={`pb-3 px-3 text-xs font-semibold border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeTab === 'quick'
                 ? 'border-blue-500 text-blue-400'
                 : 'border-transparent text-slate-400 hover:text-slate-300'

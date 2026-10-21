@@ -185,7 +185,7 @@ export default function LandingPage() {
 
           {/* Interactive Live Hero Simulator */}
           <div className="mt-14 max-w-4xl mx-auto rounded-3xl p-1 bg-gradient-to-b from-slate-800 to-slate-900/60 shadow-2xl border border-slate-800">
-            <div className="rounded-[22px] bg-slate-950 p-6 sm:p-8">
+            <div className="rounded-[22px] bg-slate-950 p-4 sm:p-8">
               <div className="text-center mb-6">
                 <span className="text-xs font-mono uppercase tracking-wider text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20">
                   Interactive Simulator: Try It Now
@@ -197,12 +197,12 @@ export default function LandingPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                 {/* Simulator Left: Customer Controls */}
-                <div className="space-y-5 bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
+                <div className="space-y-5 bg-slate-900/60 p-4 sm:p-5 rounded-2xl border border-slate-800">
                   <div>
                     <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
                       1. Customer Selects Star Rating:
                     </label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
                           key={star}
@@ -210,7 +210,7 @@ export default function LandingPage() {
                           className="p-1 transition-transform active:scale-125"
                         >
                           <Star
-                            className={`w-7 h-7 ${
+                            className={`w-6 h-6 sm:w-7 sm:h-7 ${
                               demoRating >= star
                                 ? 'fill-blue-400 text-blue-400'
                                 : 'text-slate-700'
@@ -218,7 +218,7 @@ export default function LandingPage() {
                           />
                         </button>
                       ))}
-                      <span className="text-xs font-bold text-blue-400 ml-2">
+                      <span className="text-xs font-bold text-blue-400 ml-1 sm:ml-2 whitespace-nowrap">
                         {demoRating === 5 ? '5.0 ★ Excellent!' : `${demoRating}.0 ★`}
                       </span>
                     </div>
@@ -279,9 +279,9 @@ export default function LandingPage() {
                       &quot;{getSimulatedReviewText()}&quot;
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
-                      <span>Google Places URL:</span>
-                      <span className="font-mono text-blue-400">search.google.com/local/writereview...</span>
+                    <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 gap-2">
+                      <span className="shrink-0">Google Places URL:</span>
+                      <span className="font-mono text-blue-400 truncate max-w-[180px] sm:max-w-none">search.google.com/local/writereview...</span>
                     </div>
                   </div>
 
@@ -430,7 +430,7 @@ export default function LandingPage() {
           </div>
 
           {/* Industry Tab Content Card */}
-          <div className="max-w-3xl mx-auto rounded-3xl p-8 bg-slate-900/80 border border-slate-800 shadow-2xl backdrop-blur-xl">
+          <div className="max-w-3xl mx-auto rounded-3xl p-5 sm:p-8 bg-slate-900/80 border border-slate-800 shadow-2xl backdrop-blur-xl">
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
                 <div>
@@ -477,14 +477,14 @@ export default function LandingPage() {
       {/* Interactive ROI Calculator */}
       <section className="py-20 border-t border-slate-900 bg-slate-950/70">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto rounded-3xl p-8 sm:p-12 bg-gradient-to-br from-slate-900 via-slate-900/90 to-blue-950/40 border border-slate-800 shadow-2xl">
+          <div className="max-w-4xl mx-auto rounded-3xl p-5 sm:p-10 md:p-12 bg-gradient-to-br from-slate-900 via-slate-900/90 to-blue-950/40 border border-slate-800 shadow-2xl">
             <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
               <span className="text-xs font-semibold tracking-wider uppercase text-blue-400 flex items-center justify-center gap-1.5">
                 <BarChart3 className="w-4 h-4" />
                 <span>Interactive ROI Calculator</span>
               </span>
               <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                Calculate Your Review Growth & Revenue Impact
+                Calculate Your Review Growth &amp; Revenue Impact
               </h2>
               <p className="text-xs sm:text-sm text-slate-400">
                 See how many verified 5-star Google reviews you can generate this month and the revenue uplift from climbing Google Maps search results.
@@ -494,7 +494,7 @@ export default function LandingPage() {
             <div className="space-y-8">
               {/* Slider */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-0">
                   <label className="text-sm font-bold text-slate-200">
                     Monthly Walk-In Customers / Patients:
                   </label>
@@ -520,21 +520,21 @@ export default function LandingPage() {
 
               {/* Calculated Outputs */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-                <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 text-center space-y-1">
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/80 border border-slate-800 text-center space-y-1">
                   <p className="text-xs font-medium text-slate-400">Estimated New Reviews / Mo</p>
-                  <p className="text-3xl font-black text-blue-400 font-mono">+{estimatedReviews}</p>
+                  <p className="text-2xl sm:text-3xl font-black text-blue-400 font-mono">+{estimatedReviews}</p>
                   <p className="text-[11px] text-emerald-400">~12% scan-to-post rate</p>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 text-center space-y-1">
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/80 border border-slate-800 text-center space-y-1">
                   <p className="text-xs font-medium text-slate-400">Google Maps Rank Jump</p>
-                  <p className="text-3xl font-black text-white font-mono">Top #3</p>
+                  <p className="text-2xl sm:text-3xl font-black text-white font-mono">Top #3</p>
                   <p className="text-[11px] text-blue-400">Local 3-Pack placement</p>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 text-center space-y-1">
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/80 border border-slate-800 text-center space-y-1">
                   <p className="text-xs font-medium text-slate-400">Projected Revenue Uplift</p>
-                  <p className="text-3xl font-black text-emerald-400 font-mono">+₹{estimatedRevenue.toLocaleString('en-IN')}</p>
+                  <p className="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">+₹{estimatedRevenue.toLocaleString('en-IN')}</p>
                   <p className="text-[11px] text-slate-400">Harvard Business School study</p>
                 </div>
               </div>
@@ -584,7 +584,7 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Starter Plan */}
-            <div className="rounded-3xl p-8 bg-slate-900/60 border border-slate-800 space-y-6 flex flex-col justify-between hover:border-slate-700 transition-all">
+            <div className="rounded-3xl p-5 sm:p-8 bg-slate-900/60 border border-slate-800 space-y-6 flex flex-col justify-between hover:border-slate-700 transition-all">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Starter Solo</span>
@@ -657,7 +657,7 @@ export default function LandingPage() {
             </div>
 
             {/* Pro Plan - Highlighted */}
-            <div className="rounded-3xl p-8 bg-gradient-to-b from-slate-900 via-slate-900 to-blue-950/20 border-2 border-blue-500 shadow-2xl shadow-blue-500/10 space-y-6 flex flex-col justify-between relative">
+            <div className="rounded-3xl p-5 sm:p-8 bg-gradient-to-b from-slate-900 via-slate-900 to-blue-950/20 border-2 border-blue-500 shadow-2xl shadow-blue-500/10 space-y-6 flex flex-col justify-between relative">
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-gradient-to-r from-blue-600 to-sky-500 text-white text-[10px] font-black uppercase tracking-wider shadow-lg">
                 Most Popular Choice
               </div>
@@ -734,7 +734,7 @@ export default function LandingPage() {
             </div>
 
             {/* Enterprise Plan */}
-            <div className="rounded-3xl p-8 bg-slate-900/60 border border-slate-800 space-y-6 flex flex-col justify-between hover:border-slate-700 transition-all">
+            <div className="rounded-3xl p-5 sm:p-8 bg-slate-900/60 border border-slate-800 space-y-6 flex flex-col justify-between hover:border-slate-700 transition-all">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-blue-400">Enterprise</span>
@@ -924,12 +924,12 @@ export default function LandingPage() {
       {/* Bottom CTA Banner */}
       <section className="py-20 border-t border-slate-900 bg-slate-950/80">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl p-10 sm:p-14 bg-gradient-to-r from-blue-950/80 via-slate-900 to-slate-950 border border-blue-500/30 text-white shadow-2xl relative overflow-hidden text-center space-y-6">
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
+          <div className="rounded-3xl p-6 sm:p-12 md:p-14 bg-gradient-to-r from-blue-950/80 via-slate-900 to-slate-950 border border-blue-500/30 text-white shadow-2xl relative overflow-hidden text-center space-y-6">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
               Ready to Dominate Your Local Google Search Results?
             </h2>
-            <p className="text-sm sm:text-base font-medium max-w-xl mx-auto text-slate-300">
-              Join over 1,200 physical storefronts getting dozens of fresh 5-star reviews every week. Set up in under 3 minutes.
+            <p className="text-xs sm:text-sm md:text-base font-medium max-w-xl mx-auto text-slate-300">
+              Join growing local restaurants, cafes, clinics, and businesses getting fresh 5-star reviews every week. Set up in under 3 minutes.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
               <Link

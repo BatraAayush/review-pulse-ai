@@ -176,29 +176,72 @@ export default function Navbar() {
                 </div>
               </div>
             ) : (
-              /* When not logged in: single Login button */
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-blue-600 to-sky-600 text-white hover:brightness-110 shadow-lg shadow-blue-500/20 transition-all cursor-pointer"
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                <span>Login</span>
-              </Link>
+              /* When not logged in: guest navigation */
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/#features"
+                  className="text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+                >
+                  Features
+                </Link>
+                <Link
+                  href="/#how-it-works"
+                  className="text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+                >
+                  How It Works
+                </Link>
+                <Link
+                  href="/#pricing"
+                  className="text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+                >
+                  Pricing
+                </Link>
+                <Link
+                  href="/login"
+                  className="text-xs font-semibold text-slate-300 hover:text-white px-3 py-1.5 rounded-lg hover:bg-slate-900 transition-colors"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/register?plan=pro"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-gradient-to-r from-blue-600 to-sky-600 text-white hover:brightness-110 shadow-lg shadow-blue-500/20 transition-all cursor-pointer"
+                >
+                  <span>Start Free</span>
+                </Link>
+              </div>
             )}
           </div>
 
           {/* Mobile menu button */}
           <div className="flex md:hidden items-center gap-2">
             {!user ? (
-              <Link
-                href="/login"
-                className="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white"
-              >
-                Login
-              </Link>
+              <div className="flex items-center gap-1.5">
+                <Link
+                  href="/login"
+                  className="px-2.5 py-1.5 text-xs font-bold rounded-lg bg-slate-900 border border-slate-800 text-slate-200 hover:text-white"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/register?plan=pro"
+                  className="px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                >
+                  Start Free
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  aria-label="Toggle navigation menu"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                >
+                  {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                </button>
+              </div>
             ) : (
               <button
+                type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label="Toggle user menu"
                 className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -209,60 +252,107 @@ export default function Navbar() {
       </div>
 
       {/* Mobile dropdown */}
-      {mobileMenuOpen && user && (
-        <div className="md:hidden border-b border-slate-800 bg-slate-950/95 px-4 pt-2 pb-4 space-y-2">
-          {user.role === 'SUPER_ADMIN' ? (
-            <Link
-              href="/admin"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-lg text-sm text-blue-400 font-bold hover:bg-slate-800"
-            >
-              Super Admin Portal
-            </Link>
-          ) : (
+      {mobileMenuOpen && (
+        <div className="md:hidden border-b border-slate-800 bg-slate-950/95 backdrop-blur-xl px-4 pt-3 pb-5 space-y-2 animate-in slide-in-from-top-2 duration-150">
+          {user ? (
             <>
-              {currentBusiness && (
+              {user.role === 'SUPER_ADMIN' ? (
                 <Link
-                  href={`/r/${currentBusiness.slug}`}
-                  target="_blank"
+                  href="/admin"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block px-3 py-2 rounded-lg text-sm text-slate-300 hover:bg-slate-800"
+                  className="block px-3 py-2.5 rounded-xl text-sm text-blue-400 font-bold hover:bg-slate-900"
                 >
-                  View Scan Page
+                  Super Admin Portal
                 </Link>
+              ) : (
+                <>
+                  {currentBusiness && (
+                    <Link
+                      href={`/r/${currentBusiness.slug}`}
+                      target="_blank"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block px-3 py-2.5 rounded-xl text-sm text-slate-300 hover:bg-slate-900 flex items-center justify-between"
+                    >
+                      <span>View Customer Scan Page</span>
+                      <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
+                    </Link>
+                  )}
+                  <Link
+                    href="/dashboard?tab=overview"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-3 py-2.5 rounded-xl text-sm text-blue-400 font-bold hover:bg-slate-900"
+                  >
+                    Admin Dashboard
+                  </Link>
+                </>
               )}
-              <Link
-                href="/dashboard?tab=overview"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-lg text-sm text-blue-400 font-bold hover:bg-slate-800"
-              >
-                Admin Dashboard
-              </Link>
-            </>
-          )}
 
-          <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
-            <Link
-              href="/dashboard?tab=settings"
-              onClick={() => setMobileMenuOpen(false)}
-              className="text-xs text-slate-300 hover:text-white flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-900 transition-colors"
-            >
-              <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-                <UserIcon className="w-3.5 h-3.5" />
+              <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
+                <Link
+                  href="/dashboard?tab=settings"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-xs text-slate-300 hover:text-white flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-900 transition-colors"
+                >
+                  <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                    <UserIcon className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-white">{user.name}</p>
+                    <p className="text-[11px] text-blue-400">Account &amp; Settings →</p>
+                  </div>
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleOpenLogoutModal}
+                  className="text-xs text-rose-400 flex items-center gap-1 font-semibold p-1.5 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Log out</span>
+                </button>
               </div>
-              <div>
-                <p className="font-semibold text-white">{user.name}</p>
-                <p className="text-[11px] text-blue-400">Account & Business Settings →</p>
+            </>
+          ) : (
+            <div className="space-y-1 pt-1">
+              <Link
+                href="/#features"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-xl text-sm text-slate-300 hover:text-white hover:bg-slate-900 font-medium"
+              >
+                Features
+              </Link>
+              <Link
+                href="/#how-it-works"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-xl text-sm text-slate-300 hover:text-white hover:bg-slate-900 font-medium"
+              >
+                How It Works
+              </Link>
+              <Link
+                href="/#pricing"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2 rounded-xl text-sm text-slate-300 hover:text-white hover:bg-slate-900 font-medium"
+              >
+                Pricing Plans
+              </Link>
+              <div className="pt-3 border-t border-slate-800 grid grid-cols-2 gap-2">
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-slate-200 hover:text-white"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Login</span>
+                </Link>
+                <Link
+                  href="/register?plan=pro"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-600/20"
+                >
+                  <span>Start Free</span>
+                </Link>
               </div>
-            </Link>
-            <button
-              onClick={handleOpenLogoutModal}
-              className="text-xs text-rose-400 flex items-center gap-1 font-semibold p-1.5 hover:bg-rose-500/10 rounded-lg transition-colors cursor-pointer"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span>Log out</span>
-            </button>
-          </div>
+            </div>
+          )}
         </div>
       )}
     </header>

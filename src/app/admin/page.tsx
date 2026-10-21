@@ -1120,7 +1120,7 @@ export default function SuperAdminPage() {
           />
 
           <div 
-            className="max-w-md w-full rounded-2xl bg-slate-900 border border-slate-800 p-6 shadow-2xl space-y-4 relative z-10 my-auto"
+            className="max-w-md w-full max-h-[90vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-800 p-5 sm:p-6 shadow-2xl space-y-4 relative z-10 my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">

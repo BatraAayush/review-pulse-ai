@@ -125,12 +125,12 @@ export default function ConfirmModal({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-2">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 sm:gap-3 pt-2">
           <button
             type="button"
             disabled={isLoading}
             onClick={onClose}
-            className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-300 bg-slate-800/80 hover:bg-slate-800 hover:text-white border border-slate-700/80 transition-all cursor-pointer disabled:opacity-50"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-300 bg-slate-800/80 hover:bg-slate-800 hover:text-white border border-slate-700/80 transition-all cursor-pointer disabled:opacity-50 text-center justify-center"
           >
             {cancelText}
           </button>
@@ -139,7 +139,7 @@ export default function ConfirmModal({
             type="button"
             disabled={isLoading}
             onClick={onConfirm}
-            className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95 ${variantStyles.button}`}
+            className={`w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 active:scale-95 text-center ${variantStyles.button}`}
           >
             {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             <span>{confirmText}</span>

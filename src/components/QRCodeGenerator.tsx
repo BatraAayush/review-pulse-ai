@@ -575,13 +575,13 @@ export default function QRCodeGenerator({
   };
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur-xl shadow-xl">
-      <div className="flex flex-col lg:flex-row items-center gap-8">
+    <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:p-6 backdrop-blur-xl shadow-xl">
+      <div className="flex flex-col lg:flex-row items-center gap-6 sm:gap-8">
         {/* Left: Interactive Printable QR Stand Preview */}
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center w-full lg:w-auto">
           <div
             ref={printRef}
-            className={`w-[280px] sm:w-[320px] rounded-3xl p-6 transition-all duration-300 ${
+            className={`w-full max-w-[280px] sm:max-w-[320px] mx-auto rounded-3xl p-4 sm:p-6 transition-all duration-300 ${
               frameStyle === 'card'
                 ? 'bg-gradient-to-b from-white to-slate-100 text-slate-900 shadow-2xl border border-slate-200'
                 : frameStyle === 'badge'
@@ -756,9 +756,9 @@ export default function QRCodeGenerator({
             )}
           </div>
 
-          <div className="mt-4 flex flex-col items-center gap-2">
+          <div className="mt-4 flex flex-col items-center gap-2 w-full max-w-[320px]">
             <span className="text-xs text-slate-400 font-medium">Stand Frame Style</span>
-            <div className="inline-flex rounded-xl bg-slate-800/90 p-1 border border-slate-700 flex-wrap justify-center gap-1">
+            <div className="inline-flex rounded-xl bg-slate-800/90 p-1 border border-slate-700 flex-wrap justify-center gap-1 w-full">
               <button
                 type="button"
                 onClick={() => setFrameStyle('card')}

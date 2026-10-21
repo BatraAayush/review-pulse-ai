@@ -647,7 +647,7 @@ function DashboardContent() {
           </div>
 
           {/* Quick Actions & Live Link */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full lg:w-auto">
             {/* Multi-Location Switcher Dropdown */}
             <div className="relative shrink-0" ref={locationDropdownRef}>
               <button
@@ -660,7 +660,7 @@ function DashboardContent() {
                 className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-white text-xs font-semibold transition-all shadow-sm group cursor-pointer"
               >
                 <Building2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                <span className="max-w-[140px] sm:max-w-[180px] md:max-w-[210px] truncate">{business.name}</span>
+                <span className="max-w-[130px] sm:max-w-[180px] md:max-w-[210px] truncate">{business.name}</span>
                 <span className="px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold border border-slate-700 shrink-0">
                   {currentLocCount}/{maxLocations}
                 </span>
@@ -668,7 +668,7 @@ function DashboardContent() {
               </button>
 
               {locationDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-slate-900 border border-slate-700/90 shadow-2xl z-50 overflow-hidden divide-y divide-slate-800 animate-in fade-in zoom-in-95 duration-100">
+                <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-slate-900 border border-slate-700/90 shadow-2xl z-50 overflow-hidden divide-y divide-slate-800 animate-in fade-in zoom-in-95 duration-100">
                   <div className="p-3 bg-slate-950/70 flex items-center justify-between">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                       Locations ({currentLocCount})
@@ -947,7 +947,7 @@ function DashboardContent() {
         })()}
 
         {/* Navigation Tabs */}
-        <div className="flex border-b border-slate-800 space-x-2 overflow-x-auto pb-1">
+        <div className="flex border-b border-slate-800 space-x-2 overflow-x-auto pb-2 no-scrollbar touch-scroll sm:space-x-3">
           {[
             { id: 'overview', label: 'Analytics Overview', icon: TrendingUp },
             { id: 'qr', label: 'QR Kit & Printables', icon: QrCode },
@@ -965,7 +965,7 @@ function DashboardContent() {
                   setActiveTab(tab.id as typeof activeTab);
                   router.replace(`/dashboard?tab=${tab.id}`, { scroll: false });
                 }}
-                className={`flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap cursor-pointer ${isActive
+                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap cursor-pointer shrink-0 ${isActive
                     ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold'
                     : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
                   }`}
@@ -2769,7 +2769,7 @@ function DashboardContent() {
           />
 
           <div
-            className="w-full max-w-lg rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 sm:p-7 space-y-6 relative z-10 overflow-hidden my-auto"
+            className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-5 sm:p-7 space-y-6 relative z-10 my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Background glow */}
@@ -3020,7 +3020,7 @@ function DashboardContent() {
           />
 
           <div
-            className="w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 sm:p-7 space-y-6 relative z-10 overflow-hidden my-auto"
+            className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-5 sm:p-7 space-y-6 relative z-10 my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">

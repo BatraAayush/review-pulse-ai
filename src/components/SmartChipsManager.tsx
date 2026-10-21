@@ -578,7 +578,7 @@ export default function SmartChipsManager({
           />
 
           <div
-            className="w-full max-w-4xl rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 sm:p-8 space-y-6 relative z-10 overflow-hidden my-auto max-h-[90vh] flex flex-col"
+            className="w-full max-w-4xl rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-4 sm:p-7 space-y-5 relative z-10 overflow-hidden my-auto max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -684,7 +684,7 @@ export default function SmartChipsManager({
                 </div>
 
                 {/* Apply Button */}
-                <div className="pt-3 border-t border-slate-800 flex items-center justify-between gap-3">
+                <div className="pt-3 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <span className="text-[11px] text-slate-400">
                     Applying this pack replaces your current prompts with these industry defaults.
                   </span>
@@ -692,7 +692,7 @@ export default function SmartChipsManager({
                     type="button"
                     disabled={isApplyingTemplate}
                     onClick={() => handleApplyTemplatePack(previewTemplateCategory)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition-all cursor-pointer disabled:opacity-50 shrink-0"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition-all cursor-pointer disabled:opacity-50 shrink-0"
                   >
                     {isApplyingTemplate ? (
                       <>
