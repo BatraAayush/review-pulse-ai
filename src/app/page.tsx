@@ -123,7 +123,7 @@ export default function LandingPage() {
               <Sparkles className="w-3.5 h-3.5 fill-current" />
               <span>AI-Powered Smart QR Google Review SaaS</span>
               <span className="text-slate-500">•</span>
-              <span className="text-slate-300">Used by 1,200+ Businesses</span>
+              <span className="text-slate-300">Built for Local Businesses &amp; Cafes</span>
             </div>
 
             {/* Headline */}
@@ -806,10 +806,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
             <span className="text-xs font-semibold tracking-wider uppercase text-blue-400">
-              Verified Case Studies
+              Customer Success Stories
             </span>
             <h2 className="text-3xl font-black text-white tracking-tight">
-              Trusted by 1,200+ Local Storefronts
+              How Local Businesses Boost Their Reputation
             </h2>
           </div>
 

@@ -15,7 +15,7 @@
 
 ## 📌 Problem & Solution
 
-* **The Problem:** Over 90% of satisfied customers in local brick-and-mortar storefronts (restaurants, clinics, salons, fitness studios, automotive shops) leave without submitting a Google review due to mobile typing friction, difficult search navigation, or lack of inspiration. Conversely, dissatisfied customers actively seek out public forums to leave damaging 1-star reviews.
+* **The Problem:** Over 90% of satisfied customers in local walk-in businesses (restaurants, clinics, salons, gyms, automotive shops) leave without submitting a Google review due to mobile typing friction, difficult search navigation, or lack of inspiration. Conversely, dissatisfied customers actively seek out public forums to leave damaging 1-star reviews.
 * **The Solution:** ReviewPulse AI creates a seamless physical-to-digital bridge via custom table standee QR codes and NFC tap plates. Happy patrons (4–5★) build keyword-rich, authentic reviews in under 15 seconds through interactive Smart Chips and Google Gemini AI persona synthesis, then post with one click to Google Maps. Dissatisfied patrons (1–3★) are automatically routed into a private resolution inbox.
 
 ---
