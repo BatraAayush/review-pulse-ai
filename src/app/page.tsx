@@ -47,7 +47,7 @@ export default function LandingPage() {
 
   // Computed ROI
   const estimatedReviews = Math.round(monthlyCustomers * 0.12);
-  const estimatedRevenue = Math.round(estimatedReviews * 38);
+  const estimatedRevenue = Math.round(estimatedReviews * 350);
 
   const toggleDemoChip = (chip: string) => {
     if (demoChips.includes(chip)) {
@@ -534,7 +534,7 @@ export default function LandingPage() {
 
                 <div className="p-5 rounded-2xl bg-slate-950/80 border border-slate-800 text-center space-y-1">
                   <p className="text-xs font-medium text-slate-400">Projected Revenue Uplift</p>
-                  <p className="text-3xl font-black text-emerald-400 font-mono">+${estimatedRevenue.toLocaleString()}</p>
+                  <p className="text-3xl font-black text-emerald-400 font-mono">+₹{estimatedRevenue.toLocaleString('en-IN')}</p>
                   <p className="text-[11px] text-slate-400">Harvard Business School study</p>
                 </div>
               </div>
