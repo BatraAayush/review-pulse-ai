@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import CustomSelect from '@/components/CustomSelect';
 import {
   ShieldCheck,
   Building2,
@@ -90,6 +91,32 @@ interface AdminOverviewData {
   businesses: BusinessTenant[];
   recentScans: Array<ScanLogItem>;
 }
+
+const ADMIN_CATEGORY_FILTER_OPTIONS = [
+  { value: 'all', label: 'All Categories' },
+  { value: 'restaurant', label: 'Restaurants & Dining', icon: '🍽️' },
+  { value: 'clinic', label: 'Clinics & Medical', icon: '🦷' },
+  { value: 'salon', label: 'Salons & Spas', icon: '✂️' },
+  { value: 'retail', label: 'Retail Stores', icon: '🛍️' },
+  { value: 'automotive', label: 'Automotive', icon: '🏎️' },
+  { value: 'fitness', label: 'Fitness & Gym', icon: '🏋️' },
+];
+
+const ADMIN_PAGE_SIZE_OPTIONS = [
+  { value: '5', label: '5' },
+  { value: '10', label: '10' },
+  { value: '20', label: '20' },
+  { value: '50', label: '50' },
+];
+
+const ADMIN_PROVISION_CATEGORY_OPTIONS = [
+  { value: 'restaurant', label: 'Dining / Restaurant / Cafe', icon: '🍽️' },
+  { value: 'clinic', label: 'Medical / Dental Clinic', icon: '🦷' },
+  { value: 'salon', label: 'Salon / Spa / Barbershop', icon: '✂️' },
+  { value: 'retail', label: 'Boutique / Retail Store', icon: '🛍️' },
+  { value: 'automotive', label: 'Automotive / Auto Repair', icon: '🏎️' },
+  { value: 'fitness', label: 'Gym / Fitness Studio', icon: '🏋️' },
+];
 
 export default function SuperAdminPage() {
   const router = useRouter();
@@ -585,20 +612,15 @@ export default function SuperAdminPage() {
             />
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Filter className="w-4 h-4 text-slate-400" />
-            <select
+          <div className="flex items-center gap-2 w-full sm:w-auto min-w-[180px]">
+            <Filter className="w-4 h-4 text-slate-400 shrink-0" />
+            <CustomSelect
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="bg-slate-950/80 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 w-full sm:w-auto"
-            >
-              <option value="all">All Categories</option>
-              <option value="restaurant">Restaurants & Dining</option>
-              <option value="clinic">Clinics & Medical</option>
-              <option value="salon">Salons & Spas</option>
-              <option value="retail">Retail Stores</option>
-              <option value="automotive">Automotive</option>
-            </select>
+              onChange={(val) => setCategoryFilter(val)}
+              options={ADMIN_CATEGORY_FILTER_OPTIONS}
+              className="w-full sm:w-auto min-w-[180px]"
+              size="sm"
+            />
           </div>
         </div>
 
@@ -772,20 +794,17 @@ export default function SuperAdminPage() {
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-slate-400 text-xs">Rows per page:</span>
-                <select
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
+                <span className="text-slate-400 text-xs shrink-0">Rows per page:</span>
+                <CustomSelect
+                  value={String(pageSize)}
+                  onChange={(val) => {
+                    setPageSize(Number(val));
                     setCurrentPage(1);
                   }}
-                  className="bg-slate-900 border border-slate-700/80 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none focus:border-blue-500 cursor-pointer"
-                >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
+                  options={ADMIN_PAGE_SIZE_OPTIONS}
+                  className="w-20"
+                  size="sm"
+                />
               </div>
             </div>
 
@@ -1200,18 +1219,11 @@ export default function SuperAdminPage() {
                 <label className="block text-[11px] font-semibold text-slate-300 uppercase mb-1">
                   Category
                 </label>
-                <select
+                <CustomSelect
                   value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
-                >
-                  <option value="restaurant">Restaurant / Dining</option>
-                  <option value="clinic">Clinic / Medical</option>
-                  <option value="salon">Salon / Spa</option>
-                  <option value="retail">Retail Boutique</option>
-                  <option value="automotive">Automotive</option>
-                  <option value="fitness">Fitness / Gym</option>
-                </select>
+                  onChange={(val) => setNewCategory(val)}
+                  options={ADMIN_PROVISION_CATEGORY_OPTIONS}
+                />
               </div>
 
               <div className="pt-2 flex justify-end gap-2">

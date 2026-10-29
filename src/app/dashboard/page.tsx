@@ -58,6 +58,7 @@ import {
 import GoogleReviewGuideModal from '@/components/GoogleReviewGuideModal';
 import ConfirmModal from '@/components/ConfirmModal';
 import RazorpayPaymentModal from '@/components/RazorpayPaymentModal';
+import CustomSelect from '@/components/CustomSelect';
 import { useToast } from '@/components/ToastContext';
 import { Business, PrivateFeedback, ScanEvent, PaymentTransactionItem } from '@/types';
 import { isImageLogo, getCategoryEmoji } from '@/lib/logo';
@@ -94,6 +95,15 @@ interface DashboardStatsData {
   recentScans: ScanEvent[];
   feedbacks: PrivateFeedback[];
 }
+
+const DASHBOARD_CATEGORY_OPTIONS = [
+  { value: 'restaurant', label: 'Dining / Restaurant / Cafe', icon: '🍽️' },
+  { value: 'clinic', label: 'Medical / Dental Clinic', icon: '🦷' },
+  { value: 'salon', label: 'Salon / Spa / Barbershop', icon: '✂️' },
+  { value: 'retail', label: 'Boutique / Retail Store', icon: '🛍️' },
+  { value: 'automotive', label: 'Automotive / Auto Repair', icon: '🏎️' },
+  { value: 'fitness', label: 'Gym / Fitness Studio', icon: '🏋️' },
+];
 
 function DashboardContent() {
   const router = useRouter();
@@ -2208,18 +2218,11 @@ function DashboardContent() {
                     <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                       Business Category
                     </label>
-                    <select
+                    <CustomSelect
                       value={editCategory}
-                      onChange={(e) => setEditCategory(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 cursor-pointer"
-                    >
-                      <option value="restaurant">Dining / Restaurant / Cafe</option>
-                      <option value="clinic">Medical / Dental Clinic</option>
-                      <option value="salon">Salon / Spa / Barbershop</option>
-                      <option value="retail">Boutique / Retail Store</option>
-                      <option value="automotive">Automotive / Auto Repair</option>
-                      <option value="fitness">Gym / Fitness Studio</option>
-                    </select>
+                      onChange={(val) => setEditCategory(val)}
+                      options={DASHBOARD_CATEGORY_OPTIONS}
+                    />
                     <label className="flex items-center gap-2 mt-2 cursor-pointer text-[11px] text-slate-400 hover:text-slate-300 select-none">
                       <input
                         type="checkbox"
@@ -2999,18 +3002,11 @@ function DashboardContent() {
                   <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                     Industry Category
                   </label>
-                  <select
+                  <CustomSelect
                     value={newLocCategory}
-                    onChange={(e) => setNewLocCategory(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="fitness">Fitness & Gym</option>
-                    <option value="clinic">Healthcare & Dental Clinic</option>
-                    <option value="salon">Salon & Spa</option>
-                    <option value="restaurant">Restaurant & Cafe</option>
-                    <option value="automotive">Automotive & Garage</option>
-                    <option value="retail">Retail & Shopping</option>
-                  </select>
+                    onChange={(val) => setNewLocCategory(val)}
+                    options={DASHBOARD_CATEGORY_OPTIONS}
+                  />
                   <p className="text-[10px] text-slate-500 mt-1">
                     Auto-seeds industry smart review chips
                   </p>

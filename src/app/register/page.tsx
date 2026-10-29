@@ -24,9 +24,19 @@ import {
   EyeOff
 } from 'lucide-react';
 import AuthHeader from '@/components/AuthHeader';
+import CustomSelect from '@/components/CustomSelect';
 import GoogleReviewGuideModal from '@/components/GoogleReviewGuideModal';
 import ConfirmModal from '@/components/ConfirmModal';
 import { useToast } from '@/components/ToastContext';
+
+const CATEGORY_OPTIONS = [
+  { value: 'restaurant', label: 'Dining / Restaurant / Cafe', icon: '🍽️' },
+  { value: 'clinic', label: 'Medical / Dental Clinic', icon: '🦷' },
+  { value: 'salon', label: 'Salon / Spa / Barbershop', icon: '✂️' },
+  { value: 'retail', label: 'Boutique / Retail Store', icon: '🛍️' },
+  { value: 'automotive', label: 'Automotive / Auto Repair', icon: '🏎️' },
+  { value: 'fitness', label: 'Gym / Fitness Studio', icon: '🏋️' },
+];
 
 type PlanTier = 'starter' | 'pro' | 'enterprise';
 
@@ -373,18 +383,11 @@ function RegisterForm() {
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                   Business Category
                 </label>
-                <select
+                <CustomSelect
                   value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full bg-slate-950/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                >
-                  <option value="restaurant">Dining / Restaurant / Cafe</option>
-                  <option value="clinic">Medical / Dental Clinic</option>
-                  <option value="salon">Salon / Spa / Barbershop</option>
-                  <option value="retail">Boutique / Retail Store</option>
-                  <option value="automotive">Automotive / Auto Repair</option>
-                  <option value="fitness">Gym / Fitness Studio</option>
-                </select>
+                  onChange={(val) => setCategory(val)}
+                  options={CATEGORY_OPTIONS}
+                />
               </div>
             </div>
 
