@@ -101,6 +101,34 @@ export async function GET(req: NextRequest) {
       getTransactionsForBusiness(business.id, 10),
     ]);
 
+    // Auto-reconcile subscription status from captured payments
+    const latestCaptured = transactions.find((t: any) => t.status === 'captured');
+    if (latestCaptured && (business as any).subscriptionStatus !== 'active') {
+      try {
+        const cycle = latestCaptured.billingCycle === 'annual' ? 'annual' : 'monthly';
+        const daysToAdd = cycle === 'annual' ? 365 : 30;
+        const renewsAt = new Date(new Date(latestCaptured.createdAt).getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+
+        await prisma.business.update({
+          where: { id: business.id },
+          data: {
+            subscriptionStatus: 'active',
+            status: 'active',
+            subscriptionCycle: cycle,
+            subscriptionRenewsAt: renewsAt,
+            activePlan: latestCaptured.plan || (business as any).activePlan || 'pro',
+          },
+        });
+
+        (business as any).subscriptionStatus = 'active';
+        (business as any).subscriptionCycle = cycle;
+        (business as any).subscriptionRenewsAt = renewsAt;
+        (business as any).activePlan = latestCaptured.plan || (business as any).activePlan || 'pro';
+      } catch (err) {
+        console.warn('Auto-reconcile subscription error:', err);
+      }
+    }
+
     // Calculate device breakdown
     const iosScans = scans.filter((s) => s.deviceType === 'ios').length;
     const androidScans = scans.filter((s) => s.deviceType === 'android').length;

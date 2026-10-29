@@ -34,7 +34,7 @@ model Business {
   primaryColor        String            @default("#6366f1")
   activePlan          String            @default("pro") // starter, pro, enterprise
   status              String            @default("active") // active, paused
-  subscriptionStatus  String            @default("trial") // trial, active, past_due, canceled
+  subscriptionStatus  String            @default("pending_payment") // active, pending_payment, unpaid, canceled
   trialEndsAt         DateTime?
   subscriptionCycle   String?           @default("monthly") // monthly, annual
   subscriptionRenewsAt DateTime?

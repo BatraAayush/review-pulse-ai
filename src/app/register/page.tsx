@@ -19,8 +19,11 @@ import {
   Check,
   Search,
   AlertTriangle,
-  ExternalLink
+  ExternalLink,
+  Eye,
+  EyeOff
 } from 'lucide-react';
+import AuthHeader from '@/components/AuthHeader';
 import GoogleReviewGuideModal from '@/components/GoogleReviewGuideModal';
 import ConfirmModal from '@/components/ConfirmModal';
 import { useToast } from '@/components/ToastContext';
@@ -52,11 +55,12 @@ function RegisterForm() {
   const { toast } = useToast();
 
   const planParam = searchParams.get('plan') as PlanTier;
-  const initialPlan: PlanTier = ['starter', 'pro', 'enterprise'].includes(planParam) ? planParam : 'pro';
+  const initialPlan: PlanTier = ['starter', 'pro', 'enterprise'].includes(planParam) ? planParam : 'starter';
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [businessName, setBusinessName] = useState('');
   const [category, setCategory] = useState('restaurant');
   const [selectedPlan, setSelectedPlan] = useState<PlanTier>(initialPlan);
@@ -136,32 +140,32 @@ function RegisterForm() {
   const currentPlanInfo = PLAN_DETAILS[selectedPlan];
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background Glow */}
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between relative overflow-hidden">
+      {/* Background Ambient Glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-blue-600/10 blur-[130px] rounded-full pointer-events-none" />
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-xl relative z-10 text-center px-4">
-        <Link href="/" className="inline-flex items-center gap-2 mb-4 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 group-hover:scale-105 transition-transform">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <span className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-400">
-            ReviewPulse <span className="text-blue-400">AI</span>
-          </span>
-        </Link>
-        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-          Create Business Account
-        </h1>
-        <p className="mt-2 text-xs sm:text-sm text-slate-400">
-          Step 1: Set up account details • Step 2: Instant Razorpay & UPI Payment Activation
-        </p>
+      {/* Dedicated Minimalist Auth Header */}
+      <AuthHeader type="register" />
 
-        {/* Feature Pill */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-400 text-xs font-semibold mt-3">
-          <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-          <span>Integrated Indian Payment Gateway • UPI & Cards Supported</span>
+      <main className="flex-1 flex flex-col justify-center py-10 sm:py-14 sm:px-6 lg:px-8 relative z-10">
+        <div className="sm:mx-auto sm:w-full sm:max-w-xl text-center px-4">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-400 text-xs font-semibold mb-3">
+            <Sparkles className="w-3.5 h-3.5 fill-current" />
+            <span>Instant Setup • Direct Plan Activation</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            Create Business Account
+          </h1>
+          <p className="mt-2 text-xs sm:text-sm text-slate-400">
+            Set up your account details and activate your review funnel in under 2 minutes
+          </p>
+
+          {/* Feature Pill */}
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold mt-3">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Instant Activation • Razorpay UPI &amp; Cards • Cancel Anytime</span>
+          </div>
         </div>
-      </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-xl relative z-10 px-4">
         <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800/80 py-8 px-6 shadow-2xl rounded-2xl sm:px-10">
@@ -175,9 +179,14 @@ function RegisterForm() {
           <form onSubmit={handleRegister} className="space-y-5">
             {/* PLAN SELECTION SELECTOR */}
             <div>
-              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
-                Choose Subscription Plan to Showcase / Activate
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
+                  Select Subscription Plan
+                </label>
+                <span className="text-[11px] font-semibold text-blue-400">
+                  Instant Activation
+                </span>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                 {(['starter', 'pro', 'enterprise'] as PlanTier[]).map((tierKey) => {
                   const tier = PLAN_DETAILS[tierKey];
@@ -207,11 +216,16 @@ function RegisterForm() {
                           {tier.desc}
                         </p>
                       </div>
-                      <div className="mt-2 pt-2 border-t border-slate-800/80">
-                        <span className="text-sm font-black font-mono text-white">
-                          ₹{tier.price}
+                      <div className="mt-2 pt-2 border-t border-slate-800/80 flex items-baseline justify-between">
+                        <div>
+                          <span className="text-sm font-black font-mono text-white">
+                            ₹{tier.price}
+                          </span>
+                          <span className="text-[10px] text-slate-400">/mo</span>
+                        </div>
+                        <span className="text-[9px] font-bold text-slate-400 bg-slate-800/60 px-1 py-0.5 rounded border border-slate-700/50">
+                          Billed Monthly
                         </span>
-                        <span className="text-[10px] text-slate-400">/mo</span>
                       </div>
                     </button>
                   );
@@ -357,14 +371,23 @@ function RegisterForm() {
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   minLength={6}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="At least 6 characters"
-                  className="w-full bg-slate-950/60 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                  className="w-full bg-slate-950/60 border border-slate-800 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             </div>
 
@@ -377,11 +400,11 @@ function RegisterForm() {
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Creating account & preparing payment...</span>
+                    <span>Creating your business account...</span>
                   </>
                 ) : (
                   <>
-                    <CreditCard className="w-4 h-4" />
+                    <Sparkles className="w-4 h-4" />
                     <span>
                       Continue to Payment Activation (₹{currentPlanInfo.price}/mo)
                     </span>
@@ -389,6 +412,9 @@ function RegisterForm() {
                   </>
                 )}
               </button>
+              <p className="text-[11px] text-slate-400 text-center mt-2.5">
+                Instant plan activation via Razorpay UPI &amp; Cards. Cancel anytime with zero contracts.
+              </p>
             </div>
           </form>
 
@@ -400,6 +426,12 @@ function RegisterForm() {
           </div>
         </div>
       </div>
+      </main>
+
+      {/* Clean Minimal Auth Footer */}
+      <footer className="py-6 border-t border-slate-900 text-center text-xs text-slate-500 relative z-10">
+        <p>© {new Date().getFullYear()} ReviewPulse AI Micro-SaaS. All rights reserved.</p>
+      </footer>
 
       <ConfirmModal
         isOpen={showMissingUrlModal}
@@ -438,7 +470,7 @@ function RegisterForm() {
         onSelectUrl={(url) => setGoogleReviewUrl(url)}
         isSignUp={true}
       />
-    </main>
+    </div>
   );
 }
 

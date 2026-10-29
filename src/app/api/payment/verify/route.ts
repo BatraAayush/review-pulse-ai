@@ -77,20 +77,23 @@ export async function POST(req: NextRequest) {
       data: {
         activePlan: targetPlan,
         status: 'active',
+        subscriptionStatus: 'active',
+        subscriptionCycle: cycle,
+        subscriptionRenewsAt: renewsAt,
       },
     });
 
     try {
       await prisma.$executeRawUnsafe(
-        `UPDATE "Business" SET "subscriptionStatus" = ?, "subscriptionCycle" = ?, "subscriptionRenewsAt" = ?, "updatedAt" = ? WHERE "id" = ?`,
+        `UPDATE "Business" SET "subscriptionStatus" = $1, "subscriptionCycle" = $2, "subscriptionRenewsAt" = $3, "updatedAt" = $4 WHERE "id" = $5`,
         'active',
         cycle,
-        renewsAt.toISOString(),
-        new Date().toISOString(),
+        renewsAt,
+        new Date(),
         transaction.businessId
       );
     } catch (err) {
-      console.warn('Subscription status column update warning:', err);
+      console.warn('Subscription status column update fallback warning:', err);
     }
 
     return NextResponse.json({

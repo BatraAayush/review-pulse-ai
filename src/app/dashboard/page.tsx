@@ -780,11 +780,6 @@ function DashboardContent() {
         {/* Subscription Plan & Payment Status Notice Banner */}
         {(() => {
           const isPaidActive = business.subscriptionStatus === 'active';
-          const isPendingPayment = business.subscriptionStatus === 'pending_payment' || business.subscriptionStatus === 'unpaid';
-          const createdDate = new Date(business.createdAt || Date.now());
-          const daysElapsed = Math.floor((Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
-          const trialDaysRemaining = Math.max(0, 30 - daysElapsed);
-          const isTrialExpired = !isPaidActive && !isPendingPayment && trialDaysRemaining <= 0;
 
           if (isPaidActive) {
             return (
@@ -824,82 +819,45 @@ function DashboardContent() {
             );
           }
 
-          if (isPendingPayment) {
-            const planKey = (business.activePlan as PlanKey) || 'pro';
-            const planCfg = PLANS_CONFIG[planKey] || PLANS_CONFIG.pro;
-            const price = billingAnnual ? planCfg.annualTotal : planCfg.monthlyPrice;
+          // Non-active accounts: Direct Payment Activation Banner
+          const planKey = (business.activePlan as PlanKey) || 'pro';
+          const planCfg = PLANS_CONFIG[planKey] || PLANS_CONFIG.pro;
+          const price = billingAnnual ? planCfg.annualTotal : planCfg.monthlyPrice;
 
-            return (
-              <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-r from-blue-950/80 via-slate-900 to-indigo-950/70 border-2 border-blue-500/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xl backdrop-blur-xl animate-in fade-in duration-300">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-500/30 text-blue-400 flex items-center justify-center shrink-0">
-                    <CreditCard className="w-6 h-6 text-blue-400" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                        Action Required: Payment Activation ({planKey.toUpperCase()} Tier)
-                      </h4>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                        Awaiting Payment
-                      </span>
-                      <span className="text-[11px] text-blue-300 font-medium">
-                        ₹{price.toLocaleString('en-IN')} {billingAnnual ? '/year' : '/month'}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-300 mt-1">
-                      Complete payment via the integrated Razorpay & UPI gateway to activate your physical QR code stands and live Google review funnel.
-                    </p>
-                  </div>
+          return (
+            <div className="rounded-2xl p-4 sm:p-5 bg-gradient-to-r from-blue-950/80 via-slate-900 to-indigo-950/70 border-2 border-blue-500/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xl backdrop-blur-xl animate-in fade-in duration-300">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-blue-500/20 border border-blue-500/30 text-blue-400 flex items-center justify-center shrink-0">
+                  <CreditCard className="w-6 h-6 text-blue-400" />
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => handleSwitchPlan(planKey)}
-                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-black text-xs shadow-xl shadow-blue-500/25 transition-all cursor-pointer shrink-0 hover:scale-102"
-                >
-                  <CreditCard className="w-4 h-4" />
-                  <span>Activate with UPI / Card (₹{price.toLocaleString('en-IN')})</span>
-                </button>
-              </div>
-            );
-          }
-
-          if (isTrialExpired) {
-            return (
-              <div className="rounded-2xl p-4 bg-gradient-to-r from-amber-950/60 via-rose-950/50 to-slate-900 border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
-                    <AlertTriangle className="w-5 h-5 text-amber-400" />
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                      Action Required: Payment Activation ({planKey.toUpperCase()} Tier)
+                    </h4>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      Awaiting Payment
+                    </span>
+                    <span className="text-[11px] text-blue-300 font-medium">
+                      ₹{price.toLocaleString('en-IN')} {billingAnnual ? '/year' : '/month'}
+                    </span>
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-xs font-bold text-white uppercase tracking-wider">
-                        Subscription Inactive
-                      </h4>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                        Payment Required
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-300 mt-0.5">
-                      Activate your subscription to keep review QR stands and AI features active.
-                    </p>
-                  </div>
+                  <p className="text-xs text-slate-300 mt-1">
+                    Complete payment via the integrated Razorpay &amp; UPI gateway to activate your physical QR code stands and live Google review funnel.
+                  </p>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => handleSwitchPlan('starter')}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs shadow-lg transition-all cursor-pointer shrink-0"
-                >
-                  <CreditCard className="w-4 h-4" />
-                  <span>Activate with UPI / Card (₹499)</span>
-                </button>
               </div>
-            );
-          }
 
-          return null;
+              <button
+                type="button"
+                onClick={() => handleSwitchPlan(planKey)}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-black text-xs shadow-xl shadow-blue-500/25 transition-all cursor-pointer shrink-0 hover:scale-102"
+              >
+                <CreditCard className="w-4 h-4" />
+                <span>Activate with UPI / Card (₹{price.toLocaleString('en-IN')})</span>
+              </button>
+            </div>
+          );
         })()}
 
         {/* Google Review URL Setup Warning Banner */}
@@ -1325,12 +1283,12 @@ function DashboardContent() {
                           <CheckCircle2 className="w-3 h-3" />
                           <span>Active Subscription</span>
                         </span>
-                      ) : isPending ? (
+                      ) : (
                         <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           <span>Pending Payment Activation</span>
                         </span>
-                      ) : null}
+                      )}
                     </div>
                     <h3 className="text-2xl font-black text-white capitalize">
                       {business.activePlan === 'starter'
@@ -1944,7 +1902,7 @@ function DashboardContent() {
                   <FileText className="w-8 h-8 text-slate-600 mx-auto" />
                   <p className="text-xs font-semibold text-slate-300">No Past Invoices Found</p>
                   <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
-                    Your business is currently in the 30-Day Free Trial period. Receipts and tax invoices will automatically appear here once payments are made.
+                    Receipts and GST tax invoices will automatically appear here once payments are processed.
                   </p>
                 </div>
               )}
@@ -3114,6 +3072,15 @@ function DashboardContent() {
         businessId={business.id}
         businessName={business.name}
         onPaymentSuccess={() => {
+          setData((prev) => prev ? {
+            ...prev,
+            business: {
+              ...prev.business,
+              subscriptionStatus: 'active',
+              activePlan: selectedPlanForPayment,
+              subscriptionCycle: billingAnnual ? 'annual' : 'monthly',
+            }
+          } : prev);
           loadDashboardData(business.id);
           router.replace('/dashboard');
         }}

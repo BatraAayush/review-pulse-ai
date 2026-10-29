@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const validPlan = (['starter', 'pro', 'enterprise'].includes(plan) ? plan : 'pro');
+    const validPlan = (['starter', 'pro', 'enterprise'].includes(plan) ? plan : 'starter');
     const normalizedEmail = email.toLowerCase().trim();
 
     // Check if email already exists

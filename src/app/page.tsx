@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -15,26 +15,32 @@ import {
   Copy,
   ExternalLink,
   Smartphone,
-  Utensils,
-  Stethoscope,
-  Scissors,
-  Wrench,
   Check,
   BarChart3,
-  Award,
-  CreditCard
+  CreditCard,
+  QrCode
 } from 'lucide-react';
 
 export default function LandingPage() {
   const { currentBusiness } = useSaaSStore();
 
+  // Handle initial anchor hash scrolling reliably
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      const id = window.location.hash.replace('#', '');
+      const el = document.getElementById(id);
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }, 150);
+      }
+    }
+  }, []);
+
   // Hero Simulator Interactive State
   const [demoRating, setDemoRating] = useState(5);
   const [demoChips, setDemoChips] = useState<string[]>(['Pizza', 'Staff']);
   const [demoCopied, setDemoCopied] = useState(false);
-
-  // Industry Tab
-  const [activeIndustry, setActiveIndustry] = useState<'restaurant' | 'clinic' | 'salon' | 'auto'>('restaurant');
 
   // ROI Calculator State
   const [monthlyCustomers, setMonthlyCustomers] = useState(1200);
@@ -74,37 +80,6 @@ export default function LandingPage() {
     navigator.clipboard.writeText(getSimulatedReviewText());
     setDemoCopied(true);
     setTimeout(() => setDemoCopied(false), 2000);
-  };
-
-  const industryData = {
-    restaurant: {
-      name: 'Restaurants, Cafes & Bars',
-      icon: Utensils,
-      quote: 'Boost table turns and highlight signature dishes with food-centric chips.',
-      chips: ['🍕 Wood-Fired Pizza', '🍷 Great Wine List', '⚡ Fast Friendly Staff', '🍮 Must-Try Dessert'],
-      slug: 'rustic-spoon'
-    },
-    clinic: {
-      name: 'Dental & Medical Clinics',
-      icon: Stethoscope,
-      quote: 'Eliminate patient hesitation by highlighting gentle care and zero wait times.',
-      chips: ['🛋️ Gentle Pain-Free Care', '👩‍⚕️ Kind Doctors', '⏱️ Zero Waiting Time', '✨ Pristine Clinic'],
-      slug: 'lumina-dental'
-    },
-    salon: {
-      name: 'Salons, Spas & Beauty',
-      icon: Scissors,
-      quote: 'Turn post-treatment glow into enthusiastic, detailed stylist reviews.',
-      chips: ['🎨 Flawless Balayage', '💇‍♀️ Precision Haircut', '☕ Free Matchas', '✨ Silky Blowout'],
-      slug: 'velvet-stone'
-    },
-    auto: {
-      name: 'Auto Repair & Services',
-      icon: Wrench,
-      quote: 'Build iron-clad local trust with honest mechanic and transparent pricing praise.',
-      chips: ['🔧 Transparent Pricing', '🏎️ Fast Turnaround', '📊 Video Inspection Sent', '🤝 Trusted Mechanics'],
-      slug: 'apex-auto'
-    }
   };
 
   return (
@@ -391,83 +366,101 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Industry Solutions Showcase */}
-      <section id="features" className="py-20 border-t border-slate-900 bg-slate-950">
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-20 border-t border-slate-900 bg-slate-950 scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
-            <span className="text-xs font-semibold tracking-wider uppercase text-blue-400">
-              Tailored For Every Physical Business
-            </span>
-            <h2 className="text-3xl font-black text-white tracking-tight">
-              Pre-Configured Smart Chips For Your Industry
+          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold">
+              <Sparkles className="w-3.5 h-3.5 fill-current" />
+              <span>Simple 3-Step Process</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+              How ReviewPulse AI Works
             </h2>
             <p className="text-sm text-slate-400">
-              Select your business type to see how ReviewPulse structures authentic reviews highlighting your unique strengths.
+              Transform everyday walk-in customers into glowing 5-star Google reviews in less than 20 seconds.
             </p>
           </div>
 
-          {/* Industry Tab Buttons */}
-          <div className="flex justify-center flex-wrap gap-3 mb-10">
-            {(['restaurant', 'clinic', 'salon', 'auto'] as const).map((key) => {
-              const item = industryData[key];
-              const Icon = item.icon;
-              const isActive = activeIndustry === key;
-              return (
-                <button
-                  key={key}
-                  onClick={() => setActiveIndustry(key)}
-                  className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
-                    isActive
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20 scale-105'
-                      : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-white hover:bg-slate-850'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.name}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Industry Tab Content Card */}
-          <div className="max-w-3xl mx-auto rounded-3xl p-5 sm:p-8 bg-slate-900/80 border border-slate-800 shadow-2xl backdrop-blur-xl">
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
-                <div>
-                  <h3 className="text-lg font-bold text-white">{industryData[activeIndustry].name}</h3>
-                  <p className="text-xs text-slate-400 mt-1">{industryData[activeIndustry].quote}</p>
-                </div>
-                <Link
-                  href="/register?plan=pro"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md shadow-blue-500/20 transition-all self-start sm:self-auto"
-                >
-                  <span>Start with Pro Funnel</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+            {/* Step 1 */}
+            <div className="relative rounded-3xl p-6 sm:p-8 bg-slate-900/60 border border-slate-800 hover:border-blue-500/40 transition-all group flex flex-col justify-between">
               <div>
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
-                  Sample High-Converting Chips:
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {industryData[activeIndustry].chips.map((chip, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs font-medium text-slate-200 text-center"
-                    >
-                      {chip}
-                    </div>
-                  ))}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-black text-lg group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-lg shadow-blue-500/10">
+                    1
+                  </div>
+                  <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold">Step 01</span>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <QrCode className="w-5 h-5 text-blue-400" />
+                    <h3 className="text-lg font-bold text-white">Scan at Table or Counter</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                    Place your custom QR stand or NFC tap card at the point of sale. Customers simply scan with any phone camera—no app download or registration needed.
+                  </p>
                 </div>
               </div>
-
-              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between text-xs text-slate-400">
-                <span className="flex items-center gap-2">
-                  <Award className="w-4 h-4 text-blue-400" />
-                  <span>Fully editable in your Client Dashboard</span>
+              <div className="pt-6">
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+                  <Check className="w-3 h-3" />
+                  Zero app install friction
                 </span>
-                <span className="font-mono text-emerald-400">Active Template</span>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="relative rounded-3xl p-6 sm:p-8 bg-slate-900/60 border border-slate-800 hover:border-blue-500/40 transition-all group flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-black text-lg group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-lg shadow-blue-500/10">
+                    2
+                  </div>
+                  <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold">Step 02</span>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-blue-400" />
+                    <h3 className="text-lg font-bold text-white">Tap Stars &amp; AI Chips</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                    Customers select 5 stars and tap 2–3 highlight tags tailored to your business. Google Gemini AI crafts a detailed, natural, and persuasive review in real time.
+                  </p>
+                </div>
+              </div>
+              <div className="pt-6">
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full">
+                  <Sparkles className="w-3 h-3" />
+                  Anti-writer&apos;s block engine
+                </span>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="relative rounded-3xl p-6 sm:p-8 bg-slate-900/60 border border-slate-800 hover:border-blue-500/40 transition-all group flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center font-black text-lg group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all shadow-lg shadow-blue-500/10">
+                    3
+                  </div>
+                  <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold">Step 03</span>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                    <h3 className="text-lg font-bold text-white">1-Click Post to Google</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                    Review text is copied to the phone clipboard and the official Google Review window pops open. Customer pastes and posts in 2 seconds. Negative ratings are shielded privately.
+                  </p>
+                </div>
+              </div>
+              <div className="pt-6">
+                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+                  <ShieldCheck className="w-3 h-3" />
+                  Private negative review shield
+                </span>
               </div>
             </div>
           </div>
@@ -544,7 +537,7 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing Plans */}
-      <section id="pricing" className="py-20 border-t border-slate-900 bg-slate-950">
+      <section id="pricing" className="py-20 border-t border-slate-900 bg-slate-950 scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold">
@@ -933,7 +926,7 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
               <Link
-                href="/register"
+                href="/register?plan=starter"
                 className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl shadow-lg transition-all active:scale-95"
               >
                 Get Started Free Today

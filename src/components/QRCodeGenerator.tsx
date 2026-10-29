@@ -756,45 +756,34 @@ export default function QRCodeGenerator({
             )}
           </div>
 
-          <div className="mt-4 flex flex-col items-center gap-2 w-full max-w-[320px]">
-            <span className="text-xs text-slate-400 font-medium">Stand Frame Style</span>
-            <div className="inline-flex rounded-xl bg-slate-800/90 p-1 border border-slate-700 flex-wrap justify-center gap-1 w-full">
-              <button
-                type="button"
-                onClick={() => setFrameStyle('card')}
-                className={`px-3 py-1 text-xs rounded-lg font-medium transition-all cursor-pointer ${
-                  frameStyle === 'card' ? 'bg-blue-600 text-white font-semibold shadow-md' : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                Modern Card
-              </button>
-              <button
-                type="button"
-                onClick={() => setFrameStyle('badge')}
-                className={`px-3 py-1 text-xs rounded-lg font-medium transition-all cursor-pointer ${
-                  frameStyle === 'badge' ? 'bg-slate-950 text-white font-semibold border border-slate-700 shadow-md' : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                Obsidian Dark
-              </button>
-              <button
-                type="button"
-                onClick={() => setFrameStyle('accent')}
-                className={`px-3 py-1 text-xs rounded-lg font-medium transition-all cursor-pointer ${
-                  frameStyle === 'accent' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow-md' : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                Brand Accent
-              </button>
-              <button
-                type="button"
-                onClick={() => setFrameStyle('minimal')}
-                className={`px-3 py-1 text-xs rounded-lg font-medium transition-all cursor-pointer ${
-                  frameStyle === 'minimal' ? 'bg-white text-slate-900 font-semibold shadow-md' : 'text-slate-300 hover:text-white'
-                }`}
-              >
-                Minimal
-              </button>
+          <div className="mt-4 flex flex-col items-center gap-2.5 w-full max-w-[320px]">
+            <span className="text-xs text-slate-400 font-semibold tracking-wider uppercase text-[11px]">
+              Stand Frame Style
+            </span>
+            <div className="grid grid-cols-2 gap-2 w-full p-2 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl">
+              {[
+                { key: 'card', label: 'Modern Card', dot: 'bg-slate-200 border border-slate-400' },
+                { key: 'badge', label: 'Obsidian Dark', dot: 'bg-slate-950 border border-slate-700' },
+                { key: 'accent', label: 'Brand Accent', dot: 'bg-gradient-to-r from-blue-500 to-indigo-500' },
+                { key: 'minimal', label: 'Minimal', dot: 'bg-white border border-slate-300' },
+              ].map((item) => {
+                const isSelected = frameStyle === item.key;
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => setFrameStyle(item.key as typeof frameStyle)}
+                    className={`flex items-center justify-center gap-2 py-2 px-3 text-xs rounded-xl font-medium transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-blue-600 text-white font-bold shadow-md shadow-blue-500/25 border border-blue-400/40'
+                        : 'bg-slate-950/60 text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-800/80'
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${item.dot}`} />
+                    <span className="truncate">{item.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

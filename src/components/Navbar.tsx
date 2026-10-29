@@ -87,6 +87,35 @@ export default function Navbar() {
     }
   };
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith('/#')) {
+      const targetId = href.replace('/#', '');
+      if (pathname === '/') {
+        e.preventDefault();
+        const element = document.getElementById(targetId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+          window.history.pushState(null, '', `/#${targetId}`);
+        }
+      }
+    }
+  };
+
+  const handleMobileNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    setMobileMenuOpen(false);
+    if (href.startsWith('/#')) {
+      const targetId = href.replace('/#', '');
+      if (pathname === '/') {
+        e.preventDefault();
+        const element = document.getElementById(targetId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+          window.history.pushState(null, '', `/#${targetId}`);
+        }
+      }
+    }
+  };
+
   // If on customer review page `/r/[slug]`, hide SaaS header for clean mobile experience
   if (pathname.startsWith('/r/')) {
     return null;
@@ -179,20 +208,16 @@ export default function Navbar() {
               /* When not logged in: guest navigation */
               <div className="flex items-center gap-4">
                 <Link
-                  href="/#features"
-                  className="text-xs font-semibold text-slate-400 hover:text-white transition-colors"
-                >
-                  Features
-                </Link>
-                <Link
                   href="/#how-it-works"
-                  className="text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+                  onClick={(e) => handleNavClick(e, '/#how-it-works')}
+                  className="text-xs font-semibold text-slate-400 hover:text-white transition-colors cursor-pointer"
                 >
                   How It Works
                 </Link>
                 <Link
                   href="/#pricing"
-                  className="text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+                  onClick={(e) => handleNavClick(e, '/#pricing')}
+                  className="text-xs font-semibold text-slate-400 hover:text-white transition-colors cursor-pointer"
                 >
                   Pricing
                 </Link>
@@ -203,10 +228,10 @@ export default function Navbar() {
                   Login
                 </Link>
                 <Link
-                  href="/register?plan=pro"
+                  href="/register?plan=starter"
                   className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl bg-gradient-to-r from-blue-600 to-sky-600 text-white hover:brightness-110 shadow-lg shadow-blue-500/20 transition-all cursor-pointer"
                 >
-                  <span>Start Free</span>
+                  <span>Get Started</span>
                 </Link>
               </div>
             )}
@@ -223,10 +248,10 @@ export default function Navbar() {
                   Login
                 </Link>
                 <Link
-                  href="/register?plan=pro"
+                  href="/register?plan=starter"
                   className="px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-md shadow-blue-600/20"
                 >
-                  Start Free
+                  Get Started
                 </Link>
                 <button
                   type="button"
@@ -314,22 +339,15 @@ export default function Navbar() {
           ) : (
             <div className="space-y-1 pt-1">
               <Link
-                href="/#features"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-xl text-sm text-slate-300 hover:text-white hover:bg-slate-900 font-medium"
-              >
-                Features
-              </Link>
-              <Link
                 href="/#how-it-works"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={(e) => handleMobileNavClick(e, '/#how-it-works')}
                 className="block px-3 py-2 rounded-xl text-sm text-slate-300 hover:text-white hover:bg-slate-900 font-medium"
               >
                 How It Works
               </Link>
               <Link
                 href="/#pricing"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={(e) => handleMobileNavClick(e, '/#pricing')}
                 className="block px-3 py-2 rounded-xl text-sm text-slate-300 hover:text-white hover:bg-slate-900 font-medium"
               >
                 Pricing Plans
@@ -344,11 +362,11 @@ export default function Navbar() {
                   <span>Login</span>
                 </Link>
                 <Link
-                  href="/register?plan=pro"
+                  href="/register?plan=starter"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-600/20"
                 >
-                  <span>Start Free</span>
+                  <span>Get Started</span>
                 </Link>
               </div>
             </div>

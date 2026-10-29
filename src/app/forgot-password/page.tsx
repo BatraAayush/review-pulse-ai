@@ -19,6 +19,7 @@ import {
   Inbox,
   ShieldCheck,
 } from 'lucide-react';
+import AuthHeader from '@/components/AuthHeader';
 import { useToast } from '@/components/ToastContext';
 
 export default function ForgotPasswordPage() {
@@ -295,22 +296,22 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between relative overflow-hidden">
       {/* Background Ambient Glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-blue-600/10 blur-[130px] rounded-full pointer-events-none" />
 
-      {/* Header Logo */}
-      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center px-4">
-        <Link href="/" className="inline-flex items-center gap-2 mb-6 group">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/25 group-hover:scale-105 transition-transform">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <span className="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-400">
-            ReviewPulse <span className="text-blue-400">AI</span>
-          </span>
-        </Link>
+      {/* Dedicated Minimalist Auth Header */}
+      <AuthHeader type="forgot-password" />
 
-        {/* Step indicator breadcrumbs */}
+      <main className="flex-1 flex flex-col justify-center py-10 sm:py-14 sm:px-6 lg:px-8 relative z-10">
+        {/* Header Content */}
+        <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center px-4">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-400 text-xs font-semibold mb-4">
+            <Sparkles className="w-3.5 h-3.5 fill-current" />
+            <span>Account Security</span>
+          </div>
+
+          {/* Step indicator breadcrumbs */}
         <div className="flex items-center justify-center gap-2 mb-4">
           <div
             className={`w-7 h-1.5 rounded-full transition-all ${
@@ -619,6 +620,12 @@ export default function ForgotPasswordPage() {
           )}
         </div>
       </div>
-    </main>
+      </main>
+
+      {/* Clean Minimal Auth Footer */}
+      <footer className="py-6 border-t border-slate-900 text-center text-xs text-slate-500 relative z-10">
+        <p>© {new Date().getFullYear()} ReviewPulse AI Micro-SaaS. All rights reserved.</p>
+      </footer>
+    </div>
   );
 }
