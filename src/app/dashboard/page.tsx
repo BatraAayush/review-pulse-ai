@@ -136,6 +136,7 @@ function DashboardContent() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [businessFieldErrors, setBusinessFieldErrors] = useState<{ name?: string; slug?: string }>({});
   const [showGuideModal, setShowGuideModal] = useState(false);
 
   // Account Owner Details form
@@ -144,6 +145,7 @@ function DashboardContent() {
   const [savingAccount, setSavingAccount] = useState(false);
   const [accountSuccess, setAccountSuccess] = useState<string | null>(null);
   const [accountError, setAccountError] = useState<string | null>(null);
+  const [accountFieldErrors, setAccountFieldErrors] = useState<{ name?: string; email?: string }>({});
 
   // Password Change form
   const [currentPassword, setCurrentPassword] = useState('');
@@ -153,6 +155,11 @@ function DashboardContent() {
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordFieldErrors, setPasswordFieldErrors] = useState<{
+    currentPassword?: string;
+    newPassword?: string;
+    confirmNewPassword?: string;
+  }>({});
 
   // Multi-location state
   const [selectedBizId, setSelectedBizId] = useState<string | null>(null);
@@ -172,6 +179,7 @@ function DashboardContent() {
   const newLocLogoInputRef = useRef<HTMLInputElement>(null);
   const [isCreatingLocation, setIsCreatingLocation] = useState(false);
   const [addLocError, setAddLocError] = useState<string | null>(null);
+  const [newLocFieldErrors, setNewLocFieldErrors] = useState<{ name?: string }>({});
 
   // Logo file upload helper (FileReader -> base64 data URL)
   const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>, target: 'settings' | 'newLocation') => {
@@ -324,9 +332,10 @@ function DashboardContent() {
   const handleCreateLocation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newLocName.trim()) {
-      setAddLocError('Location name is required');
+      setNewLocFieldErrors({ name: 'Location name is required' });
       return;
     }
+    setNewLocFieldErrors({});
     setIsCreatingLocation(true);
     setAddLocError(null);
 
@@ -380,9 +389,29 @@ function DashboardContent() {
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!data?.business) return;
-    setSavingSettings(true);
     setSettingsSuccess(null);
     setSettingsError(null);
+
+    const errors: typeof businessFieldErrors = {};
+    if (!editName.trim()) {
+      errors.name = 'Business name is required';
+    } else if (editName.trim().length < 2) {
+      errors.name = 'Business name must be at least 2 characters';
+    }
+
+    if (!editSlug.trim()) {
+      errors.slug = 'Review URL slug is required';
+    } else if (editSlug.trim().length < 2) {
+      errors.slug = 'Slug must be at least 2 characters';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setBusinessFieldErrors(errors);
+      return;
+    }
+
+    setBusinessFieldErrors({});
+    setSavingSettings(true);
 
     try {
       const res = await fetch('/api/dashboard/business', {
@@ -390,16 +419,16 @@ function DashboardContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: data.business.id,
-          name: editName,
+          name: editName.trim(),
           category: editCategory,
-          slug: editSlug,
+          slug: editSlug.trim(),
           logoUrl: editLogoUrl,
-          tagline: editTagline,
-          address: editAddress,
-          phone: editPhone,
-          googleReviewUrl: editGoogleReviewUrl,
-          googlePlaceId: editGooglePlaceId,
-          welcomeMessage: editWelcomeMessage,
+          tagline: editTagline.trim(),
+          address: editAddress.trim(),
+          phone: editPhone.trim(),
+          googleReviewUrl: editGoogleReviewUrl.trim(),
+          googlePlaceId: editGooglePlaceId.trim(),
+          welcomeMessage: editWelcomeMessage.trim(),
           primaryColor: editPrimaryColor,
           bypassAiReview: editBypassAiReview,
           resetChipsToCategory: syncChipsOnCategoryChange,
@@ -428,17 +457,39 @@ function DashboardContent() {
   // 5. Save Account Owner Profile (Name, Email)
   const handleSaveAccount = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSavingAccount(true);
     setAccountSuccess(null);
     setAccountError(null);
+
+    const errors: typeof accountFieldErrors = {};
+    const trimmedName = editUserName.trim();
+    if (!trimmedName) {
+      errors.name = 'Full name is required';
+    } else if (trimmedName.length < 2) {
+      errors.name = 'Name must be at least 2 characters';
+    }
+
+    const trimmedEmail = editUserEmail.trim();
+    if (!trimmedEmail) {
+      errors.email = 'Work email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      errors.email = 'Please enter a valid work email address';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setAccountFieldErrors(errors);
+      return;
+    }
+
+    setAccountFieldErrors({});
+    setSavingAccount(true);
 
     try {
       const res = await fetch('/api/dashboard/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: editUserName,
-          email: editUserEmail,
+          name: trimmedName,
+          email: trimmedEmail,
         }),
       });
 
@@ -470,20 +521,29 @@ function DashboardContent() {
     setPasswordSuccess(null);
     setPasswordError(null);
 
-    if (newPassword.length < 6) {
-      const msg = 'New password must be at least 6 characters long';
-      setPasswordError(msg);
-      toast.error(msg, 'Validation Error');
+    const errors: typeof passwordFieldErrors = {};
+    if (!currentPassword) {
+      errors.currentPassword = 'Current password is required';
+    }
+
+    if (!newPassword) {
+      errors.newPassword = 'New password is required';
+    } else if (newPassword.length < 6) {
+      errors.newPassword = 'New password must be at least 6 characters long';
+    }
+
+    if (!confirmNewPassword) {
+      errors.confirmNewPassword = 'Confirmation password is required';
+    } else if (newPassword !== confirmNewPassword) {
+      errors.confirmNewPassword = 'New passwords do not match';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setPasswordFieldErrors(errors);
       return;
     }
 
-    if (newPassword !== confirmNewPassword) {
-      const msg = 'New passwords do not match';
-      setPasswordError(msg);
-      toast.error(msg, 'Validation Error');
-      return;
-    }
-
+    setPasswordFieldErrors({});
     setSavingPassword(true);
 
     try {
@@ -1994,7 +2054,7 @@ function DashboardContent() {
                 </div>
               )}
 
-              <form onSubmit={handleSaveSettings} className="space-y-5">
+              <form noValidate onSubmit={handleSaveSettings} className="space-y-5">
                 {/* Brand Logo & Custom Icon Manager */}
                 <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-4">
                   <div className="flex items-start sm:items-center justify-between gap-4 flex-wrap">
@@ -2123,12 +2183,25 @@ function DashboardContent() {
                     </label>
                     <input
                       type="text"
-                      required
                       value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
+                      onChange={(e) => {
+                        setEditName(e.target.value);
+                        if (businessFieldErrors.name) setBusinessFieldErrors((prev) => ({ ...prev, name: undefined }));
+                        if (settingsError) setSettingsError(null);
+                      }}
                       placeholder="e.g. Golden Crust Bakery"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                      className={`w-full bg-slate-950 border rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none transition-all ${
+                        businessFieldErrors.name
+                          ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                          : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                      }`}
                     />
+                    {businessFieldErrors.name && (
+                      <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{businessFieldErrors.name}</span>
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -2167,13 +2240,26 @@ function DashboardContent() {
                     <div className="relative">
                       <input
                         type="text"
-                        required
                         value={editSlug}
-                        onChange={(e) => setEditSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                        onChange={(e) => {
+                          setEditSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''));
+                          if (businessFieldErrors.slug) setBusinessFieldErrors((prev) => ({ ...prev, slug: undefined }));
+                          if (settingsError) setSettingsError(null);
+                        }}
                         placeholder="e.g. golden-crust"
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-3.5 pr-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-blue-500"
+                        className={`w-full bg-slate-950 border rounded-xl pl-3.5 pr-4 py-2.5 text-xs font-mono text-white focus:outline-none transition-all ${
+                          businessFieldErrors.slug
+                            ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                            : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                        }`}
                       />
                     </div>
+                    {businessFieldErrors.slug && (
+                      <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{businessFieldErrors.slug}</span>
+                      </p>
+                    )}
                     <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500">
                       <span>Public scan link: <span className="text-blue-400 font-mono">/r/{editSlug || 'your-slug'}</span></span>
                       <a
@@ -2515,23 +2601,36 @@ function DashboardContent() {
                 </div>
               )}
 
-              <form onSubmit={handleSaveAccount} className="space-y-4">
+              <form noValidate onSubmit={handleSaveAccount} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                       Your Full Name
                     </label>
                     <div className="relative">
-                      <User className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                      <User className={`w-4 h-4 absolute left-3.5 top-3 transition-colors ${accountFieldErrors.name ? 'text-rose-400' : 'text-slate-500'}`} />
                       <input
                         type="text"
-                        required
                         value={editUserName}
-                        onChange={(e) => setEditUserName(e.target.value)}
+                        onChange={(e) => {
+                          setEditUserName(e.target.value);
+                          if (accountFieldErrors.name) setAccountFieldErrors((prev) => ({ ...prev, name: undefined }));
+                          if (accountError) setAccountError(null);
+                        }}
                         placeholder="e.g. Jane Doe"
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                        className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none transition-all ${
+                          accountFieldErrors.name
+                            ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                            : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                        }`}
                       />
                     </div>
+                    {accountFieldErrors.name && (
+                      <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{accountFieldErrors.name}</span>
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -2539,16 +2638,29 @@ function DashboardContent() {
                       Work Email Address
                     </label>
                     <div className="relative">
-                      <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                      <Mail className={`w-4 h-4 absolute left-3.5 top-3 transition-colors ${accountFieldErrors.email ? 'text-rose-400' : 'text-slate-500'}`} />
                       <input
                         type="email"
-                        required
                         value={editUserEmail}
-                        onChange={(e) => setEditUserEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEditUserEmail(e.target.value);
+                          if (accountFieldErrors.email) setAccountFieldErrors((prev) => ({ ...prev, email: undefined }));
+                          if (accountError) setAccountError(null);
+                        }}
                         placeholder="jane@company.com"
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                        className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none transition-all ${
+                          accountFieldErrors.email
+                            ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                            : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                        }`}
                       />
                     </div>
+                    {accountFieldErrors.email && (
+                      <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{accountFieldErrors.email}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -2605,23 +2717,36 @@ function DashboardContent() {
                 </div>
               )}
 
-              <form onSubmit={handleChangePassword} className="space-y-4">
+              <form noValidate onSubmit={handleChangePassword} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                       Current Password
                     </label>
                     <div className="relative">
-                      <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                      <Lock className={`w-4 h-4 absolute left-3.5 top-3 transition-colors ${passwordFieldErrors.currentPassword ? 'text-rose-400' : 'text-slate-500'}`} />
                       <input
                         type={showPassword ? 'text' : 'password'}
-                        required
                         value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        onChange={(e) => {
+                          setCurrentPassword(e.target.value);
+                          if (passwordFieldErrors.currentPassword) setPasswordFieldErrors((prev) => ({ ...prev, currentPassword: undefined }));
+                          if (passwordError) setPasswordError(null);
+                        }}
                         placeholder="••••••••••••"
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                        className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none transition-all ${
+                          passwordFieldErrors.currentPassword
+                            ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                            : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                        }`}
                       />
                     </div>
+                    {passwordFieldErrors.currentPassword && (
+                      <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{passwordFieldErrors.currentPassword}</span>
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -2629,15 +2754,21 @@ function DashboardContent() {
                       New Password
                     </label>
                     <div className="relative">
-                      <KeyRound className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                      <KeyRound className={`w-4 h-4 absolute left-3.5 top-3 transition-colors ${passwordFieldErrors.newPassword ? 'text-rose-400' : 'text-slate-500'}`} />
                       <input
                         type={showPassword ? 'text' : 'password'}
-                        required
-                        minLength={6}
                         value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
+                        onChange={(e) => {
+                          setNewPassword(e.target.value);
+                          if (passwordFieldErrors.newPassword) setPasswordFieldErrors((prev) => ({ ...prev, newPassword: undefined }));
+                          if (passwordError) setPasswordError(null);
+                        }}
                         placeholder="Min. 6 chars"
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-9 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                        className={`w-full bg-slate-950 border rounded-xl pl-10 pr-9 py-2.5 text-xs text-white focus:outline-none transition-all ${
+                          passwordFieldErrors.newPassword
+                            ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                            : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                        }`}
                       />
                       <button
                         type="button"
@@ -2647,6 +2778,12 @@ function DashboardContent() {
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
+                    {passwordFieldErrors.newPassword && (
+                      <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{passwordFieldErrors.newPassword}</span>
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -2654,17 +2791,29 @@ function DashboardContent() {
                       Confirm New Password
                     </label>
                     <div className="relative">
-                      <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                      <Lock className={`w-4 h-4 absolute left-3.5 top-3 transition-colors ${passwordFieldErrors.confirmNewPassword ? 'text-rose-400' : 'text-slate-500'}`} />
                       <input
                         type={showPassword ? 'text' : 'password'}
-                        required
-                        minLength={6}
                         value={confirmNewPassword}
-                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                        onChange={(e) => {
+                          setConfirmNewPassword(e.target.value);
+                          if (passwordFieldErrors.confirmNewPassword) setPasswordFieldErrors((prev) => ({ ...prev, confirmNewPassword: undefined }));
+                          if (passwordError) setPasswordError(null);
+                        }}
                         placeholder="Re-type new password"
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500"
+                        className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none transition-all ${
+                          passwordFieldErrors.confirmNewPassword
+                            ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                            : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                        }`}
                       />
                     </div>
+                    {passwordFieldErrors.confirmNewPassword && (
+                      <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{passwordFieldErrors.confirmNewPassword}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -2815,7 +2964,7 @@ function DashboardContent() {
             )}
 
             {/* Form */}
-            <form onSubmit={handleCreateLocation} className="space-y-4">
+            <form noValidate onSubmit={handleCreateLocation} className="space-y-4">
               {/* Location Name */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5">
@@ -2823,12 +2972,25 @@ function DashboardContent() {
                 </label>
                 <input
                   type="text"
-                  required
                   value={newLocName}
-                  onChange={(e) => setNewLocName(e.target.value)}
+                  onChange={(e) => {
+                    setNewLocName(e.target.value);
+                    if (newLocFieldErrors.name) setNewLocFieldErrors({});
+                    if (addLocError) setAddLocError(null);
+                  }}
                   placeholder="e.g. Jack Gym - Downtown Branch"
-                  className="w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                  className={`w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-950 border text-white placeholder-slate-500 focus:outline-none transition-all ${
+                    newLocFieldErrors.name
+                      ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                      : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                  }`}
                 />
+                {newLocFieldErrors.name && (
+                  <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{newLocFieldErrors.name}</span>
+                  </p>
+                )}
               </div>
 
               {/* Category & Slug */}

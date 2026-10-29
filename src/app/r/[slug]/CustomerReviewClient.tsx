@@ -143,6 +143,7 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
   const [isPrivateFeedbackSubmitted, setIsPrivateFeedbackSubmitted] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [customerContact, setCustomerContact] = useState('');
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const [isAIGenerating, setIsAIGenerating] = useState(false);
   const [aiNotice, setAiNotice] = useState<string | null>(null);
   const [showInspirationSection, setShowInspirationSection] = useState(false);
@@ -499,8 +500,12 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
   // Handle Private Feedback submission (for 1-3 stars)
   const handlePrivateFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reviewText.trim()) return;
+    if (!reviewText.trim()) {
+      setFeedbackError('Please share a brief message describing your experience so management can assist.');
+      return;
+    }
 
+    setFeedbackError(null);
     setIsSubmitting(true);
     try {
       await fetch(`/api/r/${slug}/feedback`, {
@@ -1031,7 +1036,7 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                 </p>
               </div>
             ) : (
-              <form onSubmit={handlePrivateFeedbackSubmit} className="space-y-3">
+              <form noValidate onSubmit={handlePrivateFeedbackSubmit} className="space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div className="space-y-1">
                     <label className="text-[11px] font-semibold text-slate-300 block">Name</label>
@@ -1047,7 +1052,7 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                     <label className="text-[11px] font-semibold text-slate-300 block">Phone/Email</label>
                     <input
                       type="text"
-                      placeholder="Phone or Email"
+                      placeholder="Phone or Email (optional)"
                       value={customerContact}
                       onChange={(e) => setCustomerContact(e.target.value)}
                       className="w-full rounded-xl bg-slate-950/80 border border-slate-700 p-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
@@ -1056,20 +1061,32 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-slate-300 block">Message</label>
+                  <label className="text-[11px] font-semibold text-slate-300 block">Message <span className="text-rose-400">*</span></label>
                   <textarea
                     rows={3}
-                    required
                     value={reviewText}
-                    onChange={(e) => setReviewText(e.target.value)}
+                    onChange={(e) => {
+                      setReviewText(e.target.value);
+                      if (feedbackError) setFeedbackError(null);
+                    }}
                     placeholder="What went wrong during your visit? Please tell us how we can improve..."
-                    className="w-full rounded-2xl bg-slate-950/80 border border-slate-700 p-3 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 resize-none leading-relaxed"
+                    className={`w-full rounded-2xl bg-slate-950/80 border p-3 text-xs text-slate-200 placeholder-slate-500 focus:outline-none resize-none leading-relaxed transition-all ${
+                      feedbackError
+                        ? 'border-rose-500/80 focus:ring-2 focus:ring-rose-500/50'
+                        : 'border-slate-700 focus:ring-2 focus:ring-blue-500/50'
+                    }`}
                   />
+                  {feedbackError && (
+                    <p className="mt-1 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{feedbackError}</span>
+                    </p>
+                  )}
                 </div>
 
                 <button
                   type="submit"
-                  disabled={isSubmitting || !reviewText.trim()}
+                  disabled={isSubmitting}
                   className="w-full rounded-xl bg-blue-600 hover:bg-blue-500 text-white p-3 text-xs font-bold shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-[0.99]"
                 >
                   <Send className="w-3.5 h-3.5" />

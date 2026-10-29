@@ -69,6 +69,12 @@ function RegisterForm() {
   const [showMissingUrlModal, setShowMissingUrlModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{
+    name?: string;
+    email?: string;
+    businessName?: string;
+    password?: string;
+  }>({});
 
   const executeRegister = async () => {
     setShowMissingUrlModal(false);
@@ -113,6 +119,43 @@ function RegisterForm() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+
+    const errors: typeof fieldErrors = {};
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      errors.name = 'Full name is required';
+    } else if (trimmedName.length < 2) {
+      errors.name = 'Please enter a valid name (at least 2 characters)';
+    }
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      errors.email = 'Work email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      errors.email = 'Please enter a valid work email address (e.g. name@company.com)';
+    }
+
+    const trimmedBizName = businessName.trim();
+    if (!trimmedBizName) {
+      errors.businessName = 'Business name is required';
+    } else if (trimmedBizName.length < 2) {
+      errors.businessName = 'Business name must be at least 2 characters';
+    }
+
+    if (!password) {
+      errors.password = 'Password is required';
+    } else if (password.length < 6) {
+      errors.password = 'Password must be at least 6 characters long';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      return;
+    }
+
+    setFieldErrors({});
+
     if (!googleReviewUrl.trim()) {
       // Explicitly ask for input so correct cafe or place can appear!
       setShowMissingUrlModal(true);
@@ -176,7 +219,7 @@ function RegisterForm() {
             </div>
           )}
 
-          <form onSubmit={handleRegister} className="space-y-5">
+          <form noValidate onSubmit={handleRegister} className="space-y-5">
             {/* PLAN SELECTION SELECTOR */}
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -239,16 +282,29 @@ function RegisterForm() {
                   Your Full Name
                 </label>
                 <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                  <User className={`w-4 h-4 absolute left-3.5 top-3.5 transition-colors ${fieldErrors.name ? 'text-rose-400' : 'text-slate-400'}`} />
                   <input
                     type="text"
-                    required
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: undefined }));
+                      if (error) setError(null);
+                    }}
                     placeholder="Jane Doe"
-                    className="w-full bg-slate-950/60 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className={`w-full bg-slate-950/60 border rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-all ${
+                      fieldErrors.name
+                        ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                        : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                    }`}
                   />
                 </div>
+                {fieldErrors.name && (
+                  <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{fieldErrors.name}</span>
+                  </p>
+                )}
               </div>
 
               <div>
@@ -256,16 +312,29 @@ function RegisterForm() {
                   Work Email
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                  <Mail className={`w-4 h-4 absolute left-3.5 top-3.5 transition-colors ${fieldErrors.email ? 'text-rose-400' : 'text-slate-400'}`} />
                   <input
                     type="email"
-                    required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: undefined }));
+                      if (error) setError(null);
+                    }}
                     placeholder="jane@myrestaurant.com"
-                    className="w-full bg-slate-950/60 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className={`w-full bg-slate-950/60 border rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-all ${
+                      fieldErrors.email
+                        ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                        : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                    }`}
                   />
                 </div>
+                {fieldErrors.email && (
+                  <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{fieldErrors.email}</span>
+                  </p>
+                )}
               </div>
             </div>
 
@@ -275,16 +344,29 @@ function RegisterForm() {
                   Business Name
                 </label>
                 <div className="relative">
-                  <Store className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                  <Store className={`w-4 h-4 absolute left-3.5 top-3.5 transition-colors ${fieldErrors.businessName ? 'text-rose-400' : 'text-slate-400'}`} />
                   <input
                     type="text"
-                    required
                     value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
+                    onChange={(e) => {
+                      setBusinessName(e.target.value);
+                      if (fieldErrors.businessName) setFieldErrors((prev) => ({ ...prev, businessName: undefined }));
+                      if (error) setError(null);
+                    }}
                     placeholder="e.g. Golden Crust Bakery"
-                    className="w-full bg-slate-950/60 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className={`w-full bg-slate-950/60 border rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-all ${
+                      fieldErrors.businessName
+                        ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                        : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                    }`}
                   />
                 </div>
+                {fieldErrors.businessName && (
+                  <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{fieldErrors.businessName}</span>
+                  </p>
+                )}
               </div>
 
               <div>
@@ -369,15 +451,21 @@ function RegisterForm() {
                 Password
               </label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                <Lock className={`w-4 h-4 absolute left-3.5 top-3.5 transition-colors ${fieldErrors.password ? 'text-rose-400' : 'text-slate-400'}`} />
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  required
-                  minLength={6}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                    if (error) setError(null);
+                  }}
                   placeholder="At least 6 characters"
-                  className="w-full bg-slate-950/60 border border-slate-800 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                  className={`w-full bg-slate-950/60 border rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-all ${
+                    fieldErrors.password
+                      ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                      : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                  }`}
                 />
                 <button
                   type="button"
@@ -389,6 +477,12 @@ function RegisterForm() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {fieldErrors.password && (
+                <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{fieldErrors.password}</span>
+                </p>
+              )}
             </div>
 
             <div className="pt-2">

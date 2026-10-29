@@ -45,6 +45,12 @@ export default function ForgotPasswordPage() {
   const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{
+    email?: string;
+    otp?: string;
+    newPassword?: string;
+    confirmPassword?: string;
+  }>({});
 
   // Countdown timer for OTP resend
   const [countdown, setCountdown] = useState(0);
@@ -74,6 +80,8 @@ export default function ForgotPasswordPage() {
       const next = [...otpDigits];
       next[index] = '';
       setOtpDigits(next);
+      if (fieldErrors.otp) setFieldErrors((prev) => ({ ...prev, otp: undefined }));
+      if (error) setError(null);
       return;
     }
 
@@ -86,6 +94,7 @@ export default function ForgotPasswordPage() {
     const next = [...otpDigits];
     next[index] = cleaned[0];
     setOtpDigits(next);
+    if (fieldErrors.otp) setFieldErrors((prev) => ({ ...prev, otp: undefined }));
     setError(null);
 
     // Auto-advance to next box if digit entered
@@ -105,6 +114,7 @@ export default function ForgotPasswordPage() {
       next[targetIdx] = digitsOnly[i];
     }
     setOtpDigits(next);
+    if (fieldErrors.otp) setFieldErrors((prev) => ({ ...prev, otp: undefined }));
     setError(null);
 
     const nextFocus = Math.min(startIndex + digitsOnly.length, 5);
@@ -145,13 +155,25 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError(null);
     setSuccessMsg(null);
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setFieldErrors({ email: 'Account work email is required' });
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setFieldErrors({ email: 'Please enter a valid work email address' });
+      return;
+    }
+
+    setFieldErrors({});
     setLoading(true);
 
     try {
       const res = await fetch('/api/auth/forgot-password/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: trimmedEmail }),
       });
 
       const data = await res.json();
@@ -160,7 +182,7 @@ export default function ForgotPasswordPage() {
         throw new Error(data.error || 'Failed to send verification code');
       }
 
-      const msg = data.message || `Verification code sent to ${email.trim()}`;
+      const msg = data.message || `Verification code sent to ${trimmedEmail}`;
       setSuccessMsg(msg);
       toast.success(msg, 'Code Dispatched');
       setCountdown(60);
@@ -213,12 +235,12 @@ export default function ForgotPasswordPage() {
     setSuccessMsg(null);
 
     if (otp.length !== 6) {
-      const msg = 'Please fill all 6 boxes with the verification code sent to your email';
-      setError(msg);
-      toast.error(msg, 'Incomplete Code');
+      const msg = 'Please enter all 6 digits of the verification code';
+      setFieldErrors({ otp: msg });
       return;
     }
 
+    setFieldErrors({});
     setLoading(true);
 
     try {
@@ -251,20 +273,25 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     setError(null);
 
-    if (newPassword.length < 6) {
-      const msg = 'New password must be at least 6 characters long';
-      setError(msg);
-      toast.error(msg, 'Validation Error');
+    const errors: typeof fieldErrors = {};
+    if (!newPassword) {
+      errors.newPassword = 'New password is required';
+    } else if (newPassword.length < 6) {
+      errors.newPassword = 'New password must be at least 6 characters long';
+    }
+
+    if (!confirmPassword) {
+      errors.confirmPassword = 'Confirmation password is required';
+    } else if (newPassword !== confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
 
-    if (newPassword !== confirmPassword) {
-      const msg = 'Passwords do not match';
-      setError(msg);
-      toast.error(msg, 'Validation Error');
-      return;
-    }
-
+    setFieldErrors({});
     setLoading(true);
 
     try {
@@ -369,22 +396,35 @@ export default function ForgotPasswordPage() {
 
           {/* STEP 1: ENTER EMAIL */}
           {step === 'email' && (
-            <form onSubmit={handleSendOtp} className="space-y-5">
+            <form noValidate onSubmit={handleSendOtp} className="space-y-5">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
                   Account Work Email
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                  <Mail className={`w-4 h-4 absolute left-3.5 top-3.5 transition-colors ${fieldErrors.email ? 'text-rose-400' : 'text-slate-400'}`} />
                   <input
                     type="email"
-                    required
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: undefined }));
+                      if (error) setError(null);
+                    }}
                     placeholder="name@business.com"
-                    className="w-full bg-slate-950/60 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className={`w-full bg-slate-950/60 border rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-all ${
+                      fieldErrors.email
+                        ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                        : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                    }`}
                   />
                 </div>
+                {fieldErrors.email && (
+                  <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{fieldErrors.email}</span>
+                  </p>
+                )}
               </div>
 
               <button
@@ -465,13 +505,21 @@ export default function ForgotPasswordPage() {
                       onKeyDown={(e) => handleDigitKeyDown(idx, e)}
                       onPaste={(e) => handleDigitPaste(e, idx)}
                       className={`w-full h-12 sm:h-14 text-center font-mono font-black text-xl sm:text-2xl rounded-xl transition-all outline-none select-none ${
-                        digit
+                        fieldErrors.otp
+                          ? 'border-2 border-rose-500 bg-slate-950/80 text-rose-300'
+                          : digit
                           ? 'bg-slate-900 border-2 border-blue-500 text-white shadow-lg shadow-blue-500/20'
                           : 'bg-slate-950/80 border-2 border-slate-800 text-slate-300 hover:border-slate-700'
                       } focus:border-blue-400 focus:bg-slate-900 focus:ring-4 focus:ring-blue-500/20`}
                     />
                   ))}
                 </div>
+                {fieldErrors.otp && (
+                  <p className="mt-1.5 text-xs text-rose-400 flex items-center justify-center gap-1.5 animate-in fade-in-50 duration-150">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{fieldErrors.otp}</span>
+                  </p>
+                )}
                 <p className="text-[11px] text-slate-500 text-center mt-2">
                   Tip: You can paste the whole 6-digit code directly into the first box.
                 </p>
@@ -528,21 +576,27 @@ export default function ForgotPasswordPage() {
 
           {/* STEP 3: SET NEW PASSWORD */}
           {step === 'new-password' && (
-            <form onSubmit={handleResetPassword} className="space-y-4">
+            <form noValidate onSubmit={handleResetPassword} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                   New Password
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                  <Lock className={`w-4 h-4 absolute left-3.5 top-3.5 transition-colors ${fieldErrors.newPassword ? 'text-rose-400' : 'text-slate-400'}`} />
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    required
-                    minLength={6}
                     value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
+                    onChange={(e) => {
+                      setNewPassword(e.target.value);
+                      if (fieldErrors.newPassword) setFieldErrors((prev) => ({ ...prev, newPassword: undefined }));
+                      if (error) setError(null);
+                    }}
                     placeholder="At least 6 characters"
-                    className="w-full bg-slate-950/60 border border-slate-800 rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className={`w-full bg-slate-950/60 border rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-all ${
+                      fieldErrors.newPassword
+                        ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                        : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                    }`}
                   />
                   <button
                     type="button"
@@ -552,6 +606,12 @@ export default function ForgotPasswordPage() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+                {fieldErrors.newPassword && (
+                  <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{fieldErrors.newPassword}</span>
+                  </p>
+                )}
               </div>
 
               <div>
@@ -559,17 +619,29 @@ export default function ForgotPasswordPage() {
                   Confirm New Password
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                  <Lock className={`w-4 h-4 absolute left-3.5 top-3.5 transition-colors ${fieldErrors.confirmPassword ? 'text-rose-400' : 'text-slate-400'}`} />
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    required
-                    minLength={6}
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      if (fieldErrors.confirmPassword) setFieldErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                      if (error) setError(null);
+                    }}
                     placeholder="Re-enter new password"
-                    className="w-full bg-slate-950/60 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className={`w-full bg-slate-950/60 border rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-all ${
+                      fieldErrors.confirmPassword
+                        ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                        : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                    }`}
                   />
                 </div>
+                {fieldErrors.confirmPassword && (
+                  <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{fieldErrors.confirmPassword}</span>
+                  </p>
+                )}
               </div>
 
               <div className="pt-2">
