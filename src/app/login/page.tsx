@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { 
   Sparkles, 
   ArrowRight, 
-  ShieldCheck, 
   Store, 
   Lock, 
   Mail, 
@@ -226,25 +225,6 @@ export default function LoginPage() {
                     Click any pre-seeded profile to evaluate specific portal capabilities:
                   </p>
                   <div className="grid grid-cols-1 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => fillQuickLogin('admin@reviewpulse.ai', 'Admin@123456')}
-                      className="w-full text-left px-3 py-2 rounded-xl bg-slate-950/70 hover:bg-slate-800/80 border border-slate-800 hover:border-blue-500/40 text-xs flex items-center justify-between text-slate-300 transition-all cursor-pointer gap-2 group"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-                          <ShieldCheck className="w-3.5 h-3.5" />
-                        </div>
-                        <div className="truncate">
-                          <p className="font-semibold text-white group-hover:text-blue-300 transition-colors">Super Admin</p>
-                          <p className="text-slate-500 text-[10px] font-mono truncate">admin@reviewpulse.ai</p>
-                        </div>
-                      </div>
-                      <span className="text-[11px] font-bold text-blue-400 px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 shrink-0">
-                        Fill Demo
-                      </span>
-                    </button>
-
                     <button
                       type="button"
                       onClick={() => fillQuickLogin('owner@bellarestaurant.com', 'Owner@123456')}
