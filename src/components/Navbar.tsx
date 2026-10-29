@@ -182,8 +182,8 @@ export default function Navbar() {
                 {/* User Info & Logout */}
                 <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
                   <Link
-                    href="/dashboard?tab=settings"
-                    title="Account & Business Settings"
+                    href={user.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard?tab=settings'}
+                    title={user.role === 'SUPER_ADMIN' ? 'Super Admin Portal' : 'Account & Business Settings'}
                     className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 hover:bg-slate-800 text-xs text-slate-300 hover:text-white transition-all cursor-pointer group"
                   >
                     <UserIcon className="w-3.5 h-3.5 text-blue-400 group-hover:text-blue-300 transition-colors" />
@@ -314,7 +314,7 @@ export default function Navbar() {
 
               <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
                 <Link
-                  href="/dashboard?tab=settings"
+                  href={user.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard?tab=settings'}
                   onClick={() => setMobileMenuOpen(false)}
                   className="text-xs text-slate-300 hover:text-white flex items-center gap-2 p-1.5 rounded-lg hover:bg-slate-900 transition-colors"
                 >
@@ -323,7 +323,9 @@ export default function Navbar() {
                   </div>
                   <div>
                     <p className="font-semibold text-white">{user.name}</p>
-                    <p className="text-[11px] text-blue-400">Account &amp; Settings →</p>
+                    <p className="text-[11px] text-blue-400">
+                      {user.role === 'SUPER_ADMIN' ? 'Super Admin Portal →' : 'Account & Settings →'}
+                    </p>
                   </div>
                 </Link>
                 <button

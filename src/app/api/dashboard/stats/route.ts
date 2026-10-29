@@ -15,11 +15,25 @@ export async function GET(req: NextRequest) {
     const requestedBizId = searchParams.get('businessId');
 
     let business;
-    if (session.role === 'SUPER_ADMIN' && requestedBizId) {
-      business = await prisma.business.findUnique({
-        where: { id: requestedBizId },
-        include: { smartChips: { orderBy: { sortOrder: 'asc' } } },
-      });
+    if (session.role === 'SUPER_ADMIN') {
+      if (requestedBizId) {
+        business = await prisma.business.findUnique({
+          where: { id: requestedBizId },
+          include: { smartChips: { orderBy: { sortOrder: 'asc' } } },
+        });
+      } else {
+        business = await prisma.business.findFirst({
+          where: { ownerId: session.userId },
+          include: { smartChips: { orderBy: { sortOrder: 'asc' } } },
+        });
+        // If super admin has no personal business profile, fallback to the latest registered platform business
+        if (!business) {
+          business = await prisma.business.findFirst({
+            include: { smartChips: { orderBy: { sortOrder: 'asc' } } },
+            orderBy: { createdAt: 'desc' },
+          });
+        }
+      }
     } else if (requestedBizId) {
       business = await prisma.business.findFirst({
         where: { id: requestedBizId, ownerId: session.userId },
