@@ -127,3 +127,57 @@ export async function sendPasswordResetOtpEmail(toEmail: string, otp: string) {
     text,
   });
 }
+
+export async function sendSignupVerificationOtpEmail(toEmail: string, otp: string, name?: string) {
+  const subject = `Verify your email for ReviewPulse AI (${otp})`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b0f19; color: #f1f5f9; padding: 24px; }
+          .card { max-width: 500px; margin: 0 auto; background-color: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 32px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+          .header { text-align: center; margin-bottom: 24px; }
+          .logo { font-size: 24px; font-weight: 800; color: #60a5fa; letter-spacing: -0.5px; }
+          .title { font-size: 20px; font-weight: 700; color: #ffffff; margin-top: 12px; margin-bottom: 8px; }
+          .subtitle { font-size: 14px; color: #94a3b8; line-height: 1.5; }
+          .otp-box { background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(14, 165, 233, 0.15)); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 20px; text-align: center; margin: 28px 0; }
+          .otp-code { font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: 800; letter-spacing: 8px; color: #38bdf8; }
+          .validity { font-size: 12px; color: #cbd5e1; margin-top: 8px; }
+          .footer { font-size: 12px; color: #64748b; text-align: center; margin-top: 28px; line-height: 1.4; border-top: 1px solid #1f2937; padding-top: 16px; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="header">
+            <div class="logo">ReviewPulse AI</div>
+            <div class="title">Verify Your Work Email Address</div>
+            <div class="subtitle">Hi ${name ? name.trim() : 'there'}, welcome to ReviewPulse AI! Use the 6-digit verification code below to verify your email and activate your account.</div>
+          </div>
+          <div class="otp-box">
+            <div class="otp-code">${otp}</div>
+            <div class="validity">⏱️ This code will expire in <strong>10 minutes</strong>.</div>
+          </div>
+          <div class="subtitle" style="font-size: 13px;">
+            If you did not attempt to register an account with ReviewPulse AI, please ignore this email.
+          </div>
+          <div class="footer">
+            &copy; ${new Date().getFullYear()} ReviewPulse AI Inc. All rights reserved.<br>
+            Automated Google Reviews Growth & Reputation Platform.
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const text = `Hi ${name ? name.trim() : 'there'},\n\nYour ReviewPulse AI Email Verification Code is: ${otp}\nThis code is valid for 10 minutes.\n\nIf you did not request this, please ignore this message.`;
+
+  return sendEmail({
+    to: toEmail,
+    subject,
+    html,
+    text,
+  });
+}

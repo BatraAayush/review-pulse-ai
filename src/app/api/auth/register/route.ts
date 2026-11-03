@@ -15,11 +15,18 @@ function slugify(text: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password, businessName, category = 'restaurant', googleReviewUrl, plan = 'pro' } = await req.json();
+    const { name, email, password, businessName, category = 'restaurant', googleReviewUrl, plan = 'pro', otp } = await req.json();
 
     if (!name || !email || !password || !businessName) {
       return NextResponse.json(
         { error: 'Name, email, password, and business name are required' },
+        { status: 400 }
+      );
+    }
+
+    if (!otp || typeof otp !== 'string' || otp.trim().length !== 6) {
+      return NextResponse.json(
+        { error: 'A valid 6-digit email verification code is required to complete registration' },
         { status: 400 }
       );
     }
@@ -44,6 +51,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'An account with this email already exists. Please log in.' },
         { status: 409 }
+      );
+    }
+
+    // Verify 6-digit OTP code against signup record
+    const cleanOtp = otp.trim();
+    const dbEmailKey = `signup:${normalizedEmail}`;
+
+    const validOtp = await prisma.passwordResetOtp.findFirst({
+      where: {
+        email: dbEmailKey,
+        otp: cleanOtp,
+        used: false,
+        expiresAt: {
+          gt: new Date(),
+        },
+      },
+    });
+
+    if (!validOtp) {
+      return NextResponse.json(
+        { error: 'Invalid or expired verification code. Please request a new code.' },
+        { status: 400 }
       );
     }
 
@@ -120,6 +149,12 @@ export async function POST(req: NextRequest) {
     });
 
     const primaryBusiness = newUser.businesses[0];
+
+    // Mark signup OTP as used
+    await prisma.passwordResetOtp.update({
+      where: { id: validOtp.id },
+      data: { used: true },
+    });
 
     const sessionPayload = {
       userId: newUser.id,

@@ -62,9 +62,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 5. Auth Pages: /login, /register, /forgot-password
-  // If already authenticated, redirect directly to their app portal!
-  const isAuthRoute = pathname === '/login' || pathname === '/register' || pathname === '/forgot-password';
+  // 5. Auth Pages: /login, /register (redirect to dashboard/admin if already authenticated)
+  // Note: /forgot-password is intentionally permitted for authenticated users who forgot current password in Settings!
+  const isAuthRoute = pathname === '/login' || pathname === '/register';
   if (isAuthRoute) {
     if (isAuthenticated) {
       const target = session?.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard';

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Sparkles,
   ArrowRight,
@@ -24,13 +24,15 @@ import { useToast } from '@/components/ToastContext';
 import { validatePassword } from '@/lib/passwordValidation';
 import PasswordRequirements from '@/components/PasswordRequirements';
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialEmail = searchParams.get('email') || '';
   const { toast } = useToast();
   const [step, setStep] = useState<'email' | 'otp' | 'new-password' | 'success'>('email');
 
   // Form values
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(initialEmail);
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -678,14 +680,24 @@ export default function ForgotPasswordPage() {
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => router.push('/login')}
-                  className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm shadow-lg shadow-blue-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <span>Proceed to Sign In</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                <div className="space-y-2.5 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => router.push('/login')}
+                    className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm shadow-lg shadow-blue-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>Proceed to Sign In</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => router.push('/dashboard')}
+                    className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 font-medium text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>Return to Dashboard</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -697,5 +709,17 @@ export default function ForgotPasswordPage() {
         <p>© {new Date().getFullYear()} ReviewPulse AI Micro-SaaS. All rights reserved.</p>
       </footer>
     </div>
+  );
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      </div>
+    }>
+      <ForgotPasswordForm />
+    </Suspense>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -21,7 +21,10 @@ import {
   AlertTriangle,
   ExternalLink,
   Eye,
-  EyeOff
+  EyeOff,
+  CheckCircle2,
+  RefreshCw,
+  ArrowLeft,
 } from 'lucide-react';
 import AuthHeader from '@/components/AuthHeader';
 import CustomSelect from '@/components/CustomSelect';
@@ -80,6 +83,8 @@ function RegisterForm() {
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [showMissingUrlModal, setShowMissingUrlModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [resending, setResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{
     name?: string;
@@ -88,8 +93,141 @@ function RegisterForm() {
     password?: string;
   }>({});
 
-  const executeRegister = async () => {
+  // 2-Step Registration with Email OTP Verification
+  const [step, setStep] = useState<'form' | 'otp'>('form');
+  const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
+  const [countdown, setCountdown] = useState(0);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const otp = otpDigits.join('');
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (countdown > 0) {
+      timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [countdown]);
+
+  useEffect(() => {
+    if (step === 'otp') {
+      setOtpDigits(['', '', '', '', '', '']);
+      setTimeout(() => {
+        inputRefs.current[0]?.focus();
+      }, 80);
+    }
+  }, [step]);
+
+  // Handle individual OTP digit box changes
+  const handleDigitChange = (index: number, val: string) => {
+    const cleaned = val.replace(/\D/g, '');
+    if (!cleaned) {
+      const next = [...otpDigits];
+      next[index] = '';
+      setOtpDigits(next);
+      if (error) setError(null);
+      return;
+    }
+
+    if (cleaned.length > 1) {
+      handlePastedCode(cleaned, index);
+      return;
+    }
+
+    const next = [...otpDigits];
+    next[index] = cleaned[0];
+    setOtpDigits(next);
+    setError(null);
+
+    if (index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handlePastedCode = (pasted: string, startIndex: number = 0) => {
+    const digitsOnly = pasted.replace(/\D/g, '').slice(0, 6);
+    if (!digitsOnly) return;
+
+    const next = [...otpDigits];
+    for (let i = 0; i < digitsOnly.length; i++) {
+      const targetIdx = startIndex + i < 6 ? startIndex + i : i;
+      next[targetIdx] = digitsOnly[i];
+    }
+    setOtpDigits(next);
+    setError(null);
+
+    const nextFocus = Math.min(startIndex + digitsOnly.length, 5);
+    inputRefs.current[nextFocus]?.focus();
+  };
+
+  const handleDigitKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace') {
+      if (!otpDigits[index] && index > 0) {
+        const next = [...otpDigits];
+        next[index - 1] = '';
+        setOtpDigits(next);
+        inputRefs.current[index - 1]?.focus();
+      } else {
+        const next = [...otpDigits];
+        next[index] = '';
+        setOtpDigits(next);
+      }
+    } else if (e.key === 'ArrowLeft' && index > 0) {
+      e.preventDefault();
+      inputRefs.current[index - 1]?.focus();
+    } else if (e.key === 'ArrowRight' && index < 5) {
+      e.preventDefault();
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleDigitPaste = (e: React.ClipboardEvent<HTMLInputElement>, index: number) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text');
+    handlePastedCode(pasted, index);
+  };
+
+  const sendSignupOtp = async (isResend = false) => {
     setShowMissingUrlModal(false);
+    if (isResend) setResending(true);
+    else setSendingOtp(true);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/auth/register/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim(),
+          name: name.trim(),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to send verification code');
+      }
+
+      toast.success(`Verification code sent to ${email.trim()}! Please check your inbox.`, 'Code Sent');
+      setStep('otp');
+      setCountdown(60);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to send verification code';
+      setError(msg);
+      toast.error(msg, 'Email Verification Error');
+    } finally {
+      setSendingOtp(false);
+      setResending(false);
+    }
+  };
+
+  const executeRegister = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (otp.length !== 6) {
+      setError('Please enter the full 6-digit verification code.');
+      return;
+    }
+
     setError(null);
     setLoading(true);
 
@@ -98,13 +236,14 @@ function RegisterForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name,
-          email,
+          name: name.trim(),
+          email: email.trim(),
           password,
-          businessName,
+          businessName: businessName.trim(),
           category,
           plan: selectedPlan,
           googleReviewUrl: googleReviewUrl.trim() || undefined,
+          otp,
         }),
       });
 
@@ -115,8 +254,8 @@ function RegisterForm() {
       }
 
       toast.success(
-        `Business account created! Proceeding to ${PLAN_DETAILS[selectedPlan].name} activation.`,
-        'Account Created'
+        `Email verified! Business account created for ${businessName.trim()}.`,
+        'Account Verified'
       );
       router.push(data.redirectUrl || `/dashboard?activate=true&plan=${selectedPlan}`);
       router.refresh();
@@ -176,7 +315,7 @@ function RegisterForm() {
       setShowMissingUrlModal(true);
       return;
     }
-    await executeRegister();
+    await sendSignupOtp();
   };
 
   const handleUrlChange = (val: string) => {
@@ -212,10 +351,12 @@ function RegisterForm() {
             <span>Instant Setup • Direct Plan Activation</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-            Create Business Account
+            {step === 'otp' ? 'Verify Email Address' : 'Create Business Account'}
           </h1>
           <p className="mt-2 text-xs sm:text-sm text-slate-400">
-            Set up your account details and activate your review funnel in under 2 minutes
+            {step === 'otp'
+              ? 'Enter the 6-digit verification code sent to your inbox'
+              : 'Set up your account details and activate your review funnel in under 2 minutes'}
           </p>
 
           {/* Feature Pill */}
@@ -234,7 +375,115 @@ function RegisterForm() {
               </div>
             )}
 
-            <form noValidate onSubmit={handleRegister} className="space-y-5">
+            {step === 'otp' ? (
+              <div className="space-y-6">
+                <div className="text-center space-y-2">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center mx-auto shadow-lg shadow-blue-500/10">
+                    <Mail className="w-7 h-7" />
+                  </div>
+                  <h2 className="text-xl font-bold text-white tracking-tight">
+                    Verify Your Work Email
+                  </h2>
+                  <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+                    We sent a 6-digit verification code to{' '}
+                    <strong className="text-white font-mono">{email}</strong>.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep('form');
+                      setError(null);
+                    }}
+                    className="text-xs text-blue-400 hover:text-blue-300 font-medium underline underline-offset-4 cursor-pointer inline-flex items-center gap-1"
+                  >
+                    <ArrowLeft className="w-3 h-3" />
+                    <span>Wrong email? Edit registration details</span>
+                  </button>
+                </div>
+
+                <form noValidate onSubmit={executeRegister} className="space-y-6">
+                  {/* 6 Digit OTP Inputs */}
+                  <div>
+                    <label className="block text-center text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
+                      Enter 6-Digit Code
+                    </label>
+                    <div className="flex items-center justify-center gap-2 sm:gap-3">
+                      {otpDigits.map((digit, idx) => (
+                        <input
+                          key={idx}
+                          ref={(el) => {
+                            inputRefs.current[idx] = el;
+                          }}
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={1}
+                          value={digit}
+                          onChange={(e) => handleDigitChange(idx, e.target.value)}
+                          onKeyDown={(e) => handleDigitKeyDown(idx, e)}
+                          onPaste={(e) => handleDigitPaste(e, idx)}
+                          className={`w-11 h-13 sm:w-12 sm:h-14 rounded-xl text-center text-xl sm:text-2xl font-mono font-bold transition-all focus:outline-none ${
+                            error
+                              ? 'border border-rose-500/80 bg-slate-950 text-rose-300 focus:ring-2 focus:ring-rose-500/40'
+                              : digit
+                              ? 'border border-blue-500/60 bg-slate-950 text-white shadow-sm ring-1 ring-blue-500/30'
+                              : 'border border-slate-800 bg-slate-950/70 text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Resend Countdown & Button */}
+                  <div className="text-center text-xs">
+                    {countdown > 0 ? (
+                      <p className="text-slate-400 flex items-center justify-center gap-1.5 font-medium">
+                        <span>Resend code in</span>
+                        <span className="font-mono text-blue-400 font-bold">{countdown}s</span>
+                      </p>
+                    ) : (
+                      <button
+                        type="button"
+                        disabled={resending}
+                        onClick={() => sendSignupOtp(true)}
+                        className="text-blue-400 hover:text-blue-300 font-semibold underline underline-offset-4 cursor-pointer disabled:opacity-50 inline-flex items-center gap-1.5"
+                      >
+                        {resending ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>Resending Code...</span>
+                          </>
+                        ) : (
+                          <span>Didn&apos;t receive code? Resend OTP</span>
+                        )}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Submit Button */}
+                  <div>
+                    <button
+                      type="submit"
+                      disabled={loading || otp.length !== 6}
+                      className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-bold text-sm shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>Verifying &amp; Creating Account...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Verify &amp; Create Account ({currentPlanInfo.name})</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <form noValidate onSubmit={handleRegister} className="space-y-5">
               {/* PLAN SELECTION SELECTOR */}
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -492,19 +741,19 @@ function RegisterForm() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={sendingOtp}
                   className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-bold text-sm shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 hover:opacity-95 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
-                  {loading ? (
+                  {sendingOtp ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Creating your business account...</span>
+                      <span>Sending Verification Code...</span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4" />
                       <span>
-                        Continue to Payment Activation (₹{currentPlanInfo.price}/mo)
+                        Verify Email &amp; Continue (₹{currentPlanInfo.price}/mo)
                       </span>
                       <ArrowRight className="w-4 h-4" />
                     </>
@@ -515,6 +764,7 @@ function RegisterForm() {
                 </p>
               </div>
             </form>
+            )}
 
             <div className="mt-6 text-center text-xs text-slate-400">
               Already have an account?{' '}
@@ -537,7 +787,7 @@ function RegisterForm() {
           setShowMissingUrlModal(false);
           setShowGuideModal(true);
         }}
-        onConfirm={executeRegister}
+        onConfirm={() => sendSignupOtp()}
         variant="warning"
         title="Direct Google Review URL is Not Set"
         icon={<AlertTriangle className="w-6 h-6 text-amber-400" />}
