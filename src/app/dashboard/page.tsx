@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Footer from '@/components/Footer';
@@ -218,6 +218,56 @@ function DashboardContent() {
     newPassword?: string;
     confirmNewPassword?: string;
   }>({});
+
+  // Detect whether forms have pending unsaved modifications
+  const isBusinessChanged = useMemo(() => {
+    const b = data?.business;
+    if (!b) return false;
+    return (
+      editName.trim() !== (b.name || '').trim() ||
+      editCategory !== (b.category || 'restaurant') ||
+      editSlug.trim() !== (b.slug || '').trim() ||
+      (editLogoUrl || '') !== (b.logoUrl || '') ||
+      editTagline.trim() !== (b.tagline || '').trim() ||
+      editAddress.trim() !== (b.address || '').trim() ||
+      editPhone.trim() !== (b.phone || '').trim() ||
+      editGoogleReviewUrl.trim() !== (b.googleReviewUrl || '').trim() ||
+      editGooglePlaceId.trim() !== (b.googlePlaceId || '').trim() ||
+      editWelcomeMessage.trim() !== (b.welcomeMessage || '').trim() ||
+      (editPrimaryColor || '#2563eb').toLowerCase() !== (b.primaryColor || '#2563eb').toLowerCase() ||
+      Boolean(editBypassAiReview) !== Boolean(b.bypassAiReview)
+    );
+  }, [
+    data?.business,
+    editName,
+    editCategory,
+    editSlug,
+    editLogoUrl,
+    editTagline,
+    editAddress,
+    editPhone,
+    editGoogleReviewUrl,
+    editGooglePlaceId,
+    editWelcomeMessage,
+    editPrimaryColor,
+    editBypassAiReview,
+  ]);
+
+  const isAccountChanged = useMemo(() => {
+    if (!user) return false;
+    return (
+      editUserName.trim() !== (user.name || '').trim() ||
+      editUserEmail.trim().toLowerCase() !== (user.email || '').trim().toLowerCase()
+    );
+  }, [user, editUserName, editUserEmail]);
+
+  const isPasswordChanged = useMemo(() => {
+    return Boolean(
+      currentPassword.trim() ||
+      newPassword.trim() ||
+      confirmNewPassword.trim()
+    );
+  }, [currentPassword, newPassword, confirmNewPassword]);
 
   // Multi-location state
   const [selectedBizId, setSelectedBizId] = useState<string | null>(null);
@@ -457,6 +507,10 @@ function DashboardContent() {
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!data?.business) return;
+    if (!isBusinessChanged) {
+      toast.info('No changes were made to save.', 'Already Up to Date');
+      return;
+    }
     setSettingsSuccess(null);
     setSettingsError(null);
 
@@ -546,6 +600,10 @@ function DashboardContent() {
   // 5. Save Account Owner Profile (Name, Email)
   const handleSaveAccount = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAccountChanged) {
+      toast.info('No profile changes to update.', 'Already Up to Date');
+      return;
+    }
     setAccountSuccess(null);
     setAccountError(null);
 
@@ -622,6 +680,10 @@ function DashboardContent() {
   // 6. Change Password
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isPasswordChanged) {
+      toast.info('Please enter your current and new password to update.', 'No Password Entered');
+      return;
+    }
     setPasswordSuccess(null);
     setPasswordError(null);
 
@@ -2857,8 +2919,9 @@ function DashboardContent() {
                 <div className="pt-2">
                   <button
                     type="submit"
-                    disabled={savingSettings}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-colors cursor-pointer disabled:opacity-50 shadow-md shadow-blue-500/20"
+                    disabled={savingSettings || !isBusinessChanged}
+                    title={!isBusinessChanged ? 'No changes made to business details' : 'Save business details'}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 shadow-md shadow-blue-500/20 disabled:shadow-none"
                   >
                     {savingSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     <span>Save Business Details</span>
@@ -2973,8 +3036,9 @@ function DashboardContent() {
                 <div className="pt-2">
                   <button
                     type="submit"
-                    disabled={savingAccount}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-colors cursor-pointer disabled:opacity-50 shadow-md shadow-blue-500/20"
+                    disabled={savingAccount || !isAccountChanged}
+                    title={!isAccountChanged ? 'No changes made to account profile' : 'Update account profile'}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 shadow-md shadow-blue-500/20 disabled:shadow-none"
                   >
                     {savingAccount ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     <span>Update Account Profile</span>
@@ -3115,8 +3179,9 @@ function DashboardContent() {
                 <div className="pt-2 flex items-center justify-between">
                   <button
                     type="submit"
-                    disabled={savingPassword}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-colors cursor-pointer disabled:opacity-50 shadow-md shadow-blue-500/20"
+                    disabled={savingPassword || !isPasswordChanged}
+                    title={!isPasswordChanged ? 'Enter current and new password to update' : 'Update password'}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 shadow-md shadow-blue-500/20 disabled:shadow-none"
                   >
                     {savingPassword ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
                     <span>Update Password</span>
