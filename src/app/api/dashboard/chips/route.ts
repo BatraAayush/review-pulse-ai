@@ -15,7 +15,107 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { label, category, phrase, icon, businessId } = await req.json();
+    const body = await req.json();
+
+    // 1. Batch insert mode
+    if (Array.isArray(body.chips)) {
+      const { chips, businessId } = body;
+      if (!chips.length) {
+        return NextResponse.json({ error: 'No prompts provided in batch' }, { status: 400 });
+      }
+
+      const business = await prisma.business.findFirst({
+        where: session.role === 'SUPER_ADMIN' && businessId
+          ? { id: businessId }
+          : businessId
+          ? { id: businessId, ownerId: session.userId }
+          : { ownerId: session.userId },
+        select: { id: true, category: true },
+      });
+
+      if (!business) {
+        return NextResponse.json({ error: 'Business not found' }, { status: 404 });
+      }
+
+      const isClinic = isMedicalCategory(business.category);
+
+      // Fetch existing chips for this business to skip duplicates
+      const existingChips = await prisma.smartChip.findMany({
+        where: { businessId: business.id },
+        select: { label: true },
+      });
+      const existingLabels = new Set(
+        existingChips.map((c) => c.label.toLowerCase().trim())
+      );
+
+      const maxSort = await prisma.smartChip.aggregate({
+        where: { businessId: business.id },
+        _max: { sortOrder: true },
+      });
+      let currentSort = maxSort._max.sortOrder || 0;
+
+      const toInsert: Array<{
+        businessId: string;
+        label: string;
+        category: string;
+        phrase: string;
+        icon: string;
+        sortOrder: number;
+      }> = [];
+
+      const seenInBatch = new Set<string>();
+
+      for (const chip of chips) {
+        const trimmedLabel = (chip.label || '').trim();
+        const trimmedPhrase = (chip.phrase || '').trim();
+        const trimmedCategory = (chip.category || 'General').trim();
+        const key = trimmedLabel.toLowerCase();
+
+        if (!trimmedLabel || trimmedLabel.length < 2 || trimmedLabel.length > 40) continue;
+        if (!trimmedPhrase || trimmedPhrase.length < 10 || trimmedPhrase.length > 300) continue;
+        if (existingLabels.has(key) || seenInBatch.has(key)) continue;
+
+        if (isClinic) {
+          const validation = validateMedicalChipContent(trimmedLabel, trimmedPhrase, trimmedCategory);
+          if (!validation.valid) continue;
+        }
+
+        seenInBatch.add(key);
+        currentSort += 1;
+        toInsert.push({
+          businessId: business.id,
+          label: trimmedLabel,
+          category: trimmedCategory,
+          phrase: trimmedPhrase,
+          icon: chip.icon || 'Sparkles',
+          sortOrder: currentSort,
+        });
+      }
+
+      if (toInsert.length === 0) {
+        return NextResponse.json({
+          error: 'All selected prompts are already active in your funnel or invalid.',
+        }, { status: 400 });
+      }
+
+      await prisma.smartChip.createMany({
+        data: toInsert,
+      });
+
+      const updatedChips = await prisma.smartChip.findMany({
+        where: { businessId: business.id },
+        orderBy: { sortOrder: 'asc' },
+      });
+
+      return NextResponse.json({
+        success: true,
+        addedCount: toInsert.length,
+        chips: updatedChips,
+      });
+    }
+
+    // 2. Single chip creation mode
+    const { label, category, phrase, icon, businessId } = body;
 
     const trimmedLabel = (label || '').trim();
     const trimmedPhrase = (phrase || '').trim();

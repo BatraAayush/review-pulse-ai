@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { 
-  Sparkles, 
-  Plus, 
-  Trash2, 
-  RotateCcw, 
-  Check, 
-  Smartphone, 
-  Search, 
-  Loader2, 
+import {
+  Sparkles,
+  Plus,
+  Trash2,
+  RotateCcw,
+  Check,
+  Smartphone,
+  Search,
+  Loader2,
   X,
   Info,
   ShieldCheck,
@@ -20,7 +20,6 @@ import { Business } from '@/types';
 import ConfirmModal from '@/components/ConfirmModal';
 import {
   CATEGORY_DEFAULT_CHIPS,
-  DefaultChipTemplate,
   getSuggestionsForCategory,
   normalizeCategory,
   validateMedicalChipContent,
@@ -67,7 +66,7 @@ const INDUSTRY_CONFIG: Record<string, { label: string; icon: string; desc: strin
 
 export default function SmartChipsManager({
   business,
-  onUpdateBusiness: _onUpdateBusiness,
+  onUpdateBusiness,
   onReloadDashboard,
 }: SmartChipsManagerProps) {
   const { toast } = useToast();
@@ -90,7 +89,8 @@ export default function SmartChipsManager({
 
   // Suggested Prompts Modal states (locked to business category)
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
-  const [addingSuggestionLabel, setAddingSuggestionLabel] = useState<string | null>(null);
+  const [selectedSuggestionLabels, setSelectedSuggestionLabels] = useState<string[]>([]);
+  const [isAddingBatch, setIsAddingBatch] = useState(false);
   const [isApplyingFullPack, setIsApplyingFullPack] = useState(false);
 
   // Confirmation Modals
@@ -121,11 +121,23 @@ export default function SmartChipsManager({
     });
   }, [canonicalCategory]);
 
-  const isChipAlreadyAdded = (label: string) => {
-    return (business.smartChips || []).some(
-      (c) => c.label.toLowerCase().trim() === label.toLowerCase().trim()
+  // Set of active chip labels for fast O(1) lookup
+  const activeChipLabelsSet = useMemo(() => {
+    return new Set(
+      (business.smartChips || []).map((c) => c.label.toLowerCase().trim())
     );
+  }, [business.smartChips]);
+
+  const isChipAlreadyAdded = (label: string) => {
+    return activeChipLabelsSet.has(label.toLowerCase().trim());
   };
+
+  // Available curated ideas not yet in merchant's funnel
+  const availableIdeas = useMemo(() => {
+    return categoryIdeas.filter(
+      (idea) => !activeChipLabelsSet.has(idea.label.toLowerCase().trim())
+    );
+  }, [categoryIdeas, activeChipLabelsSet]);
 
   // Extract all unique categories across active chips
   const chipCategories = useMemo(() => {
@@ -331,36 +343,60 @@ export default function SmartChipsManager({
     }
   };
 
-  // 4. Add Curated Suggestion to Funnel
-  const handleAddSuggestion = async (suggestion: DefaultChipTemplate) => {
-    if (isChipAlreadyAdded(suggestion.label) || Boolean(addingSuggestionLabel)) return;
+  // 4. Multi-Select & Batch Add Suggestions
+  const toggleSuggestionSelection = (label: string) => {
+    if (isChipAlreadyAdded(label)) return;
+    setSelectedSuggestionLabels((prev) =>
+      prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+    );
+  };
 
-    setAddingSuggestionLabel(suggestion.label);
+  const handleSelectAllAvailable = () => {
+    setSelectedSuggestionLabels(availableIdeas.map((i) => i.label));
+  };
+
+  const handleClearSelected = () => {
+    setSelectedSuggestionLabels([]);
+  };
+
+  const handleAddSelectedSuggestions = async () => {
+    if (selectedSuggestionLabels.length === 0 || isAddingBatch) return;
+
+    const chipsToAdd = categoryIdeas.filter((idea) =>
+      selectedSuggestionLabels.includes(idea.label)
+    );
+
+    if (chipsToAdd.length === 0) return;
+
+    setIsAddingBatch(true);
     try {
       const res = await fetch('/api/dashboard/chips', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          label: suggestion.label,
-          category: suggestion.category,
-          phrase: suggestion.phrase,
-          icon: suggestion.icon || 'Sparkles',
+          chips: chipsToAdd,
           businessId: business.id,
         }),
       });
 
       if (res.ok) {
-        toast.success(`Prompt "${suggestion.label}" added to your funnel!`, 'Prompt Added');
+        const data = await res.json().catch(() => ({}));
+        const count = data.addedCount || chipsToAdd.length;
+        toast.success(
+          `Added ${count} prompt${count > 1 ? 's' : ''} to your review funnel!`,
+          'Prompts Added'
+        );
+        setSelectedSuggestionLabels([]);
         if (onReloadDashboard) await onReloadDashboard();
       } else {
         const err = await res.json().catch(() => ({}));
-        toast.error(err.error || 'Failed to add prompt', 'Error');
+        toast.error(err.error || 'Failed to add selected prompts', 'Error');
       }
     } catch (err) {
-      console.error('Failed to add suggestion:', err);
-      toast.error('Network error adding prompt', 'Error');
+      console.error('Failed to add batch suggestions:', err);
+      toast.error('Network error adding prompts', 'Error');
     } finally {
-      setAddingSuggestionLabel(null);
+      setIsAddingBatch(false);
     }
   };
 
@@ -423,11 +459,10 @@ export default function SmartChipsManager({
             <button
               type="button"
               onClick={() => setShowSimulator(!showSimulator)}
-              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-sm ${
-                showSimulator
+              className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-sm ${showSimulator
                   ? 'bg-blue-600/20 text-blue-300 border-blue-500/40 hover:bg-blue-600/30'
                   : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
-              }`}
+                }`}
               title="Toggle interactive live customer review simulator"
             >
               <Smartphone className="w-3.5 h-3.5 text-blue-400" />
@@ -483,11 +518,10 @@ export default function SmartChipsManager({
                     key={chip.id}
                     type="button"
                     onClick={() => toggleSimulatedChip(chip.id)}
-                    className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer border active:scale-95 ${
-                      isSelected
+                    className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer border active:scale-95 ${isSelected
                         ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-500/25 ring-1 ring-blue-400/40'
                         : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-700/80 hover:border-slate-600'
-                    }`}
+                      }`}
                   >
                     <span>{chip.label}</span>
                     {isSelected && <Check className="w-3.5 h-3.5 text-white stroke-[2.5]" />}
@@ -529,11 +563,10 @@ export default function SmartChipsManager({
             <button
               type="button"
               onClick={() => setSelectedFilterCategory('all')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                selectedFilterCategory === 'all'
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${selectedFilterCategory === 'all'
                   ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
                   : 'bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800'
-              }`}
+                }`}
             >
               All Prompts ({business.smartChips?.length || 0})
             </button>
@@ -545,11 +578,10 @@ export default function SmartChipsManager({
                   key={cat}
                   type="button"
                   onClick={() => setSelectedFilterCategory(cat)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer border ${
-                    isActive
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer border ${isActive
                       ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-600/25'
                       : 'bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white border-slate-800'
-                  }`}
+                    }`}
                 >
                   <span>{cat}</span>
                   <span className="ml-1.5 text-[10px] opacity-75 font-mono">({count})</span>
@@ -656,11 +688,10 @@ export default function SmartChipsManager({
                     setNewChipLabel(e.target.value);
                     if (fieldErrors.label) setFieldErrors((prev) => ({ ...prev, label: undefined }));
                   }}
-                  className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition-all ${
-                    fieldErrors.label
+                  className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition-all ${fieldErrors.label
                       ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
                       : 'border-slate-700 focus:border-blue-500'
-                  }`}
+                    }`}
                 />
                 {fieldErrors.label && (
                   <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
@@ -685,11 +716,10 @@ export default function SmartChipsManager({
                     setNewChipCategory(e.target.value);
                     if (fieldErrors.category) setFieldErrors((prev) => ({ ...prev, category: undefined }));
                   }}
-                  className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition-all ${
-                    fieldErrors.category
+                  className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition-all ${fieldErrors.category
                       ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
                       : 'border-slate-700 focus:border-blue-500'
-                  }`}
+                    }`}
                 />
                 {fieldErrors.category && (
                   <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
@@ -728,11 +758,10 @@ export default function SmartChipsManager({
                   setNewChipPhrase(e.target.value);
                   if (fieldErrors.phrase) setFieldErrors((prev) => ({ ...prev, phrase: undefined }));
                 }}
-                className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition-all ${
-                  fieldErrors.phrase
+                className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition-all ${fieldErrors.phrase
                     ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
                     : 'border-slate-700 focus:border-blue-500'
-                }`}
+                  }`}
               />
               {fieldErrors.phrase && (
                 <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
@@ -745,23 +774,23 @@ export default function SmartChipsManager({
         </div>
       </div>
 
-      {/* 6. CATEGORY-LOCKED SUGGESTED PROMPTS MODAL */}
+      {/* 6. CATEGORY-LOCKED MULTI-SELECT SUGGESTED PROMPTS MODAL */}
       {showSuggestionsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150">
           <div
             className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity cursor-pointer"
             onClick={() => {
-              if (!addingSuggestionLabel && !isApplyingFullPack) setShowSuggestionsModal(false);
+              if (!isAddingBatch && !isApplyingFullPack) setShowSuggestionsModal(false);
             }}
             aria-hidden="true"
           />
 
           <div
-            className="w-full max-w-3xl rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-4 sm:p-6 space-y-5 relative z-10 overflow-hidden my-auto max-h-[90vh] flex flex-col"
+            className="w-full max-w-3xl rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-4 sm:p-6 space-y-4 relative z-10 overflow-hidden my-auto max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4 shrink-0">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3.5 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-2xl flex items-center justify-center shrink-0">
                   {currentIndustryMeta.icon}
@@ -776,13 +805,13 @@ export default function SmartChipsManager({
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    High-converting review prompts curated exclusively for your business category. Add any prompt directly to your funnel.
+                    Select multiple prompt ideas below to add them all to your funnel at once.
                   </p>
                 </div>
               </div>
               <button
                 type="button"
-                disabled={Boolean(addingSuggestionLabel) || isApplyingFullPack}
+                disabled={isAddingBatch || isApplyingFullPack}
                 onClick={() => setShowSuggestionsModal(false)}
                 className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
               >
@@ -790,32 +819,86 @@ export default function SmartChipsManager({
               </button>
             </div>
 
-            {/* Modal Body: Curated Suggestions Grid */}
-            <div className="overflow-y-auto flex-1 pr-1 space-y-3">
-              <div className="flex items-center justify-between text-xs text-slate-400 pb-1">
-                <span>{categoryIdeas.length} curated review highlights available</span>
-                <span className="text-slate-500 text-[11px] font-mono">
+            {/* Selection Quick Actions Bar */}
+            <div className="flex items-center justify-between gap-3 flex-wrap pb-1 text-xs shrink-0">
+              <div className="flex items-center gap-2 text-slate-400">
+                <span className="font-semibold text-slate-300">
+                  {availableIdeas.length} suggestions available
+                </span>
+                <span>•</span>
+                <span className="text-slate-500 font-mono">
                   {(business.smartChips || []).length} active in funnel
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 gap-2.5">
-                {categoryIdeas.map((idea) => {
-                  const alreadyAdded = isChipAlreadyAdded(idea.label);
-                  const isCurrentlyAdding = addingSuggestionLabel === idea.label;
+              <div className="flex items-center gap-2">
+                {selectedSuggestionLabels.length > 0 && (
+                  <button
+                    type="button"
+                    disabled={isAddingBatch}
+                    onClick={handleClearSelected}
+                    className="text-xs text-slate-400 hover:text-white underline cursor-pointer disabled:opacity-50"
+                  >
+                    Deselect All
+                  </button>
+                )}
+                {availableIdeas.length > 0 && selectedSuggestionLabels.length < availableIdeas.length && (
+                  <button
+                    type="button"
+                    disabled={isAddingBatch}
+                    onClick={handleSelectAllAvailable}
+                    className="px-2.5 py-1 rounded-lg bg-blue-600/15 hover:bg-blue-600/25 text-blue-300 border border-blue-500/30 font-semibold cursor-pointer disabled:opacity-50 transition-colors"
+                  >
+                    Select All Available ({availableIdeas.length})
+                  </button>
+                )}
+              </div>
+            </div>
 
-                  return (
-                    <div
-                      key={idea.label}
-                      className={`p-3.5 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                        alreadyAdded
-                          ? 'bg-slate-950/40 border-slate-800/80 opacity-90'
-                          : 'bg-slate-950/90 border-slate-800 hover:border-slate-700'
-                      }`}
-                    >
+            {/* Modal Body: Curated Suggestions Multi-Select List */}
+            <div className="overflow-y-auto flex-1 pr-1 space-y-2.5">
+              {categoryIdeas.map((idea) => {
+                const alreadyAdded = isChipAlreadyAdded(idea.label);
+                const isSelected = selectedSuggestionLabels.includes(idea.label);
+
+                return (
+                  <div
+                    key={idea.label}
+                    onClick={() => {
+                      if (!alreadyAdded && !isAddingBatch) {
+                        toggleSuggestionSelection(idea.label);
+                      }
+                    }}
+                    className={`p-3.5 rounded-2xl border transition-all flex items-start sm:items-center justify-between gap-3 group select-none ${
+                      alreadyAdded
+                        ? 'bg-slate-950/40 border-slate-800/60 opacity-75 cursor-default'
+                        : isSelected
+                        ? 'bg-blue-950/40 border-blue-500 ring-1 ring-blue-500/40 shadow-md shadow-blue-900/20 cursor-pointer'
+                        : 'bg-slate-950/80 border-slate-800 hover:border-slate-700 hover:bg-slate-900/80 cursor-pointer'
+                    }`}
+                  >
+                    <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
+                      {/* Checkbox Icon */}
+                      <div className="pt-0.5 sm:pt-0 shrink-0">
+                        {alreadyAdded ? (
+                          <div className="w-5 h-5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center">
+                            <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                          </div>
+                        ) : isSelected ? (
+                          <div className="w-5 h-5 rounded-lg bg-blue-600 text-white flex items-center justify-center shadow-sm shadow-blue-500/40">
+                            <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                          </div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-lg border border-slate-700 bg-slate-900 group-hover:border-slate-500 transition-colors" />
+                        )}
+                      </div>
+
+                      {/* Prompt Details */}
                       <div className="space-y-1 min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-bold text-white">{idea.label}</span>
+                          <span className={`text-xs font-bold ${isSelected ? 'text-blue-200' : 'text-white'}`}>
+                            {idea.label}
+                          </span>
                           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700/80">
                             {idea.category}
                           </span>
@@ -830,61 +913,74 @@ export default function SmartChipsManager({
                           &quot;{idea.phrase}&quot;
                         </p>
                       </div>
-
-                      <div className="shrink-0 flex items-center justify-end">
-                        {alreadyAdded ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 select-none">
-                            <Check className="w-3.5 h-3.5 text-emerald-500/70" />
-                            <span>Added</span>
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            disabled={Boolean(addingSuggestionLabel) || isApplyingFullPack}
-                            onClick={() => handleAddSuggestion(idea)}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-600/20 active:scale-95 cursor-pointer disabled:opacity-50"
-                          >
-                            {isCurrentlyAdding ? (
-                              <>
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                <span>Adding...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Plus className="w-3.5 h-3.5" />
-                                <span>Add to Funnel</span>
-                              </>
-                            )}
-                          </button>
-                        )}
-                      </div>
                     </div>
-                  );
-                })}
-              </div>
+
+                    {/* Right Side Pill */}
+                    <div className="shrink-0 flex items-center justify-end">
+                      {alreadyAdded ? (
+                        <span className="text-xs font-medium text-slate-500 select-none">
+                          Added
+                        </span>
+                      ) : isSelected ? (
+                        <span className="text-xs font-bold text-blue-400 select-none">
+                          Selected
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-500 group-hover:text-slate-300 transition-colors select-none">
+                          + Select
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
-            {/* Modal Footer: Restore Factory Defaults Option */}
-            <div className="pt-3.5 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-              <span className="text-[11px] text-slate-400">
-                Want to restore your funnel back to official {currentIndustryMeta.label} defaults?
-              </span>
+            {/* Modal Sticky Bottom Action Bar */}
+            <div className="pt-3 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
               <button
                 type="button"
-                disabled={Boolean(addingSuggestionLabel) || isApplyingFullPack}
+                disabled={isAddingBatch || isApplyingFullPack}
                 onClick={handleApplyDefaultPack}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-medium transition-all cursor-pointer disabled:opacity-50"
                 title={`Reset all smart chips to official ${currentIndustryMeta.label} defaults`}
               >
                 {isApplyingFullPack ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Applying Default Pack...</span>
+                    <span>Restoring Defaults...</span>
                   </>
                 ) : (
                   <>
                     <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Restore {currentIndustryMeta.label} Defaults</span>
+                    <span>Reset to Defaults</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                disabled={selectedSuggestionLabels.length === 0 || isAddingBatch || isApplyingFullPack}
+                onClick={handleAddSelectedSuggestions}
+                className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg cursor-pointer disabled:cursor-not-allowed ${
+                  selectedSuggestionLabels.length > 0
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-600/30 active:scale-95'
+                    : 'bg-slate-800 text-slate-500 border border-slate-700/80'
+                }`}
+              >
+                {isAddingBatch ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Adding {selectedSuggestionLabels.length} Prompts...</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4" />
+                    <span>
+                      {selectedSuggestionLabels.length > 0
+                        ? `Add Selected (${selectedSuggestionLabels.length}) to Funnel`
+                        : 'Select Prompts to Add'}
+                    </span>
                   </>
                 )}
               </button>
