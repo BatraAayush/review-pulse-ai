@@ -839,11 +839,10 @@ function DashboardContent() {
                                   loadDashboardData(loc.id);
                                 }
                               }}
-                              className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left text-xs transition-colors cursor-pointer ${
-                                isSelected
-                                  ? 'bg-blue-600/15 border border-blue-500/30 text-white font-bold'
-                                  : 'hover:bg-slate-800 text-slate-300'
-                              }`}
+                              className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left text-xs transition-colors cursor-pointer ${isSelected
+                                ? 'bg-blue-600/15 border border-blue-500/30 text-white font-bold'
+                                : 'hover:bg-slate-800 text-slate-300'
+                                }`}
                             >
                               <div className="flex items-center gap-2.5 min-w-0 pr-2">
                                 <div className="w-7 h-7 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center shrink-0 overflow-hidden text-sm">
@@ -885,7 +884,7 @@ function DashboardContent() {
                         className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition-all cursor-pointer"
                       >
                         <Plus className="w-3.5 h-3.5 text-slate-400" />
-                        <span>+ Add New Location</span>
+                        <span>Add New Location</span>
                       </button>
                     </div>
                   </div>
@@ -912,11 +911,10 @@ function DashboardContent() {
                       setActiveTab(tab.id as typeof activeTab);
                       router.replace(`/dashboard?tab=${tab.id}`, { scroll: false });
                     }}
-                    className={`relative flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap cursor-pointer shrink-0 ${
-                      isActive
-                        ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 shadow-sm shadow-blue-500/10'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent'
-                    }`}
+                    className={`relative flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap cursor-pointer shrink-0 ${isActive
+                      ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 shadow-sm shadow-blue-500/10'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent'
+                      }`}
                   >
                     <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-blue-400' : 'text-slate-400'}`} />
                     <span>{tab.label}</span>
@@ -1626,7 +1624,7 @@ function DashboardContent() {
                   className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 hover:text-white border border-slate-700/80 hover:border-slate-600 text-xs font-semibold transition-all shadow-sm shrink-0 cursor-pointer"
                 >
                   <Plus className="w-4 h-4 text-slate-400" />
-                  <span>+ Add New Location</span>
+                  <span>Add New Location</span>
                 </button>
               </div>
 
@@ -1725,7 +1723,7 @@ function DashboardContent() {
                       <Plus className="w-5 h-5" />
                     </div>
                     <span className="text-xs font-bold text-white">
-                      + Add Location #{currentLocCount + 1}
+                      Add Location #{currentLocCount + 1}
                     </span>
                     <span className="text-[11px] text-slate-500">
                       Slot {currentLocCount + 1} of {maxLocations} Available
@@ -2358,8 +2356,8 @@ function DashboardContent() {
                       }}
                       placeholder="e.g. Golden Crust Bakery"
                       className={`w-full bg-slate-950 border rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none transition-all ${businessFieldErrors.name
-                          ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
-                          : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                        ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                        : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
                         }`}
                     />
                     {businessFieldErrors.name && (
@@ -2407,8 +2405,8 @@ function DashboardContent() {
                         }}
                         placeholder="e.g. golden-crust"
                         className={`w-full bg-slate-950 border rounded-xl pl-3.5 pr-4 py-2.5 text-xs font-mono text-white focus:outline-none transition-all ${businessFieldErrors.slug
-                            ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
-                            : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                          ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                          : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
                           }`}
                       />
                     </div>
@@ -2477,11 +2475,10 @@ function DashboardContent() {
 
                 <div
                   id="direct-google-review-url-section"
-                  className={`p-4 rounded-2xl transition-all duration-500 space-y-2.5 ${
-                    highlightReviewUrlField
-                      ? 'bg-amber-950/30 border-2 border-amber-400 ring-4 ring-amber-500/30 shadow-2xl shadow-amber-500/20'
-                      : 'bg-slate-950/60 border border-slate-800'
-                  }`}
+                  className={`p-4 rounded-2xl transition-all duration-500 space-y-2.5 ${highlightReviewUrlField
+                    ? 'bg-amber-950/30 border-2 border-amber-400 ring-4 ring-amber-500/30 shadow-2xl shadow-amber-500/20'
+                    : 'bg-slate-950/60 border border-slate-800'
+                    }`}
                 >
                   <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
                     <div className="flex items-center gap-2">
@@ -2785,8 +2782,8 @@ function DashboardContent() {
                         }}
                         placeholder="e.g. Jane Doe"
                         className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none transition-all ${accountFieldErrors.name
-                            ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
-                            : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                          ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                          : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
                           }`}
                       />
                     </div>
@@ -2814,8 +2811,8 @@ function DashboardContent() {
                         }}
                         placeholder="jane@company.com"
                         className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none transition-all ${accountFieldErrors.email
-                            ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
-                            : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                          ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                          : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
                           }`}
                       />
                     </div>
@@ -2899,8 +2896,8 @@ function DashboardContent() {
                         }}
                         placeholder="Enter current password"
                         className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none transition-all ${passwordFieldErrors.currentPassword
-                            ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
-                            : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                          ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                          : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
                           }`}
                       />
                     </div>
@@ -2928,8 +2925,8 @@ function DashboardContent() {
                         }}
                         placeholder="Enter new password"
                         className={`w-full bg-slate-950 border rounded-xl pl-10 pr-9 py-2.5 text-xs text-white focus:outline-none transition-all ${passwordFieldErrors.newPassword
-                            ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
-                            : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                          ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                          : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
                           }`}
                       />
                       <button
@@ -2965,8 +2962,8 @@ function DashboardContent() {
                         }}
                         placeholder="Confirm new password"
                         className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none transition-all ${passwordFieldErrors.confirmNewPassword
-                            ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
-                            : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                          ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                          : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
                           }`}
                       />
                     </div>
@@ -3203,8 +3200,8 @@ function DashboardContent() {
                   }}
                   placeholder="e.g. Jack Gym - Downtown Branch"
                   className={`w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-950 border text-white placeholder-slate-500 focus:outline-none transition-all ${newLocFieldErrors.name
-                      ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
-                      : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                    ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                    : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
                     }`}
                 />
                 {newLocFieldErrors.name && (

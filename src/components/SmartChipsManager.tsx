@@ -6,6 +6,7 @@ import {
   Plus,
   Trash2,
   RotateCcw,
+  BookOpen,
   Check,
   Smartphone,
   Search,
@@ -16,10 +17,11 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useToast } from '@/components/ToastContext';
-import { Business } from '@/types';
+import { Business, BusinessCategory } from '@/types';
 import ConfirmModal from '@/components/ConfirmModal';
 import {
   CATEGORY_DEFAULT_CHIPS,
+  DefaultChipTemplate,
   getSuggestionsForCategory,
   normalizeCategory,
   validateMedicalChipContent,
@@ -121,23 +123,16 @@ export default function SmartChipsManager({
     });
   }, [canonicalCategory]);
 
-  // Set of active chip labels for fast O(1) lookup
-  const activeChipLabelsSet = useMemo(() => {
-    return new Set(
-      (business.smartChips || []).map((c) => c.label.toLowerCase().trim())
-    );
-  }, [business.smartChips]);
-
   const isChipAlreadyAdded = (label: string) => {
-    return activeChipLabelsSet.has(label.toLowerCase().trim());
+    return (business.smartChips || []).some(
+      (c) => c.label.toLowerCase().trim() === label.toLowerCase().trim()
+    );
   };
 
   // Available curated ideas not yet in merchant's funnel
   const availableIdeas = useMemo(() => {
-    return categoryIdeas.filter(
-      (idea) => !activeChipLabelsSet.has(idea.label.toLowerCase().trim())
-    );
-  }, [categoryIdeas, activeChipLabelsSet]);
+    return categoryIdeas.filter((idea) => !isChipAlreadyAdded(idea.label));
+  }, [categoryIdeas, business.smartChips]);
 
   // Extract all unique categories across active chips
   const chipCategories = useMemo(() => {
@@ -460,8 +455,8 @@ export default function SmartChipsManager({
               type="button"
               onClick={() => setShowSimulator(!showSimulator)}
               className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-sm ${showSimulator
-                  ? 'bg-blue-600/20 text-blue-300 border-blue-500/40 hover:bg-blue-600/30'
-                  : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                ? 'bg-blue-600/20 text-blue-300 border-blue-500/40 hover:bg-blue-600/30'
+                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
                 }`}
               title="Toggle interactive live customer review simulator"
             >
@@ -519,8 +514,8 @@ export default function SmartChipsManager({
                     type="button"
                     onClick={() => toggleSimulatedChip(chip.id)}
                     className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer border active:scale-95 ${isSelected
-                        ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-500/25 ring-1 ring-blue-400/40'
-                        : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-700/80 hover:border-slate-600'
+                      ? 'bg-blue-600 text-white border-blue-400 shadow-md shadow-blue-500/25 ring-1 ring-blue-400/40'
+                      : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border-slate-700/80 hover:border-slate-600'
                       }`}
                   >
                     <span>{chip.label}</span>
@@ -564,8 +559,8 @@ export default function SmartChipsManager({
               type="button"
               onClick={() => setSelectedFilterCategory('all')}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${selectedFilterCategory === 'all'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
-                  : 'bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800'
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/25'
+                : 'bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800'
                 }`}
             >
               All Prompts ({business.smartChips?.length || 0})
@@ -579,8 +574,8 @@ export default function SmartChipsManager({
                   type="button"
                   onClick={() => setSelectedFilterCategory(cat)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer border ${isActive
-                      ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-600/25'
-                      : 'bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white border-slate-800'
+                    ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-600/25'
+                    : 'bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-white border-slate-800'
                     }`}
                 >
                   <span>{cat}</span>
@@ -689,8 +684,8 @@ export default function SmartChipsManager({
                     if (fieldErrors.label) setFieldErrors((prev) => ({ ...prev, label: undefined }));
                   }}
                   className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition-all ${fieldErrors.label
-                      ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
-                      : 'border-slate-700 focus:border-blue-500'
+                    ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                    : 'border-slate-700 focus:border-blue-500'
                     }`}
                 />
                 {fieldErrors.label && (
@@ -717,8 +712,8 @@ export default function SmartChipsManager({
                     if (fieldErrors.category) setFieldErrors((prev) => ({ ...prev, category: undefined }));
                   }}
                   className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition-all ${fieldErrors.category
-                      ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
-                      : 'border-slate-700 focus:border-blue-500'
+                    ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                    : 'border-slate-700 focus:border-blue-500'
                     }`}
                 />
                 {fieldErrors.category && (
@@ -759,8 +754,8 @@ export default function SmartChipsManager({
                   if (fieldErrors.phrase) setFieldErrors((prev) => ({ ...prev, phrase: undefined }));
                 }}
                 className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition-all ${fieldErrors.phrase
-                    ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
-                    : 'border-slate-700 focus:border-blue-500'
+                  ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                  : 'border-slate-700 focus:border-blue-500'
                   }`}
               />
               {fieldErrors.phrase && (
@@ -869,13 +864,12 @@ export default function SmartChipsManager({
                         toggleSuggestionSelection(idea.label);
                       }
                     }}
-                    className={`p-3.5 rounded-2xl border transition-all flex items-start sm:items-center justify-between gap-3 group select-none ${
-                      alreadyAdded
-                        ? 'bg-slate-950/40 border-slate-800/60 opacity-75 cursor-default'
-                        : isSelected
+                    className={`p-3.5 rounded-2xl border transition-all flex items-start sm:items-center justify-between gap-3 group select-none ${alreadyAdded
+                      ? 'bg-slate-950/40 border-slate-800/60 opacity-75 cursor-default'
+                      : isSelected
                         ? 'bg-blue-950/40 border-blue-500 ring-1 ring-blue-500/40 shadow-md shadow-blue-900/20 cursor-pointer'
                         : 'bg-slate-950/80 border-slate-800 hover:border-slate-700 hover:bg-slate-900/80 cursor-pointer'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
                       {/* Checkbox Icon */}
@@ -927,7 +921,7 @@ export default function SmartChipsManager({
                         </span>
                       ) : (
                         <span className="text-xs text-slate-500 group-hover:text-slate-300 transition-colors select-none">
-                          + Select
+                          Select
                         </span>
                       )}
                     </div>
@@ -962,11 +956,10 @@ export default function SmartChipsManager({
                 type="button"
                 disabled={selectedSuggestionLabels.length === 0 || isAddingBatch || isApplyingFullPack}
                 onClick={handleAddSelectedSuggestions}
-                className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg cursor-pointer disabled:cursor-not-allowed ${
-                  selectedSuggestionLabels.length > 0
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-600/30 active:scale-95'
-                    : 'bg-slate-800 text-slate-500 border border-slate-700/80'
-                }`}
+                className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg cursor-pointer disabled:cursor-not-allowed ${selectedSuggestionLabels.length > 0
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-600/30 active:scale-95'
+                  : 'bg-slate-800 text-slate-500 border border-slate-700/80'
+                  }`}
               >
                 {isAddingBatch ? (
                   <>
