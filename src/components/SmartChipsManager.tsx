@@ -6,7 +6,6 @@ import {
   Plus, 
   Trash2, 
   RotateCcw, 
-  BookOpen, 
   Check, 
   Smartphone, 
   Search, 
@@ -17,9 +16,15 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useToast } from '@/components/ToastContext';
-import { Business, BusinessCategory } from '@/types';
+import { Business } from '@/types';
 import ConfirmModal from '@/components/ConfirmModal';
-import { CATEGORY_DEFAULT_CHIPS, normalizeCategory, validateMedicalChipContent } from '@/lib/chips';
+import {
+  CATEGORY_DEFAULT_CHIPS,
+  DefaultChipTemplate,
+  getSuggestionsForCategory,
+  normalizeCategory,
+  validateMedicalChipContent,
+} from '@/lib/chips';
 
 interface SmartChipsManagerProps {
   business: Business;
@@ -62,7 +67,7 @@ const INDUSTRY_CONFIG: Record<string, { label: string; icon: string; desc: strin
 
 export default function SmartChipsManager({
   business,
-  onUpdateBusiness,
+  onUpdateBusiness: _onUpdateBusiness,
   onReloadDashboard,
 }: SmartChipsManagerProps) {
   const { toast } = useToast();
@@ -83,12 +88,10 @@ export default function SmartChipsManager({
     phrase?: string;
   }>({});
 
-  // Template Library Modal states
-  const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
-  const [previewTemplateCategory, setPreviewTemplateCategory] = useState<string>(
-    normalizeCategory(business.category)
-  );
-  const [isApplyingTemplate, setIsApplyingTemplate] = useState(false);
+  // Suggested Prompts Modal states (locked to business category)
+  const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
+  const [addingSuggestionLabel, setAddingSuggestionLabel] = useState<string | null>(null);
+  const [isApplyingFullPack, setIsApplyingFullPack] = useState(false);
 
   // Confirmation Modals
   const [confirmResetOpen, setConfirmResetOpen] = useState(false);
@@ -103,6 +106,26 @@ export default function SmartChipsManager({
 
   const canonicalCategory = normalizeCategory(business.category);
   const currentIndustryMeta = INDUSTRY_CONFIG[canonicalCategory] || INDUSTRY_CONFIG.restaurant;
+
+  // Curated ideas strictly locked to this business's category
+  const categoryIdeas = useMemo(() => {
+    const defaults = CATEGORY_DEFAULT_CHIPS[canonicalCategory] || [];
+    const extra = getSuggestionsForCategory(canonicalCategory) || [];
+    const combined = [...defaults, ...extra];
+    const seen = new Set<string>();
+    return combined.filter((c) => {
+      const key = c.label.toLowerCase().trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [canonicalCategory]);
+
+  const isChipAlreadyAdded = (label: string) => {
+    return (business.smartChips || []).some(
+      (c) => c.label.toLowerCase().trim() === label.toLowerCase().trim()
+    );
+  };
 
   // Extract all unique categories across active chips
   const chipCategories = useMemo(() => {
@@ -308,39 +331,68 @@ export default function SmartChipsManager({
     }
   };
 
-  // 4. Apply Industry Template Pack
-  const handleApplyTemplatePack = async (targetCat: string) => {
-    setIsApplyingTemplate(true);
+  // 4. Add Curated Suggestion to Funnel
+  const handleAddSuggestion = async (suggestion: DefaultChipTemplate) => {
+    if (isChipAlreadyAdded(suggestion.label) || Boolean(addingSuggestionLabel)) return;
+
+    setAddingSuggestionLabel(suggestion.label);
     try {
       const res = await fetch('/api/dashboard/chips', {
-        method: 'PUT',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          category: targetCat,
+          label: suggestion.label,
+          category: suggestion.category,
+          phrase: suggestion.phrase,
+          icon: suggestion.icon || 'Sparkles',
           businessId: business.id,
         }),
       });
 
       if (res.ok) {
-        const packInfo = INDUSTRY_CONFIG[targetCat] || { label: targetCat };
-        toast.success(
-          `Switched to ${packInfo.label} prompt pack! All prompts and category updated.`,
-          'Template Applied'
-        );
-        if (onUpdateBusiness) {
-          await onUpdateBusiness({ category: targetCat as BusinessCategory });
-        }
-        setShowTemplateLibrary(false);
+        toast.success(`Prompt "${suggestion.label}" added to your funnel!`, 'Prompt Added');
         if (onReloadDashboard) await onReloadDashboard();
       } else {
         const err = await res.json().catch(() => ({}));
-        toast.error(err.error || 'Failed to apply template pack', 'Error');
+        toast.error(err.error || 'Failed to add prompt', 'Error');
       }
     } catch (err) {
-      console.error('Failed to apply template pack:', err);
-      toast.error('Network error applying template pack', 'Error');
+      console.error('Failed to add suggestion:', err);
+      toast.error('Network error adding prompt', 'Error');
     } finally {
-      setIsApplyingTemplate(false);
+      setAddingSuggestionLabel(null);
+    }
+  };
+
+  // 5. Apply Default Pack from Modal
+  const handleApplyDefaultPack = async () => {
+    setIsApplyingFullPack(true);
+    try {
+      const res = await fetch('/api/dashboard/chips', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: canonicalCategory,
+          businessId: business.id,
+        }),
+      });
+
+      if (res.ok) {
+        toast.success(
+          `Restored official default prompts for ${currentIndustryMeta.label}!`,
+          'Defaults Restored'
+        );
+        setShowSuggestionsModal(false);
+        if (onReloadDashboard) await onReloadDashboard();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error || 'Failed to apply defaults', 'Error');
+      }
+    } catch (err) {
+      console.error('Failed to apply default pack:', err);
+      toast.error('Network error restoring defaults', 'Error');
+    } finally {
+      setIsApplyingFullPack(false);
     }
   };
 
@@ -382,17 +434,15 @@ export default function SmartChipsManager({
               <span>{showSimulator ? 'Hide Simulator' : 'Live Simulator'}</span>
             </button>
 
-            {/* Template Library Button */}
+            {/* Suggested Prompts Button */}
             <button
               type="button"
-              onClick={() => {
-                setPreviewTemplateCategory(canonicalCategory);
-                setShowTemplateLibrary(true);
-              }}
+              onClick={() => setShowSuggestionsModal(true)}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-600/20 active:scale-95 cursor-pointer"
+              title={`Browse curated prompt suggestions for ${currentIndustryMeta.label}`}
             >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>Template Library</span>
+              <Sparkles className="w-3.5 h-3.5 text-blue-200" />
+              <span>Suggested Prompts</span>
             </button>
 
             {/* Restore Factory Defaults Button */}
@@ -528,7 +578,7 @@ export default function SmartChipsManager({
               <Info className="w-6 h-6 text-slate-500 mx-auto" />
               <p className="text-xs font-semibold text-slate-300">No prompt chips found matching your filter</p>
               <p className="text-[11px] text-slate-500">
-                Try resetting your search filter or restore industry defaults from the Template Library above.
+                Try resetting your search filter or add prompts from Suggested Prompts above.
               </p>
             </div>
           ) : (
@@ -695,146 +745,149 @@ export default function SmartChipsManager({
         </div>
       </div>
 
-      {/* 6. INDUSTRY TEMPLATE LIBRARY MODAL */}
-      {showTemplateLibrary && (
+      {/* 6. CATEGORY-LOCKED SUGGESTED PROMPTS MODAL */}
+      {showSuggestionsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150">
           <div
             className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity cursor-pointer"
-            onClick={() => setShowTemplateLibrary(false)}
+            onClick={() => {
+              if (!addingSuggestionLabel && !isApplyingFullPack) setShowSuggestionsModal(false);
+            }}
             aria-hidden="true"
           />
 
           <div
-            className="w-full max-w-4xl rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-4 sm:p-7 space-y-5 relative z-10 overflow-hidden my-auto max-h-[90vh] flex flex-col"
+            className="w-full max-w-3xl rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-4 sm:p-6 space-y-5 relative z-10 overflow-hidden my-auto max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-4 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
-                  <BookOpen className="w-5 h-5" />
+                <div className="w-11 h-11 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-2xl flex items-center justify-center shrink-0">
+                  {currentIndustryMeta.icon}
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white tracking-tight">Industry Template Packs</h3>
-                  <p className="text-xs text-slate-400">
-                    Pre-configured, high-converting review prompt packs tested for 5-star Google review conversion.
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-lg font-bold text-white tracking-tight">
+                      {currentIndustryMeta.label} Prompt Library
+                    </h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      Category Locked
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    High-converting review prompts curated exclusively for your business category. Add any prompt directly to your funnel.
                   </p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setShowTemplateLibrary(false)}
-                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                disabled={Boolean(addingSuggestionLabel) || isApplyingFullPack}
+                onClick={() => setShowSuggestionsModal(false)}
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-50"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Modal Body: Left column categories, right column preview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 overflow-y-auto flex-1 pr-1">
-              {/* Category Pack Selector List */}
-              <div className="space-y-2">
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">
-                  Select Industry Pack:
+            {/* Modal Body: Curated Suggestions Grid */}
+            <div className="overflow-y-auto flex-1 pr-1 space-y-3">
+              <div className="flex items-center justify-between text-xs text-slate-400 pb-1">
+                <span>{categoryIdeas.length} curated review highlights available</span>
+                <span className="text-slate-500 text-[11px] font-mono">
+                  {(business.smartChips || []).length} active in funnel
                 </span>
-                {Object.entries(INDUSTRY_CONFIG).map(([key, config]) => {
-                  const isSelected = previewTemplateCategory === key;
-                  const isCurrentlyActive = canonicalCategory === key;
-                  const packChips = CATEGORY_DEFAULT_CHIPS[key] || [];
+              </div>
+
+              <div className="grid grid-cols-1 gap-2.5">
+                {categoryIdeas.map((idea) => {
+                  const alreadyAdded = isChipAlreadyAdded(idea.label);
+                  const isCurrentlyAdding = addingSuggestionLabel === idea.label;
 
                   return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => setPreviewTemplateCategory(key)}
-                      className={`w-full text-left p-3.5 rounded-2xl border transition-all cursor-pointer relative ${
-                        isSelected
-                          ? 'bg-blue-950/40 border-blue-500/60 shadow-lg shadow-blue-900/20 ring-1 ring-blue-500/40'
-                          : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 text-slate-300 hover:bg-slate-900'
+                    <div
+                      key={idea.label}
+                      className={`p-3.5 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                        alreadyAdded
+                          ? 'bg-slate-950/40 border-slate-800/80 opacity-90'
+                          : 'bg-slate-950/90 border-slate-800 hover:border-slate-700'
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="flex items-center gap-2 text-xs font-bold text-white">
-                          <span className="text-base">{config.icon}</span>
-                          <span>{config.label}</span>
-                        </span>
-                        {isCurrentlyActive && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                            Active
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-bold text-white">{idea.label}</span>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700/80">
+                            {idea.category}
                           </span>
+                          {alreadyAdded && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                              <Check className="w-3 h-3 stroke-[2.5]" />
+                              <span>In Funnel</span>
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-slate-300 italic leading-relaxed">
+                          &quot;{idea.phrase}&quot;
+                        </p>
+                      </div>
+
+                      <div className="shrink-0 flex items-center justify-end">
+                        {alreadyAdded ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 select-none">
+                            <Check className="w-3.5 h-3.5 text-emerald-500/70" />
+                            <span>Added</span>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={Boolean(addingSuggestionLabel) || isApplyingFullPack}
+                            onClick={() => handleAddSuggestion(idea)}
+                            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md shadow-blue-600/20 active:scale-95 cursor-pointer disabled:opacity-50"
+                          >
+                            {isCurrentlyAdding ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                <span>Adding...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>Add to Funnel</span>
+                              </>
+                            )}
+                          </button>
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-400 line-clamp-1">{config.desc}</p>
-                      <div className="text-[10px] text-slate-500 mt-1 font-mono">
-                        {packChips.length} curated review highlights
-                      </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
+            </div>
 
-              {/* Template Preview Section */}
-              <div className="md:col-span-2 p-5 rounded-2xl bg-slate-950/80 border border-slate-800 flex flex-col justify-between space-y-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
-                    <div>
-                      <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                        <span>{INDUSTRY_CONFIG[previewTemplateCategory]?.icon}</span>
-                        <span>{INDUSTRY_CONFIG[previewTemplateCategory]?.label} Pack</span>
-                      </h4>
-                      <p className="text-[11px] text-slate-400 mt-0.5">
-                        {INDUSTRY_CONFIG[previewTemplateCategory]?.desc}
-                      </p>
-                    </div>
-                    <span className="text-xs px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 font-semibold font-mono">
-                      {(CATEGORY_DEFAULT_CHIPS[previewTemplateCategory] || []).length} Prompts
-                    </span>
-                  </div>
-
-                  {/* Chips Preview list */}
-                  <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
-                    {(CATEGORY_DEFAULT_CHIPS[previewTemplateCategory] || []).map((chip, idx) => (
-                      <div
-                        key={idx}
-                        className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-blue-300">{chip.label}</span>
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
-                            {chip.category}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-300 italic leading-relaxed">&quot;{chip.phrase}&quot;</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Apply Button */}
-                <div className="pt-3 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <span className="text-[11px] text-slate-400">
-                    Applying this pack replaces your current prompts with these industry defaults.
-                  </span>
-                  <button
-                    type="button"
-                    disabled={isApplyingTemplate}
-                    onClick={() => handleApplyTemplatePack(previewTemplateCategory)}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition-all cursor-pointer disabled:opacity-50 shrink-0"
-                  >
-                    {isApplyingTemplate ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>Applying Pack...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Check className="w-3.5 h-3.5" />
-                        <span>Apply {INDUSTRY_CONFIG[previewTemplateCategory]?.icon} Template Pack</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
+            {/* Modal Footer: Restore Factory Defaults Option */}
+            <div className="pt-3.5 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+              <span className="text-[11px] text-slate-400">
+                Want to restore your funnel back to official {currentIndustryMeta.label} defaults?
+              </span>
+              <button
+                type="button"
+                disabled={Boolean(addingSuggestionLabel) || isApplyingFullPack}
+                onClick={handleApplyDefaultPack}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+                title={`Reset all smart chips to official ${currentIndustryMeta.label} defaults`}
+              >
+                {isApplyingFullPack ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Applying Default Pack...</span>
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Restore {currentIndustryMeta.label} Defaults</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

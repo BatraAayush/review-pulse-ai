@@ -61,6 +61,68 @@ CATEGORY_DEFAULT_CHIPS.dental = CATEGORY_DEFAULT_CHIPS.clinic;
 CATEGORY_DEFAULT_CHIPS.healthcare = CATEGORY_DEFAULT_CHIPS.clinic;
 CATEGORY_DEFAULT_CHIPS.spa = CATEGORY_DEFAULT_CHIPS.salon;
 
+export const CATEGORY_SUGGESTION_CHIPS: Record<string, DefaultChipTemplate[]> = {
+  restaurant: [
+    { label: '🍝 Fresh Handmade Pasta', category: 'Taste', phrase: 'The handmade pasta was cooked to al dente perfection with rich authentic sauce.', icon: 'Utensils' },
+    { label: '🔥 Wood-Fired Pizza', category: 'Taste', phrase: 'Crispy blistered crust and fresh mozzarella made this pizza phenomenal.', icon: 'Utensils' },
+    { label: '🍷 Sommelier Wine Pairing', category: 'Beverage', phrase: 'The wine pairing recommendations elevated our whole dinner experience.', icon: 'Coffee' },
+    { label: '🕯️ Romantic Date Night', category: 'Vibe', phrase: 'Intimate lighting and cozy atmosphere, perfect for a dinner date.', icon: 'Sparkles' },
+    { label: '🌿 Vegetarian & Vegan Friendly', category: 'Dietary', phrase: 'Outstanding plant-based choices full of bold flavor and fresh ingredients.', icon: 'Smile' },
+    { label: '👨‍👩‍👧 Family & Group Friendly', category: 'Vibe', phrase: 'Spacious seating and accommodating staff made dining with our group easy.', icon: 'HeartHandshake' },
+    { label: '☕ Artisan Espresso & Tiramisu', category: 'Dessert', phrase: 'Do not leave without trying the authentic tiramisu and fresh espresso.', icon: 'Coffee' },
+    { label: '🌿 Beautiful Patio Seating', category: 'Ambience', phrase: 'Lovely outdoor patio area with great open-air ambience and lighting.', icon: 'Sparkles' },
+  ],
+  fitness: [
+    { label: '🥊 High-Energy HIIT Classes', category: 'Workouts', phrase: 'High-intensity circuits that kept me motivated through the whole session.', icon: 'Zap' },
+    { label: '🧘 Calm Yoga & Stretching', category: 'Recovery', phrase: 'Peaceful studio area perfect for warm-ups, yoga, and mobility recovery.', icon: 'Smile' },
+    { label: '💧 Clean Saunas & Showers', category: 'Amenities', phrase: 'The sauna, lockers, and shower facilities are always spotless.', icon: 'Sparkles' },
+    { label: '🏆 Goal-Oriented Personal Training', category: 'Coaching', phrase: 'Trainers build tailored workout plans that deliver real measurable results.', icon: 'Sparkles' },
+    { label: '🍎 Nutrition & Meal Guidance', category: 'Wellness', phrase: 'Great advice on fueling workouts and building sustainable healthy habits.', icon: 'HeartHandshake' },
+    { label: '🎶 Motivating Music & Atmosphere', category: 'Vibe', phrase: 'Great playlist and uplifting energy that makes working out fun.', icon: 'Zap' },
+  ],
+  clinic: [
+    { label: '🛡️ Thorough & Gentle Checkup', category: 'Patient Care', phrase: 'The doctor took their time and made sure I felt completely at ease.', icon: 'ShieldCheck' },
+    { label: '📋 Clear Treatment Explanations', category: 'Communication', phrase: 'Transparent breakdown and clear step-by-step guidance before any procedure.', icon: 'Sparkles' },
+    { label: '🧸 Kid & Family Friendly', category: 'Patient Care', phrase: 'Staff was extremely patient, kind, and comforting with our children.', icon: 'HeartHandshake' },
+    { label: '🚗 Convenient Parking & Easy Access', category: 'Convenience', phrase: 'Easy to locate with plenty of dedicated parking space right outside.', icon: 'CheckCircle2' },
+    { label: '📱 Seamless Online Reminders', category: 'Convenience', phrase: 'Helpful SMS reminders and easy online check-in without delays.', icon: 'CheckCircle2' },
+    { label: '🧼 Spotless Sanitized Rooms', category: 'Facility', phrase: 'Treatment rooms and instruments were visibly sterile and well maintained.', icon: 'ShieldCheck' },
+  ],
+  salon: [
+    { label: '✨ Deep Conditioning & Gloss', category: 'Treatment', phrase: 'My hair feels revitalized, silky smooth, and full of natural shine.', icon: 'Sparkles' },
+    { label: '🧔 Precision Hot-Towel Beard Trim', category: 'Grooming', phrase: 'Sharp lines and great attention to detail on the hot towel beard grooming.', icon: 'Sparkles' },
+    { label: '💅 Long-Lasting Manicure', category: 'Nails', phrase: 'Flawless cuticle work and chip-free polish that lasted for weeks.', icon: 'Smile' },
+    { label: '💆 Heavenly Scalp Massage', category: 'Relaxation', phrase: 'The scalp massage during the wash was heavenly and deeply relaxing.', icon: 'HeartHandshake' },
+    { label: '🌿 Natural & Organic Products', category: 'Quality', phrase: 'Appreciated the gentle, sulfate-free salon products that smell amazing.', icon: 'Sparkles' },
+  ],
+  automotive: [
+    { label: '🛞 Precision Wheel Alignment', category: 'Service', phrase: 'Smooth ride and straight steering after the precision tire alignment.', icon: 'Zap' },
+    { label: '❄️ Ice-Cold AC Recharge', category: 'Climate', phrase: 'Air conditioning is blowing ice cold again with quick diagnostic turnaround.', icon: 'Zap' },
+    { label: '🔋 Instant Battery & Electrical Test', category: 'Diagnostics', phrase: 'Quick electrical diagnostic test and new battery installed on the spot.', icon: 'ShieldCheck' },
+    { label: '📑 Transparent Digital Inspection', category: 'Trust', phrase: 'Sent clear photos and estimates before beginning any repairs.', icon: 'CheckCircle2' },
+    { label: '☕ Comfortable Customer Lounge', category: 'Amenities', phrase: 'Clean waiting area with fast Wi-Fi and complimentary hot coffee.', icon: 'Coffee' },
+  ],
+  retail: [
+    { label: '🎁 Complimentary Gift Wrapping', category: 'Service', phrase: 'Beautiful gift packaging that saved me so much time and effort.', icon: 'HeartHandshake' },
+    { label: '🔄 Hassle-Free Returns & Exchanges', category: 'Service', phrase: 'Seamless, quick return process with courteous customer support.', icon: 'CheckCircle2' },
+    { label: '🌱 Eco-Friendly Packaging', category: 'Quality', phrase: 'Love that the store uses recyclable materials and conscious packaging.', icon: 'Sparkles' },
+    { label: '📱 Fast In-Store Pickup', category: 'Speed', phrase: 'Online order was ready for pickup in under 30 minutes without waiting.', icon: 'Zap' },
+    { label: '🛋️ Well-Curated Displays', category: 'Ambience', phrase: 'Beautifully organized store where it is a pleasure to browse.', icon: 'Smile' },
+  ],
+};
+
+CATEGORY_SUGGESTION_CHIPS.gym = CATEGORY_SUGGESTION_CHIPS.fitness;
+CATEGORY_SUGGESTION_CHIPS.food = CATEGORY_SUGGESTION_CHIPS.restaurant;
+CATEGORY_SUGGESTION_CHIPS.auto = CATEGORY_SUGGESTION_CHIPS.automotive;
+CATEGORY_SUGGESTION_CHIPS.dental = CATEGORY_SUGGESTION_CHIPS.clinic;
+CATEGORY_SUGGESTION_CHIPS.healthcare = CATEGORY_SUGGESTION_CHIPS.clinic;
+CATEGORY_SUGGESTION_CHIPS.spa = CATEGORY_SUGGESTION_CHIPS.salon;
+
+export function getSuggestionsForCategory(category: string): DefaultChipTemplate[] {
+  const canonical = normalizeCategory(category);
+  return CATEGORY_SUGGESTION_CHIPS[canonical] || CATEGORY_SUGGESTION_CHIPS.restaurant;
+}
+
 export function normalizeCategory(category: string): 'restaurant' | 'fitness' | 'clinic' | 'salon' | 'automotive' | 'retail' {
   const normalized = (category || '').toLowerCase().trim();
   if (normalized === 'fitness' || normalized.includes('gym') || normalized.includes('fit') || normalized.includes('workout')) {
