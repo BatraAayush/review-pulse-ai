@@ -3012,25 +3012,17 @@ function DashboardContent() {
                           }`}
                       />
                     </div>
-                    {accountFieldErrors.email && (
+                    {accountFieldErrors.email ? (
                       <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
                         <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                         <span>{accountFieldErrors.email}</span>
                       </p>
+                    ) : (
+                      <p className="mt-1.5 text-[11px] text-slate-500">
+                        Email used to sign into your dashboard
+                      </p>
                     )}
                   </div>
-                </div>
-
-                <div className="flex items-center justify-between text-xs text-slate-400 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-500">Account Role:</span>
-                    <span className="font-semibold text-white uppercase text-[11px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                      {user?.role || 'OWNER'}
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-slate-500">
-                    Email is used to sign into your dashboard
-                  </span>
                 </div>
 
                 <div className="pt-2">
