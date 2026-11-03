@@ -60,7 +60,7 @@ import RazorpayPaymentModal from '@/components/RazorpayPaymentModal';
 import CustomSelect from '@/components/CustomSelect';
 import { useToast } from '@/components/ToastContext';
 import { Business, PrivateFeedback, ScanEvent, PaymentTransactionItem } from '@/types';
-import { isImageLogo, getCategoryEmoji } from '@/lib/logo';
+import { isImageLogo, getCategoryEmoji, compressAndProcessImageFile } from '@/lib/logo';
 import { PLANS_CONFIG, PlanKey } from '@/lib/payment';
 import { validatePassword } from '@/lib/passwordValidation';
 import PasswordRequirements from '@/components/PasswordRequirements';
@@ -217,45 +217,43 @@ function DashboardContent() {
   const [addLocError, setAddLocError] = useState<string | null>(null);
   const [newLocFieldErrors, setNewLocFieldErrors] = useState<{ name?: string }>({});
 
-  // Logo file upload helper (FileReader -> base64 data URL)
-  const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>, target: 'settings' | 'newLocation') => {
+  // Logo file upload helper (Auto-downscales and compresses to lightweight Data URL)
+  const handleLogoFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'settings' | 'newLocation') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Image file must be under 2MB. Please choose a smaller image or compressed file.', 'File Too Large');
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image file must be under 10MB. Please choose a smaller image.', 'File Too Large');
+      if (e.target) e.target.value = '';
       return;
     }
 
     if (!file.type.startsWith('image/')) {
       toast.error('Please select a valid image file (PNG, JPG, SVG, WebP)', 'Invalid File Type');
+      if (e.target) e.target.value = '';
       return;
     }
 
-    const reader = new FileReader();
     if (target === 'settings') setLogoUploading(true);
     else setNewLocLogoUploading(true);
 
-    reader.onload = (loadEvent) => {
-      const dataUrl = loadEvent.target?.result as string;
+    try {
+      const dataUrl = await compressAndProcessImageFile(file, 400);
       if (target === 'settings') {
         setEditLogoUrl(dataUrl);
-        setLogoUploading(false);
-        toast.success('Logo uploaded! Click "Save Business Details" to persist.', 'Logo Ready');
+        toast.success('Logo uploaded & optimized! Click "Save Business Details" to persist.', 'Logo Ready');
       } else {
         setNewLocLogoUrl(dataUrl);
-        setNewLocLogoUploading(false);
-        toast.success('Branch logo selected.', 'Logo Ready');
+        toast.success('Branch logo uploaded & optimized.', 'Logo Ready');
       }
-    };
-
-    reader.onerror = () => {
+    } catch (err) {
+      console.error('Failed to process image:', err);
+      toast.error('Failed to process image file. Please try another image.', 'Upload Error');
+    } finally {
+      if (e.target) e.target.value = '';
       if (target === 'settings') setLogoUploading(false);
       else setNewLocLogoUploading(false);
-      toast.error('Failed to read image file', 'Error');
-    };
-
-    reader.readAsDataURL(file);
+    }
   };
 
   // Close location and profile dropdowns on outside click
@@ -2286,21 +2284,46 @@ function DashboardContent() {
                           )}
                           <span>Upload Image (PNG, JPG, SVG, WebP)</span>
                         </button>
-                        <span className="text-[11px] text-slate-500">Instant file upload • Max 2MB</span>
+                        <span className="text-[11px] text-slate-500">Auto-optimized for retina QR • Max 10MB</span>
                       </div>
 
-                      {/* Direct URL input */}
+                      {/* Direct URL input or Active Upload Status */}
                       <div>
-                        <div className="relative">
-                          <Link2 className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3" />
-                          <input
-                            type="text"
-                            value={editLogoUrl.startsWith('data:') ? 'Custom uploaded image (stored)' : editLogoUrl}
-                            onChange={(e) => setEditLogoUrl(e.target.value)}
-                            placeholder="Or paste direct image URL (https://... or emoji)"
-                            className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
-                          />
-                        </div>
+                        {editLogoUrl.startsWith('data:') ? (
+                          <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-between gap-3 text-xs">
+                            <div className="flex items-center gap-2 text-blue-300">
+                              <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+                              <span className="font-medium">Custom logo uploaded & optimized</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() => logoFileInputRef.current?.click()}
+                                className="text-[11px] font-semibold text-blue-400 hover:text-blue-300 underline cursor-pointer"
+                              >
+                                Replace
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditLogoUrl('')}
+                                className="text-[11px] font-semibold text-rose-400 hover:text-rose-300 underline cursor-pointer"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="relative">
+                            <Link2 className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3" />
+                            <input
+                              type="text"
+                              value={editLogoUrl}
+                              onChange={(e) => setEditLogoUrl(e.target.value)}
+                              placeholder="Or paste direct image URL (https://...) or emoji"
+                              className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
+                            />
+                          </div>
+                        )}
                       </div>
 
                       {/* Quick Emoji Presets */}
@@ -3293,13 +3316,26 @@ function DashboardContent() {
                         )}
                         <span>Upload File</span>
                       </button>
-                      <input
-                        type="text"
-                        value={newLocLogoUrl.startsWith('data:') ? 'Custom uploaded image' : newLocLogoUrl}
-                        onChange={(e) => setNewLocLogoUrl(e.target.value)}
-                        placeholder="Or paste image URL / emoji"
-                        className="flex-1 min-w-0 px-2.5 py-1.5 text-[11px] rounded-lg bg-slate-900 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-                      />
+                      {newLocLogoUrl.startsWith('data:') ? (
+                        <div className="flex-1 min-w-0 flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-[11px] text-blue-300">
+                          <span className="truncate">Image uploaded & optimized</span>
+                          <button
+                            type="button"
+                            onClick={() => setNewLocLogoUrl('')}
+                            className="text-rose-400 hover:text-rose-300 underline ml-2 shrink-0 cursor-pointer text-[10px]"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : (
+                        <input
+                          type="text"
+                          value={newLocLogoUrl}
+                          onChange={(e) => setNewLocLogoUrl(e.target.value)}
+                          placeholder="Or paste image URL / emoji"
+                          className="flex-1 min-w-0 px-2.5 py-1.5 text-[11px] rounded-lg bg-slate-900 border border-slate-800 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
