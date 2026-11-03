@@ -147,9 +147,33 @@ function DashboardContent() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
-  const [businessFieldErrors, setBusinessFieldErrors] = useState<{ name?: string; slug?: string }>({});
+  const [businessFieldErrors, setBusinessFieldErrors] = useState<{
+    name?: string;
+    slug?: string;
+    googleReviewUrl?: string;
+    logoUrl?: string;
+  }>({});
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [highlightReviewUrlField, setHighlightReviewUrlField] = useState(false);
+
+  // Smooth scroll and focus helper for any error input or section
+  const scrollToErrorField = (elementId: string) => {
+    setActiveTab('settings');
+    setTimeout(() => {
+      const el = document.getElementById(elementId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) {
+          el.focus({ preventScroll: true });
+        } else {
+          const inner = el.querySelector('input, textarea, select');
+          if (inner instanceof HTMLElement) {
+            inner.focus({ preventScroll: true });
+          }
+        }
+      }
+    }, 60);
+  };
 
   // Smooth scroll and focus helper for Direct Google Review URL
   const scrollToGoogleReviewUrlSection = (autoFocus = true) => {
@@ -451,6 +475,9 @@ function DashboardContent() {
 
     if (Object.keys(errors).length > 0) {
       setBusinessFieldErrors(errors);
+      const firstKey = Object.keys(errors)[0];
+      scrollToErrorField(`settings-business-${firstKey}`);
+      toast.error('Please resolve the highlighted field error.', 'Validation Error');
       return;
     }
 
@@ -492,6 +519,24 @@ function DashboardContent() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to update business settings';
       setSettingsError(msg);
+
+      const lowerMsg = msg.toLowerCase();
+      if (lowerMsg.includes('slug') || lowerMsg.includes('taken') || lowerMsg.includes('url slug')) {
+        setBusinessFieldErrors((prev) => ({ ...prev, slug: msg }));
+        scrollToErrorField('settings-business-slug');
+      } else if (lowerMsg.includes('name')) {
+        setBusinessFieldErrors((prev) => ({ ...prev, name: msg }));
+        scrollToErrorField('settings-business-name');
+      } else if (lowerMsg.includes('google') || lowerMsg.includes('place') || lowerMsg.includes('writereview')) {
+        setBusinessFieldErrors((prev) => ({ ...prev, googleReviewUrl: msg }));
+        scrollToErrorField('direct-google-review-url-input');
+      } else if (lowerMsg.includes('logo') || lowerMsg.includes('image')) {
+        setBusinessFieldErrors((prev) => ({ ...prev, logoUrl: msg }));
+        scrollToErrorField('settings-business-logo');
+      } else {
+        scrollToErrorField('settings-header-banner');
+      }
+
       toast.error(msg, 'Save Failed');
     } finally {
       setSavingSettings(false);
@@ -521,6 +566,9 @@ function DashboardContent() {
 
     if (Object.keys(errors).length > 0) {
       setAccountFieldErrors(errors);
+      const firstKey = Object.keys(errors)[0];
+      scrollToErrorField(`account-user-${firstKey}`);
+      toast.error('Please resolve the highlighted field error.', 'Validation Error');
       return;
     }
 
@@ -553,6 +601,18 @@ function DashboardContent() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to update account profile';
       setAccountError(msg);
+
+      const lower = msg.toLowerCase();
+      if (lower.includes('email') || lower.includes('taken')) {
+        setAccountFieldErrors((prev) => ({ ...prev, email: msg }));
+        scrollToErrorField('account-user-email');
+      } else if (lower.includes('name')) {
+        setAccountFieldErrors((prev) => ({ ...prev, name: msg }));
+        scrollToErrorField('account-user-name');
+      } else {
+        scrollToErrorField('account-header-banner');
+      }
+
       toast.error(msg, 'Update Failed');
     } finally {
       setSavingAccount(false);
@@ -587,6 +647,14 @@ function DashboardContent() {
 
     if (Object.keys(errors).length > 0) {
       setPasswordFieldErrors(errors);
+      if (errors.currentPassword) {
+        scrollToErrorField('password-current');
+      } else if (errors.newPassword) {
+        scrollToErrorField('password-new');
+      } else if (errors.confirmNewPassword) {
+        scrollToErrorField('password-confirm');
+      }
+      toast.error('Please resolve the password error.', 'Validation Error');
       return;
     }
 
@@ -618,6 +686,21 @@ function DashboardContent() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to change password';
       setPasswordError(msg);
+
+      const lower = msg.toLowerCase();
+      if (lower.includes('current') || lower.includes('incorrect') || lower.includes('wrong')) {
+        setPasswordFieldErrors((prev) => ({ ...prev, currentPassword: msg }));
+        scrollToErrorField('password-current');
+      } else if (lower.includes('match') || lower.includes('confirm')) {
+        setPasswordFieldErrors((prev) => ({ ...prev, confirmNewPassword: msg }));
+        scrollToErrorField('password-confirm');
+      } else if (lower.includes('password')) {
+        setPasswordFieldErrors((prev) => ({ ...prev, newPassword: msg }));
+        scrollToErrorField('password-new');
+      } else {
+        scrollToErrorField('password-header-banner');
+      }
+
       toast.error(msg, 'Update Failed');
     } finally {
       setSavingPassword(false);
@@ -2211,7 +2294,7 @@ function DashboardContent() {
               )}
 
               {settingsError && (
-                <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2">
+                <div id="settings-header-banner" className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2 animate-in fade-in-50 duration-150">
                   <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
                   <span>{settingsError}</span>
                 </div>
@@ -2219,7 +2302,7 @@ function DashboardContent() {
 
               <form noValidate onSubmit={handleSaveSettings} className="space-y-5">
                 {/* Brand Logo & Custom Icon Manager */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-4">
+                <div id="settings-business-logo" className={`p-4 sm:p-5 rounded-2xl bg-slate-950/70 border transition-all space-y-4 ${businessFieldErrors.logoUrl ? 'border-rose-500/80 ring-1 ring-rose-500' : 'border-slate-800'}`}>
                   <div className="flex items-start sm:items-center justify-between gap-4 flex-wrap">
                     <div>
                       <label className="block text-xs font-bold text-white uppercase tracking-wider">
@@ -2232,13 +2315,23 @@ function DashboardContent() {
                     {editLogoUrl && (
                       <button
                         type="button"
-                        onClick={() => setEditLogoUrl('')}
+                        onClick={() => {
+                          setEditLogoUrl('');
+                          if (businessFieldErrors.logoUrl) setBusinessFieldErrors((prev) => ({ ...prev, logoUrl: undefined }));
+                        }}
                         className="text-[11px] text-rose-400 hover:text-rose-300 transition-colors font-medium cursor-pointer"
                       >
                         Reset to Default Icon
                       </button>
                     )}
                   </div>
+
+                  {businessFieldErrors.logoUrl && (
+                    <p className="text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{businessFieldErrors.logoUrl}</span>
+                    </p>
+                  )}
 
                   <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 pt-1">
                     {/* Live Preview Avatar */}
@@ -2370,6 +2463,7 @@ function DashboardContent() {
                       Business Name
                     </label>
                     <input
+                      id="settings-business-name"
                       type="text"
                       value={editName}
                       onChange={(e) => {
@@ -2419,6 +2513,7 @@ function DashboardContent() {
                     </label>
                     <div className="relative">
                       <input
+                        id="settings-business-slug"
                         type="text"
                         value={editSlug}
                         onChange={(e) => {
@@ -2547,6 +2642,8 @@ function DashboardContent() {
                         onChange={(e) => {
                           const val = e.target.value;
                           const trimmed = val.trim();
+                          if (businessFieldErrors.googleReviewUrl) setBusinessFieldErrors((prev) => ({ ...prev, googleReviewUrl: undefined }));
+                          if (settingsError) setSettingsError(null);
                           if (trimmed.startsWith('ChIJ') && !trimmed.includes('http')) {
                             setEditGoogleReviewUrl(`https://search.google.com/local/writereview?placeid=${trimmed}`);
                             toast.success('Place ID formatted into direct review URL!', 'Auto-Formatted');
@@ -2555,9 +2652,20 @@ function DashboardContent() {
                           }
                         }}
                         placeholder="https://search.google.com/local/writereview?placeid=... or g.page/r/..."
-                        className="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-blue-500 font-mono"
+                        className={`w-full bg-slate-900 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none font-mono transition-all ${
+                          businessFieldErrors.googleReviewUrl
+                            ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                            : 'border-slate-700/80 focus:border-blue-500'
+                        }`}
                       />
                     </div>
+
+                    {businessFieldErrors.googleReviewUrl && (
+                      <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{businessFieldErrors.googleReviewUrl}</span>
+                      </p>
+                    )}
 
                     {/* Copy & Redirect Buttons */}
                     {editGoogleReviewUrl.trim() && (
@@ -2781,7 +2889,7 @@ function DashboardContent() {
               )}
 
               {accountError && (
-                <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2">
+                <div id="account-header-banner" className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2 animate-in fade-in-50 duration-150">
                   <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
                   <span>{accountError}</span>
                 </div>
@@ -2796,6 +2904,7 @@ function DashboardContent() {
                     <div className="relative">
                       <User className={`w-4 h-4 absolute left-3.5 top-3 transition-colors ${accountFieldErrors.name ? 'text-rose-400' : 'text-slate-500'}`} />
                       <input
+                        id="account-user-name"
                         type="text"
                         value={editUserName}
                         onChange={(e) => {
@@ -2825,6 +2934,7 @@ function DashboardContent() {
                     <div className="relative">
                       <Mail className={`w-4 h-4 absolute left-3.5 top-3 transition-colors ${accountFieldErrors.email ? 'text-rose-400' : 'text-slate-500'}`} />
                       <input
+                        id="account-user-email"
                         type="email"
                         value={editUserEmail}
                         onChange={(e) => {
@@ -2895,7 +3005,7 @@ function DashboardContent() {
               )}
 
               {passwordError && (
-                <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2">
+                <div id="password-header-banner" className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2 animate-in fade-in-50 duration-150">
                   <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
                   <span>{passwordError}</span>
                 </div>
@@ -2910,6 +3020,7 @@ function DashboardContent() {
                     <div className="relative">
                       <Lock className={`w-4 h-4 absolute left-3.5 top-3 transition-colors ${passwordFieldErrors.currentPassword ? 'text-rose-400' : 'text-slate-500'}`} />
                       <input
+                        id="password-current"
                         type={showPassword ? 'text' : 'password'}
                         value={currentPassword}
                         onChange={(e) => {
@@ -2939,6 +3050,7 @@ function DashboardContent() {
                     <div className="relative">
                       <KeyRound className={`w-4 h-4 absolute left-3.5 top-3 transition-colors ${passwordFieldErrors.newPassword ? 'text-rose-400' : 'text-slate-500'}`} />
                       <input
+                        id="password-new"
                         type={showPassword ? 'text' : 'password'}
                         value={newPassword}
                         onChange={(e) => {
@@ -2976,6 +3088,7 @@ function DashboardContent() {
                     <div className="relative">
                       <Lock className={`w-4 h-4 absolute left-3.5 top-3 transition-colors ${passwordFieldErrors.confirmNewPassword ? 'text-rose-400' : 'text-slate-500'}`} />
                       <input
+                        id="password-confirm"
                         type={showPassword ? 'text' : 'password'}
                         value={confirmNewPassword}
                         onChange={(e) => {
