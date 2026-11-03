@@ -349,7 +349,9 @@ function DashboardContent() {
   }, [locationDropdownOpen, profileDropdownOpen]);
 
   // 1. Check Auth & Load Dashboard Data
-  const loadDashboardData = async (targetBizId?: string) => {
+  // syncFormInputs: true on initial mount, location switches, or explicit post-save syncs.
+  // Must remain false on silent window focus so unsaved form edits and error corrections are never wiped out!
+  const loadDashboardData = async (targetBizId?: string, syncFormInputs: boolean = false) => {
     try {
       const authRes = await fetch('/api/auth/me');
       const authData = await authRes.json();
@@ -360,8 +362,10 @@ function DashboardContent() {
       }
 
       setUser(authData.user);
-      setEditUserName(authData.user.name || '');
-      setEditUserEmail(authData.user.email || '');
+      if (syncFormInputs) {
+        setEditUserName(authData.user.name || '');
+        setEditUserEmail(authData.user.email || '');
+      }
 
       const activeBizId = targetBizId !== undefined ? targetBizId : selectedBizId;
       const url = activeBizId ? `/api/dashboard/stats?businessId=${encodeURIComponent(activeBizId)}` : '/api/dashboard/stats';
@@ -373,7 +377,7 @@ function DashboardContent() {
           setSelectedBizId(statsData.business.id);
         }
 
-        if (statsData.business) {
+        if (syncFormInputs && statsData.business) {
           setEditName(statsData.business.name || '');
           setEditCategory(statsData.business.category || 'restaurant');
           setEditSlug(statsData.business.slug || '');
@@ -396,11 +400,11 @@ function DashboardContent() {
   };
 
   useEffect(() => {
-    loadDashboardData();
+    loadDashboardData(undefined, true);
 
-    // Auto-revalidate telemetry silently whenever window tab gains focus
+    // Auto-revalidate telemetry silently whenever window tab gains focus (without clobbering form edits)
     const handleFocus = () => {
-      loadDashboardData();
+      loadDashboardData(undefined, false);
     };
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
@@ -489,7 +493,7 @@ function DashboardContent() {
         setNewLocPhone('');
         setNewLocPlaceId('');
         setNewLocReviewUrl('');
-        await loadDashboardData(resData.business.id);
+        await loadDashboardData(resData.business.id, true);
       } else {
         setAddLocError(resData.error || 'Failed to create location');
         toast.error(resData.error || 'Failed to create location', 'Creation Failed');
@@ -569,7 +573,7 @@ function DashboardContent() {
       setSettingsSuccess('Business details updated successfully!');
       toast.success('Business details and settings saved successfully!', 'Saved');
       setTimeout(() => setSettingsSuccess(null), 4000);
-      await loadDashboardData();
+      await loadDashboardData(undefined, true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to update business settings';
       setSettingsError(msg);
@@ -787,7 +791,7 @@ function DashboardContent() {
           nextStatus === 'resolved' ? 'Private feedback marked as resolved.' : 'Feedback marked as unread.',
           'Feedback Updated'
         );
-        await loadDashboardData();
+        await loadDashboardData(undefined, false);
       } else {
         toast.error('Failed to update feedback status', 'Error');
       }
@@ -979,7 +983,7 @@ function DashboardContent() {
                               onClick={() => {
                                 setLocationDropdownOpen(false);
                                 if (!isSelected) {
-                                  loadDashboardData(loc.id);
+                                  loadDashboardData(loc.id, true);
                                 }
                               }}
                               className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left text-xs transition-colors cursor-pointer ${isSelected
@@ -1580,7 +1584,7 @@ function DashboardContent() {
                 });
               }
             }}
-            onReloadDashboard={loadDashboardData}
+            onReloadDashboard={() => loadDashboardData(undefined, false)}
           />
         )}
 
@@ -1835,7 +1839,7 @@ function DashboardContent() {
                           ) : (
                             <button
                               type="button"
-                              onClick={() => loadDashboardData(loc.id)}
+                              onClick={() => loadDashboardData(loc.id, true)}
                               className="flex-1 py-2 text-center text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors cursor-pointer"
                             >
                               Switch Dashboard ➔
@@ -3275,7 +3279,7 @@ function DashboardContent() {
               });
               if (res.ok) {
                 toast.success('Google Review link saved and applied successfully!', 'Review Link Saved');
-                await loadDashboardData();
+                await loadDashboardData(undefined, true);
               } else {
                 toast.info('Google Review link populated! Remember to click Save Business Details below.', 'Link Selected');
               }
@@ -3706,7 +3710,7 @@ function DashboardContent() {
               subscriptionCycle: billingAnnual ? 'annual' : 'monthly',
             }
           } : prev);
-          loadDashboardData(business.id);
+          loadDashboardData(business.id, true);
           router.replace('/dashboard');
         }}
       />
