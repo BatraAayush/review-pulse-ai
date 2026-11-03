@@ -3,17 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { 
-  Sparkles, 
-  ArrowRight, 
-  Store, 
-  Lock, 
-  Mail, 
-  AlertCircle, 
-  Loader2, 
-  Eye, 
-  EyeOff, 
-  ChevronDown 
+import {
+  Sparkles,
+  ArrowRight,
+  Store,
+  Lock,
+  Mail,
+  AlertCircle,
+  Loader2,
+  Eye,
+  EyeOff,
+  ChevronDown
 } from 'lucide-react';
 import AuthHeader from '@/components/AuthHeader';
 import { useToast } from '@/components/ToastContext';
@@ -63,13 +63,11 @@ export default function LoginPage() {
     if (!trimmedEmail) {
       errors.email = 'Email address is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      errors.email = 'Please enter a valid email address (e.g. name@company.com)';
+      errors.email = 'Please enter a valid email address';
     }
 
     if (!password) {
       errors.password = 'Password is required';
-    } else if (password.length < 6) {
-      errors.password = 'Password must be at least 6 characters long';
     }
 
     if (Object.keys(errors).length > 0) {
@@ -160,11 +158,10 @@ export default function LoginPage() {
                       if (error) setError(null);
                     }}
                     placeholder="name@business.com"
-                    className={`w-full bg-slate-950/60 border rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-all ${
-                      fieldErrors.email
+                    className={`w-full bg-slate-950/60 border rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-all ${fieldErrors.email
                         ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
                         : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                    }`}
+                      }`}
                   />
                 </div>
                 {fieldErrors.email && (
@@ -198,11 +195,10 @@ export default function LoginPage() {
                       if (error) setError(null);
                     }}
                     placeholder="••••••••••••"
-                    className={`w-full bg-slate-950/60 border rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-all ${
-                      fieldErrors.password
+                    className={`w-full bg-slate-950/60 border rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-all ${fieldErrors.password
                         ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
                         : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                    }`}
+                      }`}
                   />
                   <button
                     type="button"

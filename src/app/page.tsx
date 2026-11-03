@@ -274,7 +274,7 @@ export default function LandingPage() {
       </section>
 
       {/* Problem vs Solution Section */}
-      <section className="py-20 border-t border-slate-900 bg-slate-950/70">
+      <section id="features" className="py-20 border-t border-slate-900 bg-slate-950/70 scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
             <span className="text-xs font-semibold tracking-wider uppercase text-blue-400">
@@ -468,7 +468,7 @@ export default function LandingPage() {
       </section>
 
       {/* Interactive ROI Calculator */}
-      <section className="py-20 border-t border-slate-900 bg-slate-950/70">
+      <section id="roi-calculator" className="py-20 border-t border-slate-900 bg-slate-950/70 scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto rounded-3xl p-5 sm:p-10 md:p-12 bg-gradient-to-br from-slate-900 via-slate-900/90 to-blue-950/40 border border-slate-800 shadow-2xl">
             <div className="text-center max-w-2xl mx-auto mb-10 space-y-3">
@@ -917,27 +917,41 @@ export default function LandingPage() {
       {/* Bottom CTA Banner */}
       <section className="py-20 border-t border-slate-900 bg-slate-950/80">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl p-6 sm:p-12 md:p-14 bg-gradient-to-r from-blue-950/80 via-slate-900 to-slate-950 border border-blue-500/30 text-white shadow-2xl relative overflow-hidden text-center space-y-6">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight">
-              Ready to Dominate Your Local Google Search Results?
-            </h2>
-            <p className="text-xs sm:text-sm md:text-base font-medium max-w-xl mx-auto text-slate-300">
-              Join growing local restaurants, cafes, clinics, and businesses getting fresh 5-star reviews every week. Set up in under 3 minutes.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
-              <Link
-                href="/register?plan=starter"
-                className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-xs rounded-xl shadow-lg transition-all active:scale-95"
-              >
-                Get Started Free Today
-              </Link>
-              <Link
-                href={`/r/${currentBusiness.slug}`}
-                target="_blank"
-                className="w-full sm:w-auto px-7 py-3.5 bg-slate-900/80 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl backdrop-blur-md transition-all"
-              >
-                Scan Customer Preview
-              </Link>
+          <div className="rounded-3xl p-[1px] bg-gradient-to-b from-slate-700/60 via-slate-800/40 to-slate-900/80 shadow-2xl">
+            <div className="rounded-[23px] bg-slate-900/95 backdrop-blur-xl px-6 py-10 sm:px-12 sm:py-14 text-center space-y-6 relative overflow-hidden">
+              {/* Subtle top ambient glow */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-28 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
+
+              <div className="relative z-10 max-w-2xl mx-auto space-y-4">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-400 text-xs font-semibold">
+                  <Sparkles className="w-3.5 h-3.5 fill-current" />
+                  <span>Instant Activation • Zero Setup Fees</span>
+                </div>
+
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
+                  Ready to Dominate <span className="bg-gradient-to-r from-blue-400 via-sky-300 to-blue-200 bg-clip-text text-transparent">Your Local Google Search Results?</span>
+                </h2>
+
+                <p className="text-xs sm:text-sm md:text-base font-medium max-w-xl mx-auto text-slate-300">
+                  Join growing local restaurants, cafes, clinics, and businesses getting fresh 5-star reviews every week. Set up in under 3 minutes.
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
+                  <Link
+                    href="/register?plan=starter"
+                    className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-blue-500/20 transition-all active:scale-95 cursor-pointer"
+                  >
+                    Get Started Free Today
+                  </Link>
+                  <Link
+                    href={`/r/${currentBusiness.slug}`}
+                    target="_blank"
+                    className="w-full sm:w-auto px-7 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 font-bold text-xs rounded-xl backdrop-blur-md transition-all cursor-pointer"
+                  >
+                    Scan Customer Preview ↗
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </div>

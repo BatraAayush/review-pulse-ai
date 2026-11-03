@@ -152,7 +152,7 @@ export async function GET(req: NextRequest) {
     const ratedScans = scans.filter((s) => s.ratingSelected !== null);
     const avgRating = ratedScans.length > 0
       ? Number((ratedScans.reduce((acc, curr) => acc + (curr.ratingSelected || 0), 0) / ratedScans.length).toFixed(1))
-      : 4.8;
+      : 0;
 
     const conversionRate = totalScans > 0
       ? Number(((googleConversions / totalScans) * 100).toFixed(1))

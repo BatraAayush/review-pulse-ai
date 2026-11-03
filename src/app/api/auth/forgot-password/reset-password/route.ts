@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { hashPassword } from '@/lib/auth';
+import { validatePassword } from '@/lib/passwordValidation';
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,9 +14,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (newPassword.length < 6) {
+    const pwdValidation = validatePassword(newPassword);
+    if (!pwdValidation.isValid) {
       return NextResponse.json(
-        { error: 'New password must be at least 6 characters long' },
+        { error: pwdValidation.error },
         { status: 400 }
       );
     }

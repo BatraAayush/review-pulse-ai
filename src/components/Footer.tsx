@@ -76,6 +76,11 @@ export default function Footer() {
                   Create Business Account
                 </Link>
               </li>
+              <li>
+                <Link href="/contact" className="hover:text-white transition-colors text-blue-400">
+                  Contact Support &amp; Sales
+                </Link>
+              </li>
             </ul>
           </div>
 

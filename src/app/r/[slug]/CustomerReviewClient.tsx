@@ -2,22 +2,23 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { 
-  Star, 
-  Sparkles, 
-  Copy, 
-  ExternalLink, 
-  CheckCircle2, 
-  AlertCircle, 
-  Send, 
-  RefreshCw, 
+import {
+  Star,
+  Sparkles,
+  Copy,
+  ExternalLink,
+  CheckCircle2,
+  AlertCircle,
+  Send,
+  RefreshCw,
   ShieldCheck,
   MapPin,
   Loader2,
   Zap,
   ArrowRight,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Eye
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { INITIAL_BUSINESSES } from '@/lib/mock-data';
@@ -109,6 +110,8 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
   const [notFound, setNotFound] = useState(false);
   const [pendingActivation, setPendingActivation] = useState<{ businessName?: string } | null>(null);
   const [scanId, setScanId] = useState<string | null>(null);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const hasRecordedScanRef = React.useRef(false);
 
   // Direct Bypass state
   const [forceShowAiFunnel, setForceShowAiFunnel] = useState(false);
@@ -124,6 +127,12 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
         sp.get('bypass') === 'true';
       if (isDirectQuery) {
         setClientHasDirectParam(true);
+      }
+      const isPreview =
+        sp.get('preview') === '1' ||
+        sp.get('preview') === 'true';
+      if (isPreview) {
+        setIsPreviewMode(true);
       }
     }
   }, []);
@@ -290,16 +299,26 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
     return () => { isMounted = false; };
   }, [slug]);
 
-  // 2. Record real QR scan in database on mount
+  // 2. Record real QR scan in database on mount (with strict deduplication lock)
   useEffect(() => {
     let isMounted = true;
     async function recordRealScan() {
+      // Deduplication lock: never record twice in the same session / StrictMode mount
+      if (hasRecordedScanRef.current) return;
+      hasRecordedScanRef.current = true;
+
+      const isPreview = typeof window !== 'undefined' && (
+        new URLSearchParams(window.location.search).get('preview') === '1' ||
+        new URLSearchParams(window.location.search).get('preview') === 'true'
+      );
+
       try {
         const res = await fetch(`/api/r/${slug}/scan`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             isDirect: isDirectBypass,
+            isPreview,
             actionTaken: isDirectBypass ? 'direct_google_redirect' : 'scanned',
           }),
         });
@@ -640,8 +659,14 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
   if (isDirectBypass) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between py-8 px-4 sm:px-6 relative overflow-hidden">
+        {isPreviewMode && (
+          <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500/15 border-b border-amber-500/30 px-3 py-1.5 text-center text-xs text-amber-300 font-semibold backdrop-blur-md flex items-center justify-center gap-1.5 shadow-lg">
+            <Eye className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span>Merchant Preview Mode: Scans &amp; tests are not counted in live analytics</span>
+          </div>
+        )}
         {/* Background ambient lighting */}
-        <div 
+        <div
           className="absolute -top-32 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-[140px] pointer-events-none opacity-30"
           style={{ backgroundColor: business.primaryColor || '#2563eb' }}
         />
@@ -740,8 +765,14 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between py-6 px-4 sm:px-6 relative overflow-hidden">
+      {isPreviewMode && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500/15 border-b border-amber-500/30 px-3 py-1.5 text-center text-xs text-amber-300 font-semibold backdrop-blur-md flex items-center justify-center gap-1.5 shadow-lg">
+          <Eye className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+          <span>Merchant Preview Mode: Scans &amp; tests are not counted in live analytics</span>
+        </div>
+      )}
       {/* Background ambient glow */}
-      <div 
+      <div
         className="absolute -top-32 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-[120px] pointer-events-none opacity-25"
         style={{ backgroundColor: business.primaryColor || '#2563eb' }}
       />
@@ -808,11 +839,10 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                   className="p-1.5 transition-transform active:scale-125 focus:outline-none group cursor-pointer"
                 >
                   <Star
-                    className={`w-9 h-9 sm:w-10 sm:h-10 transition-all duration-200 ${
-                      isFilled
+                    className={`w-9 h-9 sm:w-10 sm:h-10 transition-all duration-200 ${isFilled
                         ? 'fill-amber-400 text-amber-400 scale-110 drop-shadow-[0_0_12px_rgba(59,130,246,0.5)]'
                         : 'text-slate-700 hover:text-slate-600'
-                    }`}
+                      }`}
                   />
                 </button>
               );
@@ -909,11 +939,10 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                             key={chip.id}
                             type="button"
                             onClick={() => toggleChip(chip.id)}
-                            className={`text-xs px-3.5 py-2 rounded-xl font-medium transition-all duration-150 flex items-center gap-2 active:scale-95 cursor-pointer ${
-                              isSelected
+                            className={`text-xs px-3.5 py-2 rounded-xl font-medium transition-all duration-150 flex items-center gap-2 active:scale-95 cursor-pointer ${isSelected
                                 ? 'bg-blue-600 text-white font-bold shadow-md shadow-blue-600/30 border border-blue-500 ring-1 ring-blue-400/50'
                                 : 'bg-slate-800/80 text-slate-300 border border-slate-700/80 hover:bg-slate-700 hover:border-slate-600'
-                            }`}
+                              }`}
                           >
                             <span>{chip.label}</span>
                             {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-blue-200" />}
@@ -1070,11 +1099,10 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                       if (feedbackError) setFeedbackError(null);
                     }}
                     placeholder="What went wrong during your visit? Please tell us how we can improve..."
-                    className={`w-full rounded-2xl bg-slate-950/80 border p-3 text-xs text-slate-200 placeholder-slate-500 focus:outline-none resize-none leading-relaxed transition-all ${
-                      feedbackError
+                    className={`w-full rounded-2xl bg-slate-950/80 border p-3 text-xs text-slate-200 placeholder-slate-500 focus:outline-none resize-none leading-relaxed transition-all ${feedbackError
                         ? 'border-rose-500/80 focus:ring-2 focus:ring-rose-500/50'
                         : 'border-slate-700 focus:ring-2 focus:ring-blue-500/50'
-                    }`}
+                      }`}
                   />
                   {feedbackError && (
                     <p className="mt-1 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
@@ -1122,13 +1150,13 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
       {showRedirectModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
           {/* Backdrop overlay */}
-          <div 
+          <div
             className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity cursor-pointer"
             onClick={() => setShowRedirectModal(false)}
             aria-hidden="true"
           />
 
-          <div 
+          <div
             className="max-w-sm w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 text-center shadow-2xl space-y-4 relative z-10 my-auto"
             onClick={(e) => e.stopPropagation()}
           >

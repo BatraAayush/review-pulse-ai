@@ -13,12 +13,13 @@ import {
   Loader2, 
   X,
   Info,
-  ShieldCheck
+  ShieldCheck,
+  AlertCircle
 } from 'lucide-react';
 import { useToast } from '@/components/ToastContext';
 import { Business, BusinessCategory } from '@/types';
 import ConfirmModal from '@/components/ConfirmModal';
-import { CATEGORY_DEFAULT_CHIPS, normalizeCategory } from '@/lib/chips';
+import { CATEGORY_DEFAULT_CHIPS, normalizeCategory, validateMedicalChipContent } from '@/lib/chips';
 
 interface SmartChipsManagerProps {
   business: Business;
@@ -76,6 +77,11 @@ export default function SmartChipsManager({
   const [newChipPhrase, setNewChipPhrase] = useState('');
   const [newChipCategory, setNewChipCategory] = useState('Service');
   const [isAddingChip, setIsAddingChip] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{
+    label?: string;
+    category?: string;
+    phrase?: string;
+  }>({});
 
   // Template Library Modal states
   const [showTemplateLibrary, setShowTemplateLibrary] = useState(false);
@@ -141,10 +147,70 @@ export default function SmartChipsManager({
   // 1. Add New Chip
   const handleAddChip = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newChipLabel.trim() || !newChipPhrase.trim()) {
-      toast.error('Please enter both a chip label and a review phrase.', 'Missing Fields');
+
+    const errors: typeof fieldErrors = {};
+    const trimmedLabel = newChipLabel.trim();
+    const trimmedCategory = newChipCategory.trim();
+    const trimmedPhrase = newChipPhrase.trim();
+
+    // 1. Label validation
+    if (!trimmedLabel) {
+      errors.label = 'Tag label is required';
+    } else if (trimmedLabel.length < 2) {
+      errors.label = 'Tag label must be at least 2 characters';
+    } else if (trimmedLabel.length > 40) {
+      errors.label = 'Tag label cannot exceed 40 characters';
+    } else if (
+      business.smartChips?.some(
+        (c) => c.label.toLowerCase() === trimmedLabel.toLowerCase()
+      )
+    ) {
+      errors.label = 'A review highlight with this label already exists';
+    }
+
+    // 2. Category validation
+    if (!trimmedCategory) {
+      errors.category = 'Tag category is required';
+    } else if (trimmedCategory.length < 2) {
+      errors.category = 'Category must be at least 2 characters';
+    } else if (trimmedCategory.length > 30) {
+      errors.category = 'Category cannot exceed 30 characters';
+    }
+
+    // 3. Phrase validation
+    if (!trimmedPhrase) {
+      errors.phrase = 'Review sentence is required';
+    } else if (trimmedPhrase.length < 10) {
+      errors.phrase = 'Review sentence must be at least 10 characters';
+    } else if (trimmedPhrase.length > 300) {
+      errors.phrase = 'Review sentence cannot exceed 300 characters';
+    }
+
+    // 4. Medical compliance check for healthcare/clinic businesses
+    if (canonicalCategory === 'clinic') {
+      const labelMed = validateMedicalChipContent(trimmedLabel);
+      if (!labelMed.valid && !errors.label) {
+        errors.label = `Prohibited medical claim keyword ("${labelMed.prohibitedWord}")`;
+      }
+
+      const catMed = validateMedicalChipContent(trimmedCategory);
+      if (!catMed.valid && !errors.category) {
+        errors.category = `Prohibited medical keyword ("${catMed.prohibitedWord}")`;
+      }
+
+      const phraseMed = validateMedicalChipContent(trimmedPhrase);
+      if (!phraseMed.valid && !errors.phrase) {
+        errors.phrase = `Prohibited medical claim keyword ("${phraseMed.prohibitedWord}"). Focus on cleanliness, wait time, or communication.`;
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      toast.error('Please resolve the errors highlighted below.', 'Validation Error');
       return;
     }
+
+    setFieldErrors({});
     setIsAddingChip(true);
 
     try {
@@ -152,21 +218,30 @@ export default function SmartChipsManager({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          label: newChipLabel.trim(),
-          phrase: newChipPhrase.trim(),
-          category: newChipCategory.trim(),
+          label: trimmedLabel,
+          phrase: trimmedPhrase,
+          category: trimmedCategory,
           businessId: business.id,
         }),
       });
 
       if (res.ok) {
-        toast.success(`Prompt "${newChipLabel.trim()}" added to funnel!`, 'Tag Created');
+        toast.success(`Prompt "${trimmedLabel}" added to funnel!`, 'Tag Created');
         setNewChipLabel('');
         setNewChipPhrase('');
+        setFieldErrors({});
         if (onReloadDashboard) await onReloadDashboard();
       } else {
         const err = await res.json().catch(() => ({}));
-        toast.error(err.error || 'Failed to add smart chip', 'Error');
+        const errMsg = err.error || 'Failed to add smart chip';
+        toast.error(errMsg, 'Error');
+        if (errMsg.toLowerCase().includes('label') || errMsg.toLowerCase().includes('already exists')) {
+          setFieldErrors((prev) => ({ ...prev, label: errMsg }));
+        } else if (errMsg.toLowerCase().includes('phrase') || errMsg.toLowerCase().includes('sentence')) {
+          setFieldErrors((prev) => ({ ...prev, phrase: errMsg }));
+        } else if (errMsg.toLowerCase().includes('category')) {
+          setFieldErrors((prev) => ({ ...prev, category: errMsg }));
+        }
       }
     } catch (err) {
       console.error('Failed to add chip:', err);
@@ -495,6 +570,7 @@ export default function SmartChipsManager({
         <div className="pt-2 border-t border-slate-800/80">
           <form
             onSubmit={handleAddChip}
+            noValidate
             className="p-4 sm:p-5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3.5"
           >
             <div className="flex items-center justify-between">
@@ -516,27 +592,61 @@ export default function SmartChipsManager({
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="text-[11px] text-slate-400 mb-1 block">Chip Tag Label</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[11px] text-slate-400 block">Chip Tag Label</label>
+                  <span className={`text-[10px] font-mono ${newChipLabel.length > 40 ? 'text-rose-400 font-bold' : 'text-slate-500'}`}>
+                    {newChipLabel.length}/40
+                  </span>
+                </div>
                 <input
                   type="text"
-                  required
                   placeholder="e.g. 🍷 Fine Wine Selection"
                   value={newChipLabel}
-                  onChange={(e) => setNewChipLabel(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                  onChange={(e) => {
+                    setNewChipLabel(e.target.value);
+                    if (fieldErrors.label) setFieldErrors((prev) => ({ ...prev, label: undefined }));
+                  }}
+                  className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition-all ${
+                    fieldErrors.label
+                      ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                      : 'border-slate-700 focus:border-blue-500'
+                  }`}
                 />
+                {fieldErrors.label && (
+                  <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{fieldErrors.label}</span>
+                  </p>
+                )}
               </div>
 
               <div>
-                <label className="text-[11px] text-slate-400 mb-1 block">Tag Category</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[11px] text-slate-400 block">Tag Category</label>
+                  <span className={`text-[10px] font-mono ${newChipCategory.length > 30 ? 'text-rose-400 font-bold' : 'text-slate-500'}`}>
+                    {newChipCategory.length}/30
+                  </span>
+                </div>
                 <input
                   type="text"
-                  required
                   placeholder="e.g. Service, Facilities, Vibe"
                   value={newChipCategory}
-                  onChange={(e) => setNewChipCategory(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                  onChange={(e) => {
+                    setNewChipCategory(e.target.value);
+                    if (fieldErrors.category) setFieldErrors((prev) => ({ ...prev, category: undefined }));
+                  }}
+                  className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition-all ${
+                    fieldErrors.category
+                      ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                      : 'border-slate-700 focus:border-blue-500'
+                  }`}
                 />
+                {fieldErrors.category && (
+                  <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{fieldErrors.category}</span>
+                  </p>
+                )}
               </div>
 
               <div className="flex items-end">
@@ -552,17 +662,34 @@ export default function SmartChipsManager({
             </div>
 
             <div>
-              <label className="text-[11px] text-slate-400 mb-1 block">
-                Full Review Sentence (appended to customer draft when tapped)
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[11px] text-slate-400 block">
+                  Full Review Sentence (appended to customer draft when tapped)
+                </label>
+                <span className={`text-[10px] font-mono ${newChipPhrase.length > 300 ? 'text-rose-400 font-bold' : 'text-slate-500'}`}>
+                  {newChipPhrase.length}/300
+                </span>
+              </div>
               <input
                 type="text"
-                required
                 placeholder="e.g. 'The sommelier was knowledgeable and the wine pairings complemented our dinner perfectly!'"
                 value={newChipPhrase}
-                onChange={(e) => setNewChipPhrase(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                onChange={(e) => {
+                  setNewChipPhrase(e.target.value);
+                  if (fieldErrors.phrase) setFieldErrors((prev) => ({ ...prev, phrase: undefined }));
+                }}
+                className={`w-full bg-slate-900 border rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition-all ${
+                  fieldErrors.phrase
+                    ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                    : 'border-slate-700 focus:border-blue-500'
+                }`}
               />
+              {fieldErrors.phrase && (
+                <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{fieldErrors.phrase}</span>
+                </p>
+              )}
             </div>
           </form>
         </div>

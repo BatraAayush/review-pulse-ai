@@ -28,8 +28,13 @@ export async function POST(
     }
 
     let actionTaken = 'scanned';
+    let isPreview = req.nextUrl.searchParams.get('preview') === 'true';
+
     try {
       const body = await req.json().catch(() => ({}));
+      if (body?.isPreview) {
+        isPreview = true;
+      }
       if (body?.isDirect || body?.actionTaken === 'direct_google_redirect') {
         actionTaken = 'direct_google_redirect';
       } else if (body?.actionTaken) {
@@ -37,6 +42,37 @@ export async function POST(
       }
     } catch {
       // Body empty or not json, default to scanned
+    }
+
+    // If opening in merchant preview mode from dashboard, do not record a real customer scan
+    if (isPreview) {
+      return NextResponse.json({
+        success: true,
+        scanId: 'preview-scan',
+        deviceType,
+        isPreview: true,
+      });
+    }
+
+    // 5-second server-side debounce: prevent duplicate scans caused by React StrictMode, double-mount, or rapid reloads
+    const fiveSecondsAgo = new Date(Date.now() - 5000);
+    const recentScan = await prisma.scanEvent.findFirst({
+      where: {
+        businessId: business.id,
+        ipAddress,
+        userAgent,
+        timestamp: { gte: fiveSecondsAgo },
+      },
+      orderBy: { timestamp: 'desc' },
+    });
+
+    if (recentScan) {
+      return NextResponse.json({
+        success: true,
+        scanId: recentScan.id,
+        deviceType,
+        deduplicated: true,
+      });
     }
 
     const scan = await prisma.scanEvent.create({

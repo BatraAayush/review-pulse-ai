@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import QRCodeGenerator from '@/components/QRCodeGenerator';
 import SmartChipsManager from '@/components/SmartChipsManager';
@@ -24,7 +23,6 @@ import {
   Zap,
   MapPin,
   Loader2,
-  RefreshCw,
   Save,
   Check,
   Copy,
@@ -53,7 +51,8 @@ import {
   Calendar,
   Search,
   LogOut,
-  Palette
+  Palette,
+  Globe
 } from 'lucide-react';
 import GoogleReviewGuideModal from '@/components/GoogleReviewGuideModal';
 import ConfirmModal from '@/components/ConfirmModal';
@@ -63,6 +62,8 @@ import { useToast } from '@/components/ToastContext';
 import { Business, PrivateFeedback, ScanEvent, PaymentTransactionItem } from '@/types';
 import { isImageLogo, getCategoryEmoji } from '@/lib/logo';
 import { PLANS_CONFIG, PlanKey } from '@/lib/payment';
+import { validatePassword } from '@/lib/passwordValidation';
+import PasswordRequirements from '@/components/PasswordRequirements';
 
 interface DashboardStatsData {
   business: Business;
@@ -148,6 +149,29 @@ function DashboardContent() {
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [businessFieldErrors, setBusinessFieldErrors] = useState<{ name?: string; slug?: string }>({});
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [highlightReviewUrlField, setHighlightReviewUrlField] = useState(false);
+
+  // Smooth scroll and focus helper for Direct Google Review URL
+  const scrollToGoogleReviewUrlSection = (autoFocus = true) => {
+    setActiveTab('settings');
+    setHighlightReviewUrlField(true);
+    setTimeout(() => {
+      const el = document.getElementById('direct-google-review-url-section');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      if (autoFocus) {
+        const inputEl = document.getElementById('direct-google-review-url-input') as HTMLInputElement | null;
+        if (inputEl) {
+          inputEl.focus();
+        }
+      }
+    }, 120);
+
+    setTimeout(() => {
+      setHighlightReviewUrlField(false);
+    }, 3000);
+  };
 
   // Account Owner Details form
   const [editUserName, setEditUserName] = useState('');
@@ -175,6 +199,8 @@ function DashboardContent() {
   const [selectedBizId, setSelectedBizId] = useState<string | null>(null);
   const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
   const locationDropdownRef = useRef<HTMLDivElement>(null);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
   const [showAddLocationModal, setShowAddLocationModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [newLocName, setNewLocName] = useState('');
@@ -232,20 +258,23 @@ function DashboardContent() {
     reader.readAsDataURL(file);
   };
 
-  // Close location dropdown on outside click
+  // Close location and profile dropdowns on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (locationDropdownRef.current && !locationDropdownRef.current.contains(event.target as Node)) {
         setLocationDropdownOpen(false);
       }
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setProfileDropdownOpen(false);
+      }
     }
-    if (locationDropdownOpen) {
+    if (locationDropdownOpen || profileDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [locationDropdownOpen]);
+  }, [locationDropdownOpen, profileDropdownOpen]);
 
   // 1. Check Auth & Load Dashboard Data
   const loadDashboardData = async (targetBizId?: string) => {
@@ -296,6 +325,13 @@ function DashboardContent() {
 
   useEffect(() => {
     loadDashboardData();
+
+    // Auto-revalidate telemetry silently whenever window tab gains focus
+    const handleFocus = () => {
+      loadDashboardData();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
   // Auto-launch Razorpay Checkout if coming from signup (?activate=true) or business is pending payment
@@ -538,8 +574,11 @@ function DashboardContent() {
 
     if (!newPassword) {
       errors.newPassword = 'New password is required';
-    } else if (newPassword.length < 6) {
-      errors.newPassword = 'New password must be at least 6 characters long';
+    } else {
+      const pwdValidation = validatePassword(newPassword);
+      if (!pwdValidation.isValid) {
+        errors.newPassword = pwdValidation.error;
+      }
     }
 
     if (!confirmNewPassword) {
@@ -696,202 +735,293 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col">
-      <Navbar />
-
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Super Admin Inspector Banner */}
+      {/* ── Unified Sticky Dashboard Header ── */}
+      <header className="sticky top-0 z-40 w-full bg-slate-950/95 backdrop-blur-xl border-b border-slate-800 shadow-xl transition-all">
+        {/* Super Admin Inspector Banner (if inspecting as Super Admin) */}
         {user?.role === 'SUPER_ADMIN' && (
-          <div className="bg-blue-950/60 border border-blue-500/30 rounded-2xl p-3 sm:px-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-blue-200 shadow-lg">
-            <div className="flex items-center gap-2">
+          <div className="bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 border-b border-blue-500/30 px-4 sm:px-6 lg:px-8 py-1.5 flex items-center justify-between text-xs text-blue-200">
+            <div className="flex items-center gap-2 truncate">
               <ShieldCheck className="w-4 h-4 text-blue-400 shrink-0" />
-              <span>
-                <strong>Super Admin Mode:</strong> You are currently inspecting business tenant <strong>{business.name}</strong>.
+              <span className="truncate">
+                <strong>Super Admin Mode:</strong> Inspecting business tenant <strong className="text-white">{business.name}</strong>
               </span>
             </div>
             <Link
               href="/admin"
-              className="inline-flex items-center gap-1 font-bold text-blue-400 hover:text-blue-300 hover:underline shrink-0"
+              className="inline-flex items-center gap-1 font-bold text-blue-400 hover:text-white transition-colors shrink-0 ml-3"
             >
-              <span>Return to Super Admin Portal</span>
+              <span>Return to Super Admin</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         )}
 
-        {/* Top Header Bar */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 pb-6 border-b border-slate-800">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start sm:items-center gap-3.5">
-              <div
-                className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg border border-slate-800 bg-slate-900/90 text-blue-400 shrink-0 mt-0.5 sm:mt-0 overflow-hidden"
+        {/* Main Single Bar: Brand + Location Switcher + Navigation Tabs + Actions + Profile */}
+        <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 gap-2 lg:gap-4">
+            {/* Left: Brand Logo & Ghost Breadcrumb Tenant Switcher */}
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+              {/* ReviewPulse Logo */}
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 shrink-0 group"
+                title="ReviewPulse Dashboard"
               >
-                {isImageLogo(business.logoUrl) ? (
-                  <img
-                    src={business.logoUrl!}
-                    alt={business.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-2xl">{business.logoUrl || getCategoryEmoji(business.category)}</span>
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug break-words">
-                    {business.name}
-                  </h1>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 whitespace-nowrap">
-                      Live Database
-                    </span>
-                    <span className="px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 whitespace-nowrap">
-                      {business.activePlan === 'enterprise' ? 'Franchise Plan' : business.activePlan === 'pro' ? 'Pro Plan' : 'Starter Plan'}
-                    </span>
+                <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-400 p-[1px] shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                  <div className="h-full w-full bg-slate-950 rounded-[11px] flex items-center justify-center">
+                    <QrCode className="h-4 w-4 sm:h-5 sm:w-5 text-blue-400 group-hover:text-blue-300 transition-colors" />
                   </div>
                 </div>
-                <p className="text-xs text-slate-400 flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1">
-                  <span className="inline-flex items-center gap-1 min-w-0">
-                    <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                    <span className="truncate max-w-sm">{business.address || 'Address not configured'}</span>
+                <div className="hidden sm:flex items-center gap-1.5">
+                  <span className="font-extrabold text-sm sm:text-base tracking-tight text-white">
+                    Review<span className="text-blue-400">Pulse</span>
                   </span>
-                  <span className="text-slate-600 hidden sm:inline">•</span>
-                  <span className="font-mono text-slate-400 shrink-0">slug: /{business.slug}</span>
-                </p>
-              </div>
-            </div>
-          </div>
+                  <span className="text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 hidden xl:inline-block">
+                    AI SaaS
+                  </span>
+                </div>
+              </Link>
 
-          {/* Quick Actions & Live Link */}
-          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full lg:w-auto">
-            {/* Multi-Location Switcher Dropdown */}
-            <div className="relative shrink-0" ref={locationDropdownRef}>
-              <button
-                type="button"
-                id="location-switcher-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLocationDropdownOpen((prev) => !prev);
-                }}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-white text-xs font-semibold transition-all shadow-sm group cursor-pointer"
-              >
-                <Building2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                <span className="max-w-[130px] sm:max-w-[180px] md:max-w-[210px] truncate">{business.name}</span>
-                <span className="px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold border border-slate-700 shrink-0">
-                  {currentLocCount}/{maxLocations}
-                </span>
-                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-transform shrink-0 ${locationDropdownOpen ? 'rotate-180 text-white' : ''}`} />
-              </button>
+              {/* Breadcrumb Separator */}
+              <span className="text-slate-700 font-light text-base select-none hidden sm:inline">/</span>
 
-              {locationDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-slate-900 border border-slate-700/90 shadow-2xl z-50 overflow-hidden divide-y divide-slate-800 animate-in fade-in zoom-in-95 duration-100">
-                  <div className="p-3 bg-slate-950/70 flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                      Locations ({currentLocCount})
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                      {business.activePlan === 'enterprise'
-                        ? 'Franchise Plan (10 slots)'
-                        : business.activePlan === 'pro'
-                          ? 'Pro Plan (3 slots)'
-                          : 'Starter (1 slot)'}
-                    </span>
-                  </div>
-
-                  <div className="max-h-60 overflow-y-auto p-1.5 space-y-1">
-                    {data.userBusinesses && data.userBusinesses.length > 0 ? (
-                      data.userBusinesses.map((loc) => {
-                        const isSelected = loc.id === business.id;
-                        return (
-                          <button
-                            key={loc.id}
-                            type="button"
-                            onClick={() => {
-                              setLocationDropdownOpen(false);
-                              if (!isSelected) {
-                                loadDashboardData(loc.id);
-                              }
-                            }}
-                            className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left text-xs transition-colors cursor-pointer ${isSelected
-                                ? 'bg-blue-600/15 border border-blue-500/30 text-white font-bold'
-                                : 'hover:bg-slate-800 text-slate-300'
-                              }`}
-                          >
-                            <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                              <div className="w-7 h-7 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center shrink-0 overflow-hidden text-sm">
-                                {isImageLogo(loc.logoUrl) ? (
-                                  <img src={loc.logoUrl!} alt={loc.name} className="w-full h-full object-cover" />
-                                ) : (
-                                  <span>{loc.logoUrl || getCategoryEmoji(loc.category)}</span>
-                                )}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="font-semibold text-white truncate">{loc.name}</p>
-                                <p className="text-[10px] text-slate-400 truncate">
-                                  {loc.address || `/${loc.slug}`}
-                                </p>
-                              </div>
-                            </div>
-                            {isSelected ? (
-                              <Check className="w-4 h-4 text-blue-400 shrink-0" />
-                            ) : (
-                              <span className="text-[10px] text-slate-500 uppercase font-medium">Switch</span>
-                            )}
-                          </button>
-                        );
-                      })
+              {/* Multi-Location Switcher Ghost Breadcrumb */}
+              <div className="relative shrink min-w-0" ref={locationDropdownRef}>
+                <button
+                  type="button"
+                  id="location-switcher-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLocationDropdownOpen((prev) => !prev);
+                  }}
+                  className="inline-flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-slate-900/90 border border-transparent hover:border-slate-800 text-slate-200 hover:text-white text-xs sm:text-sm font-semibold transition-all group cursor-pointer"
+                  title="Switch branch location"
+                >
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 overflow-hidden text-xs">
+                    {isImageLogo(business.logoUrl) ? (
+                      <img src={business.logoUrl!} alt={business.name} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="p-2 text-xs text-slate-400 text-center">
-                        {business.name}
-                      </div>
+                      <span>{business.logoUrl || getCategoryEmoji(business.category)}</span>
                     )}
                   </div>
+                  <span className="font-bold text-white text-xs sm:text-sm max-w-[150px] sm:max-w-[220px] md:max-w-[280px] truncate">
+                    {business.name}
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 group-hover:text-slate-200 transition-transform shrink-0 ${locationDropdownOpen ? 'rotate-180 text-blue-400' : ''}`} />
+                </button>
 
-                  <div className="p-2 bg-slate-950/70">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLocationDropdownOpen(false);
-                        handleOpenAddLocation();
-                      }}
-                      className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition-all cursor-pointer"
-                    >
-                      <Plus className="w-3.5 h-3.5 text-slate-400" />
-                      <span>+ Add New Location</span>
-                    </button>
+                {locationDropdownOpen && (
+                  <div className="absolute left-0 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-slate-900 border border-slate-700/90 shadow-2xl z-50 overflow-hidden divide-y divide-slate-800 animate-in fade-in zoom-in-95 duration-100">
+                    <div className="p-3 bg-slate-950/70 flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        Locations ({currentLocCount})
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        {business.activePlan === 'enterprise'
+                          ? 'Franchise Plan (10 slots)'
+                          : business.activePlan === 'pro'
+                            ? 'Pro Plan (3 slots)'
+                            : 'Starter (1 slot)'}
+                      </span>
+                    </div>
+
+                    <div className="max-h-60 overflow-y-auto p-1.5 space-y-1">
+                      {data.userBusinesses && data.userBusinesses.length > 0 ? (
+                        data.userBusinesses.map((loc) => {
+                          const isSelected = loc.id === business.id;
+                          return (
+                            <button
+                              key={loc.id}
+                              type="button"
+                              onClick={() => {
+                                setLocationDropdownOpen(false);
+                                if (!isSelected) {
+                                  loadDashboardData(loc.id);
+                                }
+                              }}
+                              className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left text-xs transition-colors cursor-pointer ${
+                                isSelected
+                                  ? 'bg-blue-600/15 border border-blue-500/30 text-white font-bold'
+                                  : 'hover:bg-slate-800 text-slate-300'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                                <div className="w-7 h-7 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center shrink-0 overflow-hidden text-sm">
+                                  {isImageLogo(loc.logoUrl) ? (
+                                    <img src={loc.logoUrl!} alt={loc.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span>{loc.logoUrl || getCategoryEmoji(loc.category)}</span>
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-white truncate">{loc.name}</p>
+                                  <p className="text-[10px] text-slate-400 truncate">
+                                    {loc.address || `/${loc.slug}`}
+                                  </p>
+                                </div>
+                              </div>
+                              {isSelected ? (
+                                <Check className="w-4 h-4 text-blue-400 shrink-0" />
+                              ) : (
+                                <span className="text-[10px] text-slate-500 uppercase font-medium">Switch</span>
+                              )}
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <div className="p-2 text-xs text-slate-400 text-center">
+                          {business.name}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-2 bg-slate-950/70">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLocationDropdownOpen(false);
+                          handleOpenAddLocation();
+                        }}
+                        className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold border border-slate-700 transition-all cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-slate-400" />
+                        <span>+ Add New Location</span>
+                      </button>
+                    </div>
                   </div>
+                )}
+              </div>
+            </div>
+
+            {/* Center: Navigation Tabs Unified In Single Header Row (No Scroll) */}
+            <nav className="flex items-center gap-1 py-1 px-1">
+              {[
+                { id: 'overview', label: 'Analytics', icon: TrendingUp },
+                { id: 'qr', label: 'QR Kit', icon: QrCode },
+                { id: 'chips', label: 'Chips', icon: Sparkles },
+                { id: 'feedback', label: 'Shield', icon: ShieldCheck },
+                { id: 'billing', label: 'Billing', icon: CreditCard },
+                { id: 'settings', label: 'Settings', icon: Settings },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      setActiveTab(tab.id as typeof activeTab);
+                      router.replace(`/dashboard?tab=${tab.id}`, { scroll: false });
+                    }}
+                    className={`relative flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap cursor-pointer shrink-0 ${
+                      isActive
+                        ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 shadow-sm shadow-blue-500/10'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent'
+                    }`}
+                  >
+                    <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-blue-400' : 'text-slate-400'}`} />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+
+            {/* Right: User Profile Dropdown */}
+            <div className="flex items-center shrink-0">
+              {user && (
+                <div className="relative shrink-0" ref={profileDropdownRef}>
+                  <button
+                    type="button"
+                    id="profile-dropdown-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setProfileDropdownOpen((prev) => !prev);
+                    }}
+                    className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700/80 hover:border-slate-600 hover:bg-slate-800 text-xs text-slate-200 hover:text-white transition-all cursor-pointer group shadow-sm"
+                    title="Account Profile & Settings Menu"
+                  >
+                    <div className="w-6 h-6 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+                      <User className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="font-semibold text-white truncate max-w-[100px] hidden sm:inline">
+                      {user.name.split(' ')[0]}
+                    </span>
+                    <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 group-hover:text-slate-200">
+                      {user.role === 'SUPER_ADMIN' ? 'Admin' : 'Owner'}
+                    </span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-transform shrink-0 ${profileDropdownOpen ? 'rotate-180 text-white' : ''}`} />
+                  </button>
+
+                  {/* Profile Dropdown Menu Card */}
+                  {profileDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-slate-900 border border-slate-700/90 shadow-2xl z-50 overflow-hidden divide-y divide-slate-800 animate-in fade-in zoom-in-95 duration-100">
+                      {/* User Info Header */}
+                      <div className="p-3.5 bg-slate-950/70 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center font-bold text-sm shrink-0">
+                          {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold text-white truncate">{user.name}</p>
+                          <p className="text-[11px] text-slate-400 truncate">{user.email}</p>
+                          <span className="inline-block mt-1 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            {user.role === 'SUPER_ADMIN' ? 'Super Administrator' : 'Business Owner'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Super Admin Portal (if applicable) */}
+                      {user.role === 'SUPER_ADMIN' && (
+                        <div className="p-1.5">
+                          <Link
+                            href="/admin"
+                            onClick={() => setProfileDropdownOpen(false)}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-medium text-blue-400 hover:text-blue-300 hover:bg-slate-800 transition-colors"
+                          >
+                            <ShieldCheck className="w-4 h-4 text-blue-400" />
+                            <span>Super Admin Portal</span>
+                          </Link>
+                        </div>
+                      )}
+
+                      {/* Quick Customer Funnel Shortcut */}
+                      <div className="p-1.5">
+                        <Link
+                          href={`/r/${business.slug}?preview=true`}
+                          target="_blank"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors group"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <QrCode className="w-4 h-4 text-blue-400" />
+                            <span>Customer Scan Page</span>
+                          </div>
+                          <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-white transition-colors" />
+                        </Link>
+                      </div>
+
+                      {/* Logout Item */}
+                      <div className="p-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProfileDropdownOpen(false);
+                            setConfirmLogoutOpen(true);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                        >
+                          <LogOut className="w-4 h-4 text-rose-400" />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-
-            {/* Direct Add Location Button - Sleek Dark Aesthetic (No bright blue) */}
-            <button
-              type="button"
-              onClick={handleOpenAddLocation}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700/80 hover:border-slate-600 transition-all shadow-sm cursor-pointer shrink-0"
-            >
-              <Plus className="w-3.5 h-3.5 text-slate-400" />
-              <span>Add Location</span>
-            </button>
-
-            <button
-              onClick={() => loadDashboardData()}
-              title="Refresh Analytics"
-              className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
-
-            <Link
-              href={`/r/${business.slug}`}
-              target="_blank"
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition-all group shrink-0"
-            >
-              <span>Scan Page</span>
-              <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-            </Link>
           </div>
         </div>
+      </header>
 
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
         {/* Subscription Plan & Payment Status Notice Banner */}
         {(() => {
           const isPaidActive = business.subscriptionStatus === 'active';
@@ -1004,55 +1134,58 @@ function DashboardContent() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('settings');
-                  setShowGuideModal(true);
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition-all cursor-pointer shrink-0"
-              >
-                <Link2 className="w-4 h-4" />
-                <span>Configure Review Link</span>
-              </button>
+              <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setShowGuideModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 hover:text-white font-semibold text-xs border border-slate-700/80 transition-all cursor-pointer whitespace-nowrap shadow-sm"
+                  title="Open 3-step guide on finding your official Google Review link"
+                >
+                  <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
+                  <span>How to Find It</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollToGoogleReviewUrlSection(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs shadow-lg shadow-amber-500/20 transition-all cursor-pointer whitespace-nowrap"
+                  title="Jump directly to Direct Google Review URL section in settings"
+                >
+                  <Link2 className="w-4 h-4" />
+                  <span>Configure Review Link</span>
+                </button>
+              </div>
             </div>
           );
         })()}
 
-        {/* Navigation Tabs */}
-        <div className="flex border-b border-slate-800 space-x-2 overflow-x-auto pb-2 no-scrollbar touch-scroll sm:space-x-3">
-          {[
-            { id: 'overview', label: 'Analytics Overview', icon: TrendingUp },
-            { id: 'qr', label: 'QR Kit & Printables', icon: QrCode },
-            { id: 'chips', label: `Smart Review Chips (${business.smartChips?.length || 0})`, icon: Sparkles },
-            { id: 'feedback', label: `Private Shield (${feedbacks.length})`, icon: ShieldCheck },
-            { id: 'billing', label: 'Plan & Billing', icon: CreditCard },
-            { id: 'settings', label: 'Account & Business Settings', icon: Settings },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id as typeof activeTab);
-                  router.replace(`/dashboard?tab=${tab.id}`, { scroll: false });
-                }}
-                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all whitespace-nowrap cursor-pointer shrink-0 ${isActive
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 font-bold'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-900/60'
-                  }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
         {/* TAB 1: OVERVIEW */}
         {activeTab === 'overview' && (
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
+            {/* Telemetry Action Header: Refresh Data & Customer Scan Page */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-xl backdrop-blur-xl">
+              <div>
+                <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
+                  <span>Analytics &amp; Performance Telemetry</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                </h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Real-time scan conversions, customer sentiment, and funnel telemetry for <strong className="text-slate-200">{business.name}</strong>
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2.5 shrink-0">
+                <Link
+                  href={`/r/${business.slug}?preview=true`}
+                  target="_blank"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-md shadow-blue-600/20 transition-all cursor-pointer group"
+                  title={`Preview Customer QR Review Landing Page (/r/${business.slug})`}
+                >
+                  <span>Customer Scan Page</span>
+                  <ExternalLink className="w-3.5 h-3.5 text-blue-200 group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </Link>
+              </div>
+            </div>
+
             {/* Metric Stat Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="rounded-2xl p-5 bg-slate-900/70 border border-slate-800 shadow-xl backdrop-blur-xl space-y-2">
@@ -1095,14 +1228,23 @@ function DashboardContent() {
                   </div>
                 </div>
                 <div className="text-2xl font-black text-white flex items-center gap-2">
-                  <span>{stats.averageRating.toFixed(1)}</span>
+                  <span>{stats.averageRating > 0 ? stats.averageRating.toFixed(1) : '0.0'}</span>
                   <span className="text-xs font-normal text-blue-400">/ 5.0</span>
                 </div>
                 <div className="flex items-center gap-1 text-blue-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-3 h-3 fill-blue-400" />
-                  ))}
-                  <span className="text-[10px] text-slate-400 ml-1">Customer Sentiment</span>
+                  {stats.averageRating > 0 ? (
+                    <>
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-3 h-3 ${i < Math.round(stats.averageRating) ? 'fill-blue-400 text-blue-400' : 'text-slate-600'}`}
+                        />
+                      ))}
+                      <span className="text-[10px] text-slate-400 ml-1">Customer Sentiment</span>
+                    </>
+                  ) : (
+                    <span className="text-[10px] text-slate-500">No customer ratings yet</span>
+                  )}
                 </div>
               </div>
 
@@ -1198,13 +1340,15 @@ function DashboardContent() {
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
                       <span className="text-slate-300">Apple iOS (iPhone)</span>
-                      <span className="font-mono text-slate-400">{stats.devices.ios} scans</span>
+                      <span className="font-mono text-slate-400">
+                        {stats.devices.ios} scans {stats.totalScans > 0 && `(${((stats.devices.ios / stats.totalScans) * 100).toFixed(0)}%)`}
+                      </span>
                     </div>
                     <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
                       <div
-                        className="h-full bg-blue-500 rounded-full"
+                        className="h-full bg-blue-500 rounded-full transition-all duration-300"
                         style={{
-                          width: `${stats.totalScans > 0 ? (stats.devices.ios / stats.totalScans) * 100 : 65}%`,
+                          width: `${stats.totalScans > 0 ? (stats.devices.ios / stats.totalScans) * 100 : 0}%`,
                         }}
                       />
                     </div>
@@ -1213,13 +1357,15 @@ function DashboardContent() {
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
                       <span className="text-slate-300">Android Mobile</span>
-                      <span className="font-mono text-slate-400">{stats.devices.android} scans</span>
+                      <span className="font-mono text-slate-400">
+                        {stats.devices.android} scans {stats.totalScans > 0 && `(${((stats.devices.android / stats.totalScans) * 100).toFixed(0)}%)`}
+                      </span>
                     </div>
                     <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
                       <div
-                        className="h-full bg-sky-500 rounded-full"
+                        className="h-full bg-sky-500 rounded-full transition-all duration-300"
                         style={{
-                          width: `${stats.totalScans > 0 ? (stats.devices.android / stats.totalScans) * 100 : 30}%`,
+                          width: `${stats.totalScans > 0 ? (stats.devices.android / stats.totalScans) * 100 : 0}%`,
                         }}
                       />
                     </div>
@@ -1228,13 +1374,15 @@ function DashboardContent() {
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
                       <span className="text-slate-300">Desktop / Tablet</span>
-                      <span className="font-mono text-slate-400">{stats.devices.desktop} scans</span>
+                      <span className="font-mono text-slate-400">
+                        {stats.devices.desktop} scans {stats.totalScans > 0 && `(${((stats.devices.desktop / stats.totalScans) * 100).toFixed(0)}%)`}
+                      </span>
                     </div>
                     <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
                       <div
-                        className="h-full bg-sky-400 rounded-full"
+                        className="h-full bg-sky-400 rounded-full transition-all duration-300"
                         style={{
-                          width: `${stats.totalScans > 0 ? (stats.devices.desktop / stats.totalScans) * 100 : 5}%`,
+                          width: `${stats.totalScans > 0 ? (stats.devices.desktop / stats.totalScans) * 100 : 0}%`,
                         }}
                       />
                     </div>
@@ -1336,8 +1484,8 @@ function DashboardContent() {
 
                         <div className="flex items-center gap-2">
                           <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${fb.status === 'unread'
-                              ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                              : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                            : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                             }`}>
                             {fb.status}
                           </span>
@@ -1419,11 +1567,20 @@ function DashboardContent() {
                     </p>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 shrink-0">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 shrink-0 flex-wrap">
                     <Link
-                      href={`/r/${business.slug}`}
+                      href="/pricing"
+                      className="px-3.5 py-2.5 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 text-blue-300 hover:text-white text-xs font-bold border border-blue-500/30 transition-all flex items-center gap-1.5"
+                      title="Compare all features, ROI benchmarks, and plan tiers"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                      <span>Compare All Plans & ROI</span>
+                    </Link>
+
+                    <Link
+                      href={`/r/${business.slug}?preview=true`}
                       target="_blank"
-                      className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold border border-slate-700 transition-all flex items-center gap-1.5"
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold border border-slate-700 transition-all flex items-center gap-1.5"
                     >
                       <span>Test Live Funnel</span>
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -1482,8 +1639,8 @@ function DashboardContent() {
                       <div
                         key={loc.id}
                         className={`rounded-2xl p-5 border transition-all flex flex-col justify-between gap-4 ${isCurrent
-                            ? 'bg-blue-950/30 border-blue-500/50 ring-1 ring-blue-500/30 shadow-lg shadow-blue-500/10'
-                            : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
+                          ? 'bg-blue-950/30 border-blue-500/50 ring-1 ring-blue-500/30 shadow-lg shadow-blue-500/10'
+                          : 'bg-slate-950/60 border-slate-800 hover:border-slate-700'
                           }`}
                       >
                         <div className="space-y-2">
@@ -1674,8 +1831,8 @@ function DashboardContent() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* TIER 1: STARTER SOLO */}
               <div className={`rounded-3xl p-6 bg-slate-900/70 border space-y-5 flex flex-col justify-between transition-all ${business.activePlan === 'starter'
-                  ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-xl shadow-blue-500/10'
-                  : 'border-slate-800 hover:border-slate-700'
+                ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-xl shadow-blue-500/10'
+                : 'border-slate-800 hover:border-slate-700'
                 }`}>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -1748,8 +1905,8 @@ function DashboardContent() {
                   disabled={updatingPlan}
                   onClick={() => handleSwitchPlan('starter')}
                   className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${business.activePlan === 'starter'
-                      ? 'bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30'
-                      : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
+                    ? 'bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30'
+                    : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
                     }`}
                 >
                   {business.activePlan === 'starter' ? '✓ Current Plan (Test Checkout)' : 'Switch to Starter (₹499/mo)'}
@@ -1758,8 +1915,8 @@ function DashboardContent() {
 
               {/* TIER 2: PRO GROWTH */}
               <div className={`rounded-3xl p-6 bg-gradient-to-b from-slate-900 via-slate-900 to-blue-950/20 border-2 space-y-5 flex flex-col justify-between relative transition-all ${business.activePlan === 'pro'
-                  ? 'border-blue-500 shadow-2xl shadow-blue-500/20'
-                  : 'border-blue-500/50 hover:border-blue-400'
+                ? 'border-blue-500 shadow-2xl shadow-blue-500/20'
+                : 'border-blue-500/50 hover:border-blue-400'
                 }`}>
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-gradient-to-r from-blue-600 to-sky-500 text-white text-[10px] font-black uppercase tracking-wider shadow-md">
                   Most Popular
@@ -1836,8 +1993,8 @@ function DashboardContent() {
                   disabled={updatingPlan}
                   onClick={() => handleSwitchPlan('pro')}
                   className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${business.activePlan === 'pro'
-                      ? 'bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30'
-                      : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/25'
+                    ? 'bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30'
+                    : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/25'
                     }`}
                 >
                   {business.activePlan === 'pro' ? '✓ Current Plan (Test Checkout)' : 'Switch to Pro (₹999/mo)'}
@@ -1846,8 +2003,8 @@ function DashboardContent() {
 
               {/* TIER 3: FRANCHISE & AGENCY */}
               <div className={`rounded-3xl p-6 bg-slate-900/70 border space-y-5 flex flex-col justify-between transition-all ${business.activePlan === 'enterprise'
-                  ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-xl shadow-blue-500/10'
-                  : 'border-slate-800 hover:border-slate-700'
+                ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-xl shadow-blue-500/10'
+                : 'border-slate-800 hover:border-slate-700'
                 }`}>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -1912,8 +2069,8 @@ function DashboardContent() {
                   disabled={updatingPlan}
                   onClick={() => handleSwitchPlan('enterprise')}
                   className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${business.activePlan === 'enterprise'
-                      ? 'bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30'
-                      : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
+                    ? 'bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30'
+                    : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
                     }`}
                 >
                   {business.activePlan === 'enterprise' ? '✓ Current Plan (Test Checkout)' : 'Switch to Franchise (₹2,499/mo)'}
@@ -2171,8 +2328,8 @@ function DashboardContent() {
                               type="button"
                               onClick={() => setEditLogoUrl(item.emoji)}
                               className={`px-2.5 py-1 rounded-lg text-xs flex items-center gap-1 transition-all cursor-pointer ${editLogoUrl === item.emoji
-                                  ? 'bg-blue-600 text-white font-bold border border-blue-500 shadow-sm'
-                                  : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
+                                ? 'bg-blue-600 text-white font-bold border border-blue-500 shadow-sm'
+                                : 'bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800'
                                 }`}
                               title={item.label}
                             >
@@ -2200,11 +2357,10 @@ function DashboardContent() {
                         if (settingsError) setSettingsError(null);
                       }}
                       placeholder="e.g. Golden Crust Bakery"
-                      className={`w-full bg-slate-950 border rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none transition-all ${
-                        businessFieldErrors.name
+                      className={`w-full bg-slate-950 border rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none transition-all ${businessFieldErrors.name
                           ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
                           : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                      }`}
+                        }`}
                     />
                     {businessFieldErrors.name && (
                       <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
@@ -2250,11 +2406,10 @@ function DashboardContent() {
                           if (settingsError) setSettingsError(null);
                         }}
                         placeholder="e.g. golden-crust"
-                        className={`w-full bg-slate-950 border rounded-xl pl-3.5 pr-4 py-2.5 text-xs font-mono text-white focus:outline-none transition-all ${
-                          businessFieldErrors.slug
+                        className={`w-full bg-slate-950 border rounded-xl pl-3.5 pr-4 py-2.5 text-xs font-mono text-white focus:outline-none transition-all ${businessFieldErrors.slug
                             ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
                             : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                        }`}
+                          }`}
                       />
                     </div>
                     {businessFieldErrors.slug && (
@@ -2320,7 +2475,14 @@ function DashboardContent() {
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-2.5">
+                <div
+                  id="direct-google-review-url-section"
+                  className={`p-4 rounded-2xl transition-all duration-500 space-y-2.5 ${
+                    highlightReviewUrlField
+                      ? 'bg-amber-950/30 border-2 border-amber-400 ring-4 ring-amber-500/30 shadow-2xl shadow-amber-500/20'
+                      : 'bg-slate-950/60 border border-slate-800'
+                  }`}
+                >
                   <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
                     <div className="flex items-center gap-2">
                       <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
@@ -2359,6 +2521,7 @@ function DashboardContent() {
                     <div className="relative flex-1">
                       <Link2 className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
                       <input
+                        id="direct-google-review-url-input"
                         type="text"
                         value={editGoogleReviewUrl}
                         onChange={(e) => {
@@ -2540,8 +2703,8 @@ function DashboardContent() {
                           type="button"
                           onClick={() => setEditPrimaryColor(item.color)}
                           className={`w-7 h-7 rounded-lg border transition-all cursor-pointer relative ${editPrimaryColor.toLowerCase() === item.color.toLowerCase()
-                              ? 'scale-110 border-white ring-2 ring-blue-500/50 shadow-md'
-                              : 'border-slate-700/80 hover:scale-105 opacity-80 hover:opacity-100'
+                            ? 'scale-110 border-white ring-2 ring-blue-500/50 shadow-md'
+                            : 'border-slate-700/80 hover:scale-105 opacity-80 hover:opacity-100'
                             }`}
                           style={{ backgroundColor: item.color }}
                           title={`${item.label} (${item.color})`}
@@ -2621,11 +2784,10 @@ function DashboardContent() {
                           if (accountError) setAccountError(null);
                         }}
                         placeholder="e.g. Jane Doe"
-                        className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none transition-all ${
-                          accountFieldErrors.name
+                        className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none transition-all ${accountFieldErrors.name
                             ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
                             : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                        }`}
+                          }`}
                       />
                     </div>
                     {accountFieldErrors.name && (
@@ -2651,11 +2813,10 @@ function DashboardContent() {
                           if (accountError) setAccountError(null);
                         }}
                         placeholder="jane@company.com"
-                        className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none transition-all ${
-                          accountFieldErrors.email
+                        className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none transition-all ${accountFieldErrors.email
                             ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
                             : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                        }`}
+                          }`}
                       />
                     </div>
                     {accountFieldErrors.email && (
@@ -2736,12 +2897,11 @@ function DashboardContent() {
                           if (passwordFieldErrors.currentPassword) setPasswordFieldErrors((prev) => ({ ...prev, currentPassword: undefined }));
                           if (passwordError) setPasswordError(null);
                         }}
-                        placeholder="••••••••••••"
-                        className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none transition-all ${
-                          passwordFieldErrors.currentPassword
+                        placeholder="Enter current password"
+                        className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none transition-all ${passwordFieldErrors.currentPassword
                             ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
                             : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                        }`}
+                          }`}
                       />
                     </div>
                     {passwordFieldErrors.currentPassword && (
@@ -2766,12 +2926,11 @@ function DashboardContent() {
                           if (passwordFieldErrors.newPassword) setPasswordFieldErrors((prev) => ({ ...prev, newPassword: undefined }));
                           if (passwordError) setPasswordError(null);
                         }}
-                        placeholder="Min. 6 chars"
-                        className={`w-full bg-slate-950 border rounded-xl pl-10 pr-9 py-2.5 text-xs text-white focus:outline-none transition-all ${
-                          passwordFieldErrors.newPassword
+                        placeholder="Enter new password"
+                        className={`w-full bg-slate-950 border rounded-xl pl-10 pr-9 py-2.5 text-xs text-white focus:outline-none transition-all ${passwordFieldErrors.newPassword
                             ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
                             : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                        }`}
+                          }`}
                       />
                       <button
                         type="button"
@@ -2781,6 +2940,7 @@ function DashboardContent() {
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
+                    <PasswordRequirements password={newPassword} />
                     {passwordFieldErrors.newPassword && (
                       <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">
                         <AlertCircle className="w-3.5 h-3.5 shrink-0" />
@@ -2803,12 +2963,11 @@ function DashboardContent() {
                           if (passwordFieldErrors.confirmNewPassword) setPasswordFieldErrors((prev) => ({ ...prev, confirmNewPassword: undefined }));
                           if (passwordError) setPasswordError(null);
                         }}
-                        placeholder="Re-type new password"
-                        className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none transition-all ${
-                          passwordFieldErrors.confirmNewPassword
+                        placeholder="Confirm new password"
+                        className={`w-full bg-slate-950 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none transition-all ${passwordFieldErrors.confirmNewPassword
                             ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
                             : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                        }`}
+                          }`}
                       />
                     </div>
                     {passwordFieldErrors.confirmNewPassword && (
@@ -2838,6 +2997,38 @@ function DashboardContent() {
                   </Link>
                 </div>
               </form>
+            </div>
+
+            {/* Support & Public Site Quick Links */}
+            <div className="rounded-2xl p-6 bg-slate-900/70 border border-slate-800 shadow-xl backdrop-blur-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                  <HelpCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Need Support or Public Links?</h3>
+                  <p className="text-xs text-slate-400">
+                    Reach our technical team, check platform FAQs, or preview the public marketing website.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5 flex-wrap shrink-0">
+                <Link
+                  href="/contact"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-xs font-semibold transition-all cursor-pointer"
+                >
+                  <Mail className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Contact Support & FAQs</span>
+                </Link>
+                <Link
+                  href="/?public=true"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 text-blue-300 hover:text-white border border-blue-500/30 text-xs font-semibold transition-all cursor-pointer"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>View Public Website ↗</span>
+                </Link>
+              </div>
             </div>
 
             {/* SECTION 4: ACTIVE SESSION & LOG OUT */}
@@ -2871,9 +3062,38 @@ function DashboardContent() {
 
       <GoogleReviewGuideModal
         isOpen={showGuideModal}
-        onClose={() => setShowGuideModal(false)}
+        onClose={() => {
+          setShowGuideModal(false);
+          scrollToGoogleReviewUrlSection(true);
+        }}
         defaultBusinessName={data?.business?.name || editName || ''}
-        onSelectUrl={(url) => setEditGoogleReviewUrl(url)}
+        onSelectUrl={async (url) => {
+          const trimmedUrl = url.trim();
+          setEditGoogleReviewUrl(trimmedUrl);
+          setShowGuideModal(false);
+          scrollToGoogleReviewUrlSection(true);
+
+          if (data?.business?.id) {
+            try {
+              const res = await fetch('/api/dashboard/business', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  id: data.business.id,
+                  googleReviewUrl: trimmedUrl,
+                }),
+              });
+              if (res.ok) {
+                toast.success('Google Review link saved and applied successfully!', 'Review Link Saved');
+                await loadDashboardData();
+              } else {
+                toast.info('Google Review link populated! Remember to click Save Business Details below.', 'Link Selected');
+              }
+            } catch {
+              toast.info('Google Review link populated! Remember to click Save Business Details below.', 'Link Selected');
+            }
+          }
+        }}
         isSignUp={false}
       />
 
@@ -2982,11 +3202,10 @@ function DashboardContent() {
                     if (addLocError) setAddLocError(null);
                   }}
                   placeholder="e.g. Jack Gym - Downtown Branch"
-                  className={`w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-950 border text-white placeholder-slate-500 focus:outline-none transition-all ${
-                    newLocFieldErrors.name
+                  className={`w-full px-3.5 py-2.5 text-xs rounded-xl bg-slate-950 border text-white placeholder-slate-500 focus:outline-none transition-all ${newLocFieldErrors.name
                       ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
                       : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
-                  }`}
+                    }`}
                 />
                 {newLocFieldErrors.name && (
                   <p className="mt-1.5 text-xs text-rose-400 flex items-center gap-1.5 animate-in fade-in-50 duration-150">

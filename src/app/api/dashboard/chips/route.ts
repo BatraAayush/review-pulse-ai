@@ -17,8 +17,35 @@ export async function POST(req: NextRequest) {
 
     const { label, category, phrase, icon, businessId } = await req.json();
 
-    if (!label || !phrase) {
-      return NextResponse.json({ error: 'Label and phrase are required' }, { status: 400 });
+    const trimmedLabel = (label || '').trim();
+    const trimmedPhrase = (phrase || '').trim();
+    const trimmedCategory = (category || 'General').trim();
+
+    if (!trimmedLabel) {
+      return NextResponse.json({ error: 'Tag label is required' }, { status: 400 });
+    }
+    if (trimmedLabel.length < 2) {
+      return NextResponse.json({ error: 'Tag label must be at least 2 characters' }, { status: 400 });
+    }
+    if (trimmedLabel.length > 40) {
+      return NextResponse.json({ error: 'Tag label cannot exceed 40 characters' }, { status: 400 });
+    }
+
+    if (!trimmedPhrase) {
+      return NextResponse.json({ error: 'Review sentence is required' }, { status: 400 });
+    }
+    if (trimmedPhrase.length < 10) {
+      return NextResponse.json({ error: 'Review sentence must be at least 10 characters' }, { status: 400 });
+    }
+    if (trimmedPhrase.length > 300) {
+      return NextResponse.json({ error: 'Review sentence cannot exceed 300 characters' }, { status: 400 });
+    }
+
+    if (trimmedCategory.length < 2) {
+      return NextResponse.json({ error: 'Category must be at least 2 characters' }, { status: 400 });
+    }
+    if (trimmedCategory.length > 30) {
+      return NextResponse.json({ error: 'Category cannot exceed 30 characters' }, { status: 400 });
     }
 
     const business = await prisma.business.findFirst({
@@ -32,6 +59,21 @@ export async function POST(req: NextRequest) {
 
     if (!business) {
       return NextResponse.json({ error: 'Business not found' }, { status: 404 });
+    }
+
+    // Check duplicate label within this business
+    const existingChip = await prisma.smartChip.findFirst({
+      where: {
+        businessId: business.id,
+        label: { equals: trimmedLabel, mode: 'insensitive' },
+      },
+    });
+
+    if (existingChip) {
+      return NextResponse.json(
+        { error: 'A review highlight with this label already exists for this business' },
+        { status: 400 }
+      );
     }
 
     // Backend validation check: reject prohibited medical claim keywords for CLINIC / HEALTHCARE
@@ -55,9 +97,9 @@ export async function POST(req: NextRequest) {
     const newChip = await prisma.smartChip.create({
       data: {
         businessId: business.id,
-        label: label.trim(),
-        category: category?.trim() || 'General',
-        phrase: phrase.trim(),
+        label: trimmedLabel,
+        category: trimmedCategory,
+        phrase: trimmedPhrase,
         icon: icon || 'Sparkles',
         sortOrder: (maxSort._max.sortOrder || 0) + 1,
       },

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession, setSessionCookie, comparePassword, hashPassword } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { validatePassword } from '@/lib/passwordValidation';
 
 // GET current user profile
 export async function GET() {
@@ -75,9 +76,10 @@ export async function PUT(req: NextRequest) {
         );
       }
 
-      if (newPassword.length < 6) {
+      const pwdValidation = validatePassword(newPassword);
+      if (!pwdValidation.isValid) {
         return NextResponse.json(
-          { error: 'New password must be at least 6 characters long' },
+          { error: pwdValidation.error },
           { status: 400 }
         );
       }

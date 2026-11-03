@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { hashPassword, setSessionCookie } from '@/lib/auth';
+import { validatePassword } from '@/lib/passwordValidation';
 import { getDefaultChipsForCategory } from '@/lib/chips';
 
 function slugify(text: string): string {
@@ -23,9 +24,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (password.length < 6) {
+    const pwdValidation = validatePassword(password);
+    if (!pwdValidation.isValid) {
       return NextResponse.json(
-        { error: 'Password must be at least 6 characters long' },
+        { error: pwdValidation.error },
         { status: 400 }
       );
     }

@@ -3,9 +3,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CustomSelect from '@/components/CustomSelect';
+import ConfirmModal from '@/components/ConfirmModal';
+import { useToast } from '@/components/ToastContext';
 import {
   ShieldCheck,
   Building2,
@@ -35,7 +36,9 @@ import {
   Laptop,
   Sparkles,
   ArrowDown,
-  X
+  X,
+  User as UserIcon,
+  LogOut
 } from 'lucide-react';
 
 interface ScanLogItem {
@@ -120,8 +123,12 @@ const ADMIN_PROVISION_CATEGORY_OPTIONS = [
 
 export default function SuperAdminPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
+  const [user, setUser] = useState<{ id: string; email: string; name: string; role: string } | null>(null);
+  const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [data, setData] = useState<AdminOverviewData | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -177,6 +184,7 @@ export default function SuperAdminPage() {
         return;
       }
 
+      setUser(authData.user);
       setAuthorized(true);
 
       // 2. Fetch admin overview
@@ -193,6 +201,23 @@ export default function SuperAdminPage() {
       console.error('Failed to load super admin data:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleConfirmLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setUser(null);
+      setConfirmLogoutOpen(false);
+      toast.info('You have been signed out successfully.', 'Signed Out');
+      router.push('/');
+      router.refresh();
+    } catch {
+      setConfirmLogoutOpen(false);
+      router.push('/');
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
@@ -400,6 +425,7 @@ export default function SuperAdminPage() {
       setNewName('');
       setNewOwnerName('');
       setNewEmail('');
+      setNewPassword('Password@123');
       setNewReviewUrl('');
       setShowAddModal(false);
       await loadAdminData();
@@ -492,48 +518,113 @@ export default function SuperAdminPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col">
-      <Navbar />
+      {/* ── Unified Sticky Super Admin Header ── */}
+      <header className="sticky top-0 z-40 w-full bg-slate-950/95 backdrop-blur-xl border-b border-slate-800 shadow-xl transition-all">
+        <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 gap-3 sm:gap-4">
+            {/* Left: Brand Logo & Super Admin Command Center Badge */}
+            <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+              <Link
+                href="/admin"
+                className="flex items-center gap-2.5 shrink-0 group"
+                title="ReviewPulse Super Admin"
+              >
+                <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-400 p-[1px] shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                  <div className="h-full w-full bg-slate-950 rounded-[11px] flex items-center justify-center">
+                    <QrCode className="h-5 w-5 text-blue-400 group-hover:text-blue-300 transition-colors" />
+                  </div>
+                </div>
+                <div className="hidden sm:flex items-center gap-1.5">
+                  <span className="font-extrabold text-base tracking-tight text-white">
+                    Review<span className="text-blue-400">Pulse</span>
+                  </span>
+                  <span className="text-[10px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                    AI SaaS
+                  </span>
+                </div>
+              </Link>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Super Admin Top Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-widest uppercase bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Super-Admin Command Center</span>
-              </span>
-              <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-mono">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>Multi-Tenant Engine Online</span>
-              </span>
+              {/* Breadcrumb Separator */}
+              <span className="text-slate-700 font-light text-lg select-none">/</span>
+
+              {/* Command Center Title & Telemetry Status */}
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="px-2.5 py-1 rounded-xl text-xs font-bold tracking-wide uppercase bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1.5 shrink-0">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Super-Admin Command</span>
+                </span>
+
+                <span className="hidden md:flex items-center gap-1.5 text-[11px] text-emerald-400 font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Multi-Tenant Engine Online</span>
+                </span>
+              </div>
             </div>
-            <h1 className="text-2xl font-black text-white tracking-tight">
-              Platform Overview & Business Directory
-            </h1>
-            <p className="text-xs text-slate-400">
-              Live multi-tenant telemetry queried from SQLite/Prisma production database.
-            </p>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={loadAdminData}
-              title="Refresh Data"
-              className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
+            {/* Right: Actions, Merchant Dashboard, Profile, Sign Out */}
+            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+              {/* Provision New Business Button */}
+              <button
+                type="button"
+                onClick={() => setShowAddModal(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/20 transition-all cursor-pointer shrink-0"
+                title="Onboard a new merchant business"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Provision Business</span>
+                <span className="sm:hidden">Provision</span>
+              </button>
 
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/25 transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Provision New Business</span>
-            </button>
+              {/* Refresh Telemetry */}
+              <button
+                onClick={loadAdminData}
+                title="Refresh Telemetry & Database"
+                className="p-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-400 hover:text-white transition-colors cursor-pointer shrink-0"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Merchant Dashboard Preview Link */}
+              <Link
+                href="/dashboard"
+                className="hidden md:inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition-all group shrink-0"
+                title="Switch to Merchant Business Dashboard"
+              >
+                <span>Merchant View ↗</span>
+              </Link>
+
+
+              {/* Divider */}
+              <div className="h-5 w-[1px] bg-slate-800 hidden sm:block" />
+
+              {/* User Profile Pill */}
+              {user && (
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300 shrink-0">
+                  <UserIcon className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                  <span className="font-semibold text-white truncate max-w-[100px] hidden sm:inline">
+                    {user.name.split(' ')[0]}
+                  </span>
+                  <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                    Super Admin
+                  </span>
+                </div>
+              )}
+
+              {/* Sign Out Button */}
+              <button
+                type="button"
+                onClick={() => setConfirmLogoutOpen(true)}
+                title="Sign out and return to Home"
+                className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
+      </header>
+
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
 
         {/* Global SaaS Platform Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -735,11 +826,10 @@ export default function SuperAdminPage() {
                         {biz.totalFeedbacks}
                       </td>
                       <td className="py-4 px-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          biz.status === 'active'
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${biz.status === 'active'
                             ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                             : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                        }`}>
+                          }`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${biz.status === 'active' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
                           <span>{biz.status}</span>
                         </span>
@@ -758,11 +848,10 @@ export default function SuperAdminPage() {
                           <button
                             onClick={() => handleToggleStatus(biz.id, biz.status)}
                             title={biz.status === 'active' ? 'Pause Tenant' : 'Activate Tenant'}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                              biz.status === 'active'
+                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${biz.status === 'active'
                                 ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400'
                                 : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400'
-                            }`}
+                              }`}
                           >
                             <Power className="w-3.5 h-3.5" />
                           </button>
@@ -843,11 +932,10 @@ export default function SuperAdminPage() {
                       <button
                         key={`page-${pageNum}`}
                         onClick={() => setCurrentPage(pageNum as number)}
-                        className={`min-w-8 h-8 px-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
-                          isCurrent
+                        className={`min-w-8 h-8 px-2 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${isCurrent
                             ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
                             : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800'
-                        }`}
+                          }`}
                       >
                         {pageNum}
                       </button>
@@ -901,11 +989,10 @@ export default function SuperAdminPage() {
             <div className="flex items-center gap-2 self-end sm:self-auto">
               <button
                 onClick={handleToggleStreaming}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-colors cursor-pointer ${
-                  isStreaming
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-colors cursor-pointer ${isStreaming
                     ? 'border-slate-800 bg-slate-950 hover:bg-slate-800 text-slate-300'
                     : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
-                }`}
+                  }`}
                 title={isStreaming ? 'Pause real-time updates' : 'Resume real-time updates'}
               >
                 {isStreaming ? (
@@ -947,11 +1034,10 @@ export default function SuperAdminPage() {
                 <button
                   key={item.id}
                   onClick={() => handleFilterActionChange(item.id)}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors shrink-0 cursor-pointer ${
-                    scanFilterAction === item.id
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors shrink-0 cursor-pointer ${scanFilterAction === item.id
                       ? 'bg-blue-600 text-white'
                       : 'bg-slate-950/80 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800'
-                  }`}
+                    }`}
                 >
                   {item.label}
                 </button>
@@ -1017,16 +1103,15 @@ export default function SuperAdminPage() {
                 return (
                   <div
                     key={scan.id}
-                    className={`py-3 px-3 rounded-xl transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs ${
-                      isNew
+                    className={`py-3 px-3 rounded-xl transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs ${isNew
                         ? 'bg-emerald-500/10 border border-emerald-500/30 shadow-md shadow-emerald-500/10 animate-pulse'
                         : 'hover:bg-slate-800/40 bg-slate-900/30'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="p-2 rounded-lg bg-slate-800/80 text-slate-400 border border-slate-700/50 shrink-0">
                         {scan.deviceType.toLowerCase().includes('desktop') ||
-                        scan.deviceType.toLowerCase().includes('laptop') ? (
+                          scan.deviceType.toLowerCase().includes('laptop') ? (
                           <Laptop className="w-3.5 h-3.5 text-indigo-400" />
                         ) : (
                           <Smartphone className="w-3.5 h-3.5 text-blue-400" />
@@ -1132,13 +1217,13 @@ export default function SuperAdminPage() {
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
           {/* Backdrop overlay */}
-          <div 
+          <div
             className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity cursor-pointer"
             onClick={() => setShowAddModal(false)}
             aria-hidden="true"
           />
 
-          <div 
+          <div
             className="max-w-md w-full max-h-[90vh] overflow-y-auto rounded-2xl bg-slate-900 border border-slate-800 p-5 sm:p-6 shadow-2xl space-y-4 relative z-10 my-auto"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1247,6 +1332,21 @@ export default function SuperAdminPage() {
           </div>
         </div>
       )}
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmLogoutOpen}
+        onClose={() => {
+          if (!isLoggingOut) setConfirmLogoutOpen(false);
+        }}
+        onConfirm={handleConfirmLogout}
+        title="Sign Out of Super Admin Portal"
+        description="Are you sure you want to end your Super Admin session? You will need to re-authenticate to manage platform tenants and live telemetry."
+        confirmText="Sign Out"
+        variant="danger"
+        isLoading={isLoggingOut}
+        icon={<LogOut className="w-6 h-6 text-rose-400" />}
+      />
 
       <Footer />
     </div>
