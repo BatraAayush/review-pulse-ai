@@ -51,7 +51,8 @@ import {
   Calendar,
   Search,
   LogOut,
-  Palette
+  Palette,
+  Globe
 } from 'lucide-react';
 import GoogleReviewGuideModal from '@/components/GoogleReviewGuideModal';
 import ConfirmModal from '@/components/ConfirmModal';
@@ -910,8 +911,9 @@ function DashboardContent() {
               {/* ReviewPulse Logo */}
               <Link
                 href="/dashboard"
+                onClick={() => setActiveTab('overview')}
                 className="flex items-center gap-2 shrink-0 group"
-                title="ReviewPulse Dashboard"
+                title="ReviewPulse Dashboard Overview"
               >
                 <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-400 p-[1px] shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
                   <div className="h-full w-full bg-slate-950 rounded-[11px] flex items-center justify-center">
@@ -1140,6 +1142,23 @@ function DashboardContent() {
                           </div>
                           <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-white transition-colors" />
                         </Link>
+                      </div>
+
+                      {/* Public Marketing Website & Pricing Shortcut */}
+                      <div className="p-1.5">
+                        <a
+                          href="/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors group"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <Globe className="w-4 h-4 text-blue-400" />
+                            <span>Public Website &amp; Pricing</span>
+                          </div>
+                          <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-white transition-colors" />
+                        </a>
                       </div>
 
                       {/* Logout Item */}
