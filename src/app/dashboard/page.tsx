@@ -51,8 +51,7 @@ import {
   Calendar,
   Search,
   LogOut,
-  Palette,
-  Globe
+  Palette
 } from 'lucide-react';
 import GoogleReviewGuideModal from '@/components/GoogleReviewGuideModal';
 import ConfirmModal from '@/components/ConfirmModal';
@@ -3193,16 +3192,16 @@ function DashboardContent() {
               </form>
             </div>
 
-            {/* Support & Public Site Quick Links */}
+            {/* Help & Support */}
             <div className="rounded-2xl p-6 bg-slate-900/70 border border-slate-800 shadow-xl backdrop-blur-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20">
                   <HelpCircle className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Need Support or Public Links?</h3>
+                  <h3 className="text-base font-bold text-white">Help &amp; Support</h3>
                   <p className="text-xs text-slate-400">
-                    Reach our technical team, check platform FAQs, or preview the public marketing website.
+                    Have questions or need technical assistance with your review funnel? Our team is here to help.
                   </p>
                 </div>
               </div>
@@ -3213,15 +3212,19 @@ function DashboardContent() {
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-xs font-semibold transition-all cursor-pointer"
                 >
                   <Mail className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Contact Support & FAQs</span>
+                  <span>Contact Support &amp; FAQs</span>
                 </Link>
-                <Link
-                  href="/?public=true"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 text-blue-300 hover:text-white border border-blue-500/30 text-xs font-semibold transition-all cursor-pointer"
-                >
-                  <Globe className="w-3.5 h-3.5" />
-                  <span>View Public Website ↗</span>
-                </Link>
+                {business?.slug && (
+                  <a
+                    href={`/r/${business.slug}?preview=true`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 text-blue-300 hover:text-white border border-blue-500/30 text-xs font-semibold transition-all cursor-pointer"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Preview Your Live Funnel ↗</span>
+                  </a>
+                )}
               </div>
             </div>
 

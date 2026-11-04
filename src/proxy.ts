@@ -27,7 +27,7 @@ async function getSessionFromRequest(request: NextRequest): Promise<SessionPaylo
 }
 
 export async function proxy(request: NextRequest) {
-  const { pathname, searchParams } = request.nextUrl;
+  const { pathname } = request.nextUrl;
   const session = await getSessionFromRequest(request);
   const isAuthenticated = Boolean(session);
 
@@ -73,21 +73,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 6. Root Landing Page ('/')
-  if (pathname === '/') {
-    // Check if user explicitly wants to view the public website (e.g. ?public=true or ?preview=true)
-    const isPublicPreview = searchParams.get('public') === 'true' || searchParams.get('preview') === 'true';
-
-    // If authenticated AND NOT explicitly previewing public website:
-    // Approach B: App-First redirect straight into the app portal!
-    if (isAuthenticated && !isPublicPreview) {
-      const target = session?.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard';
-      return NextResponse.redirect(new URL(target, request.url));
-    }
-
-    return NextResponse.next();
-  }
-
+  // 6. Public Pages: Landing page ('/'), pricing, contact, etc. are accessible to everyone.
+  // When an authenticated user visits '/', the Navbar automatically displays their profile & "Dashboard →" button.
   return NextResponse.next();
 }
 
