@@ -341,6 +341,17 @@ function RegisterForm() {
       {/* Background Ambient Glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-blue-600/10 blur-[130px] rounded-full pointer-events-none" />
 
+      {/* Floating Top-Left Return to Website Link */}
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/70 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold backdrop-blur-md transition-all shadow-sm group cursor-pointer"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-400 group-hover:-translate-x-0.5 transition-all" />
+          <span>Back to Website</span>
+        </Link>
+      </div>
+
       {/* Main Registration Container */}
       <main className="flex-1 flex flex-col justify-center py-12 sm:py-16 sm:px-6 lg:px-8 relative z-10">
         <div className="sm:mx-auto sm:w-full sm:max-w-xl text-center px-4">
@@ -787,22 +798,11 @@ function RegisterForm() {
             </form>
             )}
 
-            <div className="mt-6 text-center text-xs text-slate-400 space-y-3">
-              <div>
-                Already have an account?{' '}
-                <Link href="/login" className="text-blue-400 hover:text-blue-300 font-bold underline underline-offset-4">
-                  Sign in here
-                </Link>
-              </div>
-              <div>
-                <Link
-                  href="/"
-                  className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Back to Website</span>
-                </Link>
-              </div>
+            <div className="mt-6 text-center text-xs text-slate-400">
+              Already have an account?{' '}
+              <Link href="/login" className="text-blue-400 hover:text-blue-300 font-bold underline underline-offset-4">
+                Sign in here
+              </Link>
             </div>
           </div>
         </div>

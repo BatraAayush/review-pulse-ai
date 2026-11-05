@@ -334,6 +334,17 @@ function ForgotPasswordForm() {
       {/* Background Ambient Glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-blue-600/10 blur-[130px] rounded-full pointer-events-none" />
 
+      {/* Floating Top-Left Return to Website Link */}
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/70 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold backdrop-blur-md transition-all shadow-sm group cursor-pointer"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-400 group-hover:-translate-x-0.5 transition-all" />
+          <span>Back to Website</span>
+        </Link>
+      </div>
+
       {/* Main Password Reset Container */}
       <main className="flex-1 flex flex-col justify-center py-12 sm:py-16 sm:px-6 lg:px-8 relative z-10">
         {/* Header Content */}
