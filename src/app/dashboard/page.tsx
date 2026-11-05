@@ -3695,7 +3695,7 @@ function DashboardContent() {
             </div>
 
             <div className="space-y-3">
-              <div className="p-4 rounded-2xl bg-slate-950/60 border border-blue-500/30 flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-slate-950/60 border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h4 className="text-xs font-bold text-white">Franchise & Agency (Recommended)</h4>
                   <p className="text-[11px] text-slate-400">Up to 10 locations + super-admin platform</p>
@@ -3706,13 +3706,13 @@ function DashboardContent() {
                     setShowUpgradeModal(false);
                     handleSwitchPlan('enterprise');
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-md cursor-pointer shrink-0 self-start sm:self-auto"
                 >
                   Switch (₹2,499)
                 </button>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex items-center justify-between">
+              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h4 className="text-xs font-bold text-white">Pro Growth</h4>
                   <p className="text-[11px] text-slate-400">Up to 3 locations + full AI features</p>
@@ -3723,7 +3723,7 @@ function DashboardContent() {
                     setShowUpgradeModal(false);
                     handleSwitchPlan('pro');
                   }}
-                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition-all border border-slate-700 cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition-all border border-slate-700 cursor-pointer shrink-0 self-start sm:self-auto"
                 >
                   Switch (₹999)
                 </button>
