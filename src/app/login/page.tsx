@@ -116,8 +116,8 @@ export default function LoginPage() {
       {/* Background Ambient Glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-blue-600/10 blur-[130px] rounded-full pointer-events-none" />
 
-      {/* Floating Top-Left Return to Website Link */}
-      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20">
+      {/* Floating Top-Left Return to Website Link (Sticky on Desktop, Natural Scroll on Mobile) */}
+      <div className="absolute sm:fixed top-4 left-4 sm:top-6 sm:left-6 z-30">
         <Link
           href="/"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/70 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold backdrop-blur-md transition-all shadow-sm group cursor-pointer"
