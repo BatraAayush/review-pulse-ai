@@ -45,22 +45,43 @@ const CATEGORY_OPTIONS = [
 
 type PlanTier = 'starter' | 'pro' | 'enterprise';
 
-const PLAN_DETAILS: Record<PlanTier, { name: string; price: number; badge?: string; desc: string }> = {
+const PLAN_DETAILS: Record<PlanTier, { name: string; price: number; badge?: string; desc: string; features: string[] }> = {
   starter: {
     name: 'Starter Solo',
     price: 499,
-    desc: '1 Location • Unlimited Scans • AI Polish',
+    desc: '1 Location • Unlimited Scans • AI Polish • Negative Shield',
+    features: [
+      '1 Location',
+      'Unlimited QR Scans',
+      'AI Review Assistant',
+      'Private Shield (1-3★)',
+      'Standee QR Studio',
+    ],
   },
   pro: {
     name: 'Pro Growth',
     price: 999,
     badge: 'Most Popular',
-    desc: '3 Locations • Full AI Assistant • Custom Analytics',
+    desc: '3 Locations • Full AI Assistant • Custom Analytics • Negative Shield',
+    features: [
+      'Up to 3 Locations',
+      'Unlimited Scans & Live Gemini AI',
+      'Negative Review Shield',
+      'Interactive Analytics',
+      'Multi-Branch Switcher',
+    ],
   },
   enterprise: {
     name: 'Franchise & Agency',
     price: 2499,
-    desc: '10 Locations • Super Admin Panel • Central Telemetry',
+    desc: '10 Locations • Super Admin Panel • Central Telemetry • Multi-Tenant',
+    features: [
+      'Up to 10 Locations',
+      'Super-Admin Command Center',
+      'Multi-Tenant Telemetry',
+      'All AI Models',
+      'Priority Support',
+    ],
   },
 };
 
@@ -518,7 +539,7 @@ function RegisterForm() {
               <form noValidate onSubmit={handleRegister} className="space-y-5">
               {/* PLAN SELECTION SELECTOR */}
               <div>
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-2.5">
                   <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider">
                     Select Subscription Plan
                   </label>
@@ -526,7 +547,8 @@ function RegisterForm() {
                     Instant Activation
                   </span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+
+                <div className="space-y-2.5">
                   {(['starter', 'pro', 'enterprise'] as PlanTier[]).map((tierKey) => {
                     const tier = PLAN_DETAILS[tierKey];
                     const isSelected = selectedPlan === tierKey;
@@ -535,35 +557,61 @@ function RegisterForm() {
                         key={tierKey}
                         type="button"
                         onClick={() => setSelectedPlan(tierKey)}
-                        className={`relative p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${isSelected
-                            ? 'bg-blue-600/15 border-blue-500 text-white shadow-md shadow-blue-500/20 ring-1 ring-blue-500'
-                            : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-200'
+                        className={`w-full p-3.5 sm:p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col gap-2 relative ${isSelected
+                            ? 'bg-blue-600/15 border-blue-500 text-white shadow-lg shadow-blue-500/15 ring-1 ring-blue-500'
+                            : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-900/60'
                           }`}
                       >
-                        {tier.badge && (
-                          <span className="absolute -top-2 right-2 px-1.5 py-0.2 text-[9px] font-black uppercase tracking-wider rounded-full bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow">
-                            {tier.badge}
-                          </span>
-                        )}
-                        <div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold">{tier.name}</span>
-                            {isSelected && <Check className="w-3.5 h-3.5 text-blue-400" />}
-                          </div>
-                          <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-2 leading-tight">
-                            {tier.desc}
-                          </p>
-                        </div>
-                        <div className="mt-2 pt-2 border-t border-slate-800/80 flex items-baseline justify-between">
-                          <div>
-                            <span className="text-sm font-black font-mono text-white">
-                              ₹{tier.price}
+                        {/* Top row: Radio + Plan Name + Badge & Price */}
+                        <div className="flex items-center justify-between gap-3 flex-wrap">
+                          <div className="flex items-center gap-2.5">
+                            {/* Radio indicator */}
+                            <div
+                              className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${isSelected
+                                  ? 'border-blue-400 bg-blue-500 ring-2 ring-blue-500/30'
+                                  : 'border-slate-600 bg-slate-900'
+                                }`}
+                            >
+                              {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                            </div>
+
+                            <span className="text-sm font-bold tracking-tight text-white">
+                              {tier.name}
                             </span>
-                            <span className="text-[10px] text-slate-400">/mo</span>
+
+                            {tier.badge && (
+                              <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-full bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-sm">
+                                {tier.badge}
+                              </span>
+                            )}
                           </div>
-                          <span className="text-[9px] font-bold text-slate-400 bg-slate-800/60 px-1 py-0.5 rounded border border-slate-700/50">
-                            Billed Monthly
-                          </span>
+
+                          {/* Price */}
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-base sm:text-lg font-black font-mono text-white">
+                              ₹{tier.price.toLocaleString('en-IN')}
+                            </span>
+                            <span className="text-xs text-slate-400">/mo</span>
+                            <span className="text-[10px] text-slate-400 font-medium ml-1">
+                              · Billed Monthly
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Feature Badges Checklist */}
+                        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                          {tier.features.map((feat) => (
+                            <span
+                              key={feat}
+                              className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-lg border transition-colors ${isSelected
+                                  ? 'bg-blue-500/15 border-blue-500/30 text-blue-200'
+                                  : 'bg-slate-900/90 border-slate-800 text-slate-400'
+                                }`}
+                            >
+                              <Check className={`w-3 h-3 shrink-0 ${isSelected ? 'text-blue-300' : 'text-emerald-400'}`} />
+                              <span>{feat}</span>
+                            </span>
+                          ))}
                         </div>
                       </button>
                     );
