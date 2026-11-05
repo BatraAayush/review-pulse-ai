@@ -815,11 +815,10 @@ function DashboardContent() {
       await fetch('/api/auth/logout', { method: 'POST' });
       setConfirmLogoutOpen(false);
       toast.info('You have been signed out successfully.', 'Signed Out');
-      router.push('/');
-      router.refresh();
+      window.location.href = '/login';
     } catch {
       setConfirmLogoutOpen(false);
-      router.push('/');
+      window.location.href = '/login';
     } finally {
       setIsLoggingOut(false);
     }
