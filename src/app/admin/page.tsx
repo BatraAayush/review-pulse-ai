@@ -544,13 +544,14 @@ export default function SuperAdminPage() {
               </Link>
 
               {/* Breadcrumb Separator */}
-              <span className="text-slate-700 font-light text-lg select-none">/</span>
+              <span className="text-slate-700 font-light text-lg select-none hidden sm:inline">/</span>
 
               {/* Command Center Title & Telemetry Status */}
               <div className="flex items-center gap-2 min-w-0">
                 <span className="px-2.5 py-1 rounded-xl text-xs font-bold tracking-wide uppercase bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center gap-1.5 shrink-0">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Super-Admin Command</span>
+                  <span className="hidden sm:inline">Super-Admin Command</span>
+                  <span className="sm:hidden">Command</span>
                 </span>
 
                 <span className="hidden md:flex items-center gap-1.5 text-[11px] text-emerald-400 font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 shrink-0">
@@ -604,7 +605,8 @@ export default function SuperAdminPage() {
                     {user.name.split(' ')[0]}
                   </span>
                   <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                    Super Admin
+                    <span className="hidden sm:inline">Super Admin</span>
+                    <span className="sm:hidden">Admin</span>
                   </span>
                 </div>
               )}

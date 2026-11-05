@@ -951,7 +951,7 @@ function DashboardContent() {
                       <span>{business.logoUrl || getCategoryEmoji(business.category)}</span>
                     )}
                   </div>
-                  <span className="font-bold text-white text-xs sm:text-sm max-w-[150px] sm:max-w-[220px] md:max-w-[280px] truncate">
+                  <span className="font-bold text-white text-xs sm:text-sm max-w-[110px] sm:max-w-[200px] md:max-w-[280px] truncate">
                     {business.name}
                   </span>
                   <ChevronDown className={`w-3.5 h-3.5 text-slate-400 group-hover:text-slate-200 transition-transform shrink-0 ${locationDropdownOpen ? 'rotate-180 text-blue-400' : ''}`} />
@@ -1039,8 +1039,8 @@ function DashboardContent() {
               </div>
             </div>
 
-            {/* Center: Navigation Tabs Unified In Single Header Row (No Scroll) */}
-            <nav className="flex items-center gap-1 py-1 px-1">
+            {/* Center: Navigation Tabs Unified In Single Header Row (Desktop lg+) */}
+            <nav className="hidden lg:flex items-center gap-1 py-1 px-1">
               {[
                 { id: 'overview', label: 'Analytics', icon: TrendingUp },
                 { id: 'qr', label: 'QR Kit', icon: QrCode },
@@ -1179,6 +1179,39 @@ function DashboardContent() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+
+        {/* Mobile / Tablet Horizontal Scrollable Sub-Nav Row for screen sizes < lg */}
+        <div className="lg:hidden border-t border-slate-800/80 bg-slate-950/95 backdrop-blur-xl px-2 sm:px-4 py-2 overflow-x-auto no-scrollbar scroll-smooth">
+          <div className="flex items-center gap-1.5 min-w-max mx-auto px-1">
+            {[
+              { id: 'overview', label: 'Analytics', icon: TrendingUp },
+              { id: 'qr', label: 'QR Kit', icon: QrCode },
+              { id: 'chips', label: 'Chips', icon: Sparkles },
+              { id: 'feedback', label: 'Shield', icon: ShieldCheck },
+              { id: 'billing', label: 'Billing', icon: CreditCard },
+              { id: 'settings', label: 'Settings', icon: Settings },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id as typeof activeTab);
+                    router.replace(`/dashboard?tab=${tab.id}`, { scroll: false });
+                  }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap cursor-pointer shrink-0 ${isActive
+                    ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30 shadow-sm shadow-blue-500/10'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900 border border-transparent'
+                    }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-blue-400' : 'text-slate-400'}`} />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </header>
@@ -1609,14 +1642,14 @@ function DashboardContent() {
         {activeTab === 'feedback' && (
           <div className="space-y-6">
             <div className="rounded-2xl p-6 bg-slate-900/70 border border-slate-800 shadow-xl backdrop-blur-xl space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h3 className="text-base font-bold text-white">Private Feedback Shield Inbox</h3>
                   <p className="text-xs text-slate-400">
                     Customers who rated 1 to 3 stars had their complaints routed here instead of Google Maps.
                   </p>
                 </div>
-                <span className="text-xs px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                <span className="text-xs px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium shrink-0 self-start sm:self-auto">
                   {stats.unreadFeedbackCount} Pending Resolution
                 </span>
               </div>
@@ -1629,8 +1662,8 @@ function DashboardContent() {
                 ) : (
                   feedbacks.map((fb) => (
                     <div key={fb.id} className="py-4 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="flex items-center gap-0.5 text-xs font-bold text-blue-400">
                             {fb.rating} <Star className="w-3 h-3 fill-blue-400" />
                           </span>
@@ -1644,7 +1677,7 @@ function DashboardContent() {
                           )}
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 self-start sm:self-auto">
                           <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${fb.status === 'unread'
                             ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                             : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'

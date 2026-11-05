@@ -826,7 +826,7 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
             Rate your overall experience:
           </label>
 
-          <div className="flex items-center justify-center gap-2 py-2">
+          <div className="flex items-center justify-center gap-1 sm:gap-2 py-2">
             {[1, 2, 3, 4, 5].map((starValue) => {
               const isFilled = (hoveredRating || rating) >= starValue;
               return (
@@ -836,10 +836,10 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                   onMouseEnter={() => setHoveredRating(starValue)}
                   onMouseLeave={() => setHoveredRating(0)}
                   onClick={() => setRating(starValue)}
-                  className="p-1.5 transition-transform active:scale-125 focus:outline-none group cursor-pointer"
+                  className="p-1 sm:p-1.5 transition-transform active:scale-125 focus:outline-none group cursor-pointer"
                 >
                   <Star
-                    className={`w-9 h-9 sm:w-10 sm:h-10 transition-all duration-200 ${isFilled
+                    className={`w-8 h-8 sm:w-10 sm:h-10 transition-all duration-200 ${isFilled
                         ? 'fill-amber-400 text-amber-400 scale-110 drop-shadow-[0_0_12px_rgba(59,130,246,0.5)]'
                         : 'text-slate-700 hover:text-slate-600'
                       }`}

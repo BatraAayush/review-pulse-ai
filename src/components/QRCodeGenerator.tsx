@@ -908,7 +908,7 @@ export default function QRCodeGenerator({
             </div>
 
             {/* Dynamic QR Live Sync Badge */}
-            <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                 <span className="font-semibold text-slate-200">Cloud-Synced Dynamic QR</span>

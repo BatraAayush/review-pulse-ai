@@ -184,7 +184,7 @@ export default function Navbar() {
             </nav>
 
             {/* Zone 3: Auth & Action CTAs */}
-            <div className="hidden sm:flex items-center gap-2.5 shrink-0">
+            <div className="hidden md:flex items-center gap-2.5 shrink-0">
               {user ? (
                 <div className="flex items-center gap-2.5">
                   {user.role === 'SUPER_ADMIN' ? (
@@ -262,7 +262,7 @@ export default function Navbar() {
                   </Link>
                   <Link
                     href="/register?plan=starter"
-                    className="px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-md shadow-blue-600/20"
+                    className="hidden sm:inline-flex px-3 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-md shadow-blue-600/20"
                   >
                     Get Started
                   </Link>

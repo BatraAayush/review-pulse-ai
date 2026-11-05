@@ -439,7 +439,7 @@ function RegisterForm() {
                     <label className="block text-center text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
                       Enter 6-Digit Code
                     </label>
-                    <div className="flex items-center justify-center gap-2 sm:gap-3">
+                    <div className="flex items-center justify-center gap-1.5 sm:gap-3">
                       {otpDigits.map((digit, idx) => (
                         <input
                           key={idx}
@@ -453,7 +453,7 @@ function RegisterForm() {
                           onChange={(e) => handleDigitChange(idx, e.target.value)}
                           onKeyDown={(e) => handleDigitKeyDown(idx, e)}
                           onPaste={(e) => handleDigitPaste(e, idx)}
-                          className={`w-11 h-13 sm:w-12 sm:h-14 rounded-xl text-center text-xl sm:text-2xl font-mono font-bold transition-all focus:outline-none ${
+                          className={`w-9 sm:w-12 h-12 sm:h-14 rounded-xl text-center text-lg sm:text-2xl font-mono font-bold transition-all focus:outline-none ${
                             error
                               ? 'border border-rose-500/80 bg-slate-950 text-rose-300 focus:ring-2 focus:ring-rose-500/40'
                               : digit

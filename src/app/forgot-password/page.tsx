@@ -523,7 +523,7 @@ function ForgotPasswordForm() {
                   </div>
 
                   {/* 6 Individual Digit Boxes */}
-                  <div className="grid grid-cols-6 gap-2 sm:gap-2.5 py-1">
+                  <div className="grid grid-cols-6 gap-1.5 sm:gap-2.5 py-1">
                     {otpDigits.map((digit, idx) => (
                       <input
                         key={idx}
@@ -538,7 +538,7 @@ function ForgotPasswordForm() {
                         onChange={(e) => handleDigitChange(idx, e.target.value)}
                         onKeyDown={(e) => handleDigitKeyDown(idx, e)}
                         onPaste={(e) => handleDigitPaste(e, idx)}
-                        className={`w-full h-12 sm:h-14 text-center font-mono font-black text-xl sm:text-2xl rounded-xl transition-all outline-none select-none ${fieldErrors.otp
+                        className={`w-full h-12 sm:h-14 text-center font-mono font-black text-lg sm:text-2xl rounded-xl transition-all outline-none select-none ${fieldErrors.otp
                             ? 'border-2 border-rose-500 bg-slate-950/80 text-rose-300'
                             : digit
                               ? 'bg-slate-900 border-2 border-blue-500 text-white shadow-lg shadow-blue-500/20'
