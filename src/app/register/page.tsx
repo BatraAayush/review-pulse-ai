@@ -25,8 +25,8 @@ import {
   CheckCircle2,
   RefreshCw,
   ArrowLeft,
+  QrCode,
 } from 'lucide-react';
-import AuthHeader from '@/components/AuthHeader';
 import CustomSelect from '@/components/CustomSelect';
 import GoogleReviewGuideModal from '@/components/GoogleReviewGuideModal';
 import ConfirmModal from '@/components/ConfirmModal';
@@ -341,11 +341,32 @@ function RegisterForm() {
       {/* Background Ambient Glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-blue-600/10 blur-[130px] rounded-full pointer-events-none" />
 
-      {/* Dedicated Minimalist Auth Header */}
-      <AuthHeader type="register" />
-
-      <main className="flex-1 flex flex-col justify-center py-10 sm:py-14 sm:px-6 lg:px-8 relative z-10">
+      {/* Main Registration Container */}
+      <main className="flex-1 flex flex-col justify-center py-12 sm:py-16 sm:px-6 lg:px-8 relative z-10">
         <div className="sm:mx-auto sm:w-full sm:max-w-xl text-center px-4">
+          {/* Centered Brand Logo */}
+          <div className="mb-6 flex justify-center">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2.5 group cursor-pointer focus:outline-none"
+              title="Return to ReviewPulse AI Homepage"
+            >
+              <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-400 p-[1px] shadow-xl shadow-blue-500/25 group-hover:scale-105 transition-transform">
+                <div className="h-full w-full bg-slate-950 rounded-[15px] flex items-center justify-center">
+                  <QrCode className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-colors" />
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 text-left">
+                <span className="font-extrabold text-xl sm:text-2xl tracking-tight text-white">
+                  Review<span className="text-blue-400">Pulse</span>
+                </span>
+                <span className="text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400">
+                  AI SaaS
+                </span>
+              </div>
+            </Link>
+          </div>
+
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-400 text-xs font-semibold mb-3">
             <Sparkles className="w-3.5 h-3.5 fill-current" />
             <span>Instant Setup • Direct Plan Activation</span>
@@ -766,11 +787,22 @@ function RegisterForm() {
             </form>
             )}
 
-            <div className="mt-6 text-center text-xs text-slate-400">
-              Already have an account?{' '}
-              <Link href="/login" className="text-blue-400 hover:text-blue-300 font-medium underline underline-offset-4">
-                Sign in here
-              </Link>
+            <div className="mt-6 text-center text-xs text-slate-400 space-y-3">
+              <div>
+                Already have an account?{' '}
+                <Link href="/login" className="text-blue-400 hover:text-blue-300 font-bold underline underline-offset-4">
+                  Sign in here
+                </Link>
+              </div>
+              <div>
+                <Link
+                  href="/"
+                  className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-300 text-xs font-medium transition-colors"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Back to Website</span>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
