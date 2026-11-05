@@ -18,7 +18,8 @@ import {
   Check,
   BarChart3,
   CreditCard,
-  QrCode
+  QrCode,
+  HelpCircle
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -847,18 +848,25 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ Accordion */}
-      <section className="py-20 border-t border-slate-900 bg-slate-950">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 border-t border-slate-900 bg-slate-950 relative overflow-hidden">
+        {/* Ambient Glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-blue-600/10 via-sky-500/10 to-indigo-600/10 rounded-full blur-[140px] pointer-events-none" />
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-12 space-y-3">
-            <span className="text-xs font-semibold tracking-wider uppercase text-blue-400">
-              Frequently Asked Questions
-            </span>
-            <h2 className="text-3xl font-black text-white tracking-tight">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-semibold shadow-sm">
+              <HelpCircle className="w-3.5 h-3.5 text-blue-400" />
+              <span>Frequently Asked Questions</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
               Everything You Need To Know
             </h2>
+            <p className="text-xs sm:text-sm text-slate-400 max-w-lg mx-auto">
+              Quick answers about Google review compliance, instant QR activation, and review shield routing.
+            </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3.5">
             {[
               {
                 q: 'Does this comply with Google’s Review Policies?',
@@ -889,24 +897,44 @@ export default function LandingPage() {
               return (
                 <div
                   key={index}
-                  className="rounded-2xl bg-slate-900/60 border border-slate-800 overflow-hidden transition-colors"
+                  className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+                    isOpen
+                      ? 'bg-gradient-to-b from-slate-900 via-slate-900/95 to-blue-950/20 border-blue-500/40 shadow-xl shadow-blue-500/5 ring-1 ring-blue-500/20'
+                      : 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700/80 hover:bg-slate-900/80'
+                  }`}
                 >
                   <button
+                    type="button"
                     onClick={() => setOpenFaq(isOpen ? null : index)}
-                    className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-sm text-white focus:outline-none cursor-pointer"
+                    className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 font-bold text-sm text-white focus:outline-none cursor-pointer group"
+                    aria-expanded={isOpen}
                   >
-                    <span>{faq.q}</span>
-                    <ChevronDown
-                      className={`w-4 h-4 text-slate-400 transition-transform ${
-                        isOpen ? 'rotate-180 text-blue-400' : ''
+                    <span className="group-hover:text-blue-300 transition-colors">
+                      {faq.q}
+                    </span>
+                    <div
+                      className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border transition-all duration-300 ${
+                        isOpen
+                          ? 'bg-blue-600 text-white border-blue-500 shadow-sm shadow-blue-500/20 rotate-180'
+                          : 'bg-slate-800/80 text-slate-400 border-slate-700/60 group-hover:text-white group-hover:border-slate-600 rotate-0'
                       }`}
-                    />
-                  </button>
-                  {isOpen && (
-                    <div className="px-5 pb-5 text-xs text-slate-400 leading-relaxed border-t border-slate-800/60 pt-3">
-                      {faq.a}
+                    >
+                      <ChevronDown className="w-4 h-4 transition-transform duration-300" />
                     </div>
-                  )}
+                  </button>
+
+                  {/* Smooth Animated Height Container via CSS Grid */}
+                  <div
+                    className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
+                      isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="px-4 pb-4 sm:px-5 sm:pb-5 text-xs text-slate-300 leading-relaxed border-t border-slate-800/60 pt-3 transition-opacity duration-300">
+                        {faq.a}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               );
             })}

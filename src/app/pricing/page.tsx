@@ -478,31 +478,47 @@ export default function PricingPage() {
             <p className="text-xs text-slate-400">Everything you need to know about billing, multi-location plans, and security.</p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {FAQS.map((faq, idx) => {
               const isOpen = openFaqIndex === idx;
               return (
                 <div
                   key={faq.q}
-                  className="rounded-2xl border border-slate-800/80 bg-slate-900/60 overflow-hidden transition-all"
+                  className={`rounded-2xl border transition-all duration-300 overflow-hidden ${
+                    isOpen
+                      ? 'bg-gradient-to-b from-slate-900 via-slate-900/95 to-blue-950/20 border-blue-500/40 shadow-xl shadow-blue-500/5 ring-1 ring-blue-500/20'
+                      : 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700/80 hover:bg-slate-900/80'
+                  }`}
                 >
                   <button
                     type="button"
                     onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                    className="w-full p-4 sm:p-5 flex items-center justify-between text-left text-xs sm:text-sm font-semibold text-white hover:text-blue-300 transition-colors cursor-pointer"
+                    className="w-full p-4 sm:p-5 flex items-center justify-between text-left text-xs sm:text-sm font-semibold text-white hover:text-blue-300 transition-colors cursor-pointer group"
+                    aria-expanded={isOpen}
                   >
                     <span>{faq.q}</span>
-                    <ChevronDown
-                      className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
-                        isOpen ? 'rotate-180 text-blue-400' : ''
+                    <div
+                      className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border transition-all duration-300 ${
+                        isOpen
+                          ? 'bg-blue-600 text-white border-blue-500 shadow-sm shadow-blue-500/20 rotate-180'
+                          : 'bg-slate-800/80 text-slate-400 border-slate-700/60 group-hover:text-white group-hover:border-slate-600 rotate-0'
                       }`}
-                    />
-                  </button>
-                  {isOpen && (
-                    <div className="px-4 pb-4 sm:px-5 sm:pb-5 text-xs text-slate-300 leading-relaxed border-t border-slate-800/40 pt-3">
-                      {faq.a}
+                    >
+                      <ChevronDown className="w-4 h-4 transition-transform duration-300" />
                     </div>
-                  )}
+                  </button>
+
+                  <div
+                    className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
+                      isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="px-4 pb-4 sm:px-5 sm:pb-5 text-xs text-slate-300 leading-relaxed border-t border-slate-800/40 pt-3 transition-opacity duration-300">
+                        {faq.a}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               );
             })}
