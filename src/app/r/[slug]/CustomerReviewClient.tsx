@@ -728,11 +728,11 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
         )}
         {/* Background ambient lighting */}
         <div
-          className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[360px] rounded-full blur-[140px] pointer-events-none opacity-45 transition-all"
+          className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[360px] rounded-full blur-[140px] pointer-events-none opacity-20 transition-all"
           style={{ backgroundColor: brandColor }}
         />
         <div
-          className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full blur-[130px] pointer-events-none opacity-20 transition-all"
+          className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full blur-[130px] pointer-events-none opacity-10 transition-all"
           style={{ backgroundColor: brandColor }}
         />
 
@@ -756,7 +756,7 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
               className="relative mx-auto w-20 h-20 rounded-2xl p-1 shadow-xl flex items-center justify-center transition-all"
               style={{
                 background: `linear-gradient(135deg, ${brandColor} 0%, ${brandLighter} 100%)`,
-                boxShadow: `0 10px 25px -5px ${hexToRgba(brandColor, 0.45)}`,
+                boxShadow: `0 4px 14px -2px ${hexToRgba(brandColor, 0.22)}`,
               }}
             >
               {isImageLogo(business.logoUrl) ? (
@@ -811,11 +811,11 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                   window.location.href = finalGoogleUrl;
                 }}
                 style={{
-                  background: `linear-gradient(135deg, ${brandColor} 0%, ${brandDarker} 100%)`,
-                  boxShadow: `0 10px 25px -5px ${hexToRgba(brandColor, 0.45)}`,
-                  borderColor: hexToRgba(brandColor, 0.4),
+                  background: `linear-gradient(180deg, ${brandColor} 0%, ${brandDarker} 100%)`,
+                  boxShadow: `inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 14px -2px ${hexToRgba(brandColor, 0.22)}, 0 2px 6px rgba(0, 0, 0, 0.3)`,
+                  borderColor: 'rgba(255, 255, 255, 0.15)',
                 }}
-                className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl text-white font-bold text-sm transition-all active:scale-[0.98] cursor-pointer border hover:brightness-110"
+                className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl text-white font-bold text-sm transition-all active:scale-[0.98] cursor-pointer border hover:brightness-105"
               >
                 <span>Continue to Google Review</span>
                 <ExternalLink className="w-4 h-4" />
@@ -851,11 +851,11 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
       )}
       {/* Background ambient glow powered by business brand theme color */}
       <div
-        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[520px] h-[380px] rounded-full blur-[130px] pointer-events-none opacity-40 transition-all duration-500"
+        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[520px] h-[380px] rounded-full blur-[130px] pointer-events-none opacity-20 transition-all duration-500"
         style={{ backgroundColor: brandColor }}
       />
       <div
-        className="absolute top-1/2 -left-20 w-80 h-80 rounded-full blur-[140px] pointer-events-none opacity-20 transition-all duration-500"
+        className="absolute top-1/2 -left-20 w-80 h-80 rounded-full blur-[140px] pointer-events-none opacity-10 transition-all duration-500"
         style={{ backgroundColor: brandColor }}
       />
 
@@ -867,7 +867,7 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
               className="w-16 h-16 rounded-2xl p-0.5 mx-auto flex items-center justify-center text-3xl overflow-hidden transition-all duration-300"
               style={{
                 background: `linear-gradient(135deg, ${brandColor} 0%, ${brandLighter} 100%)`,
-                boxShadow: `0 8px 24px -4px ${hexToRgba(brandColor, 0.45)}`,
+                boxShadow: `0 4px 14px -2px ${hexToRgba(brandColor, 0.22)}`,
               }}
             >
               <div className="bg-slate-950 w-full h-full rounded-[14px] flex items-center justify-center overflow-hidden">
@@ -1001,12 +1001,12 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                           onClick={() => toggleChip(chip.id)}
                           style={isSelected ? {
                             backgroundColor: brandColor,
-                            borderColor: brandColor,
-                            boxShadow: `0 4px 14px ${hexToRgba(brandColor, 0.35)}`,
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            boxShadow: `0 2px 8px ${hexToRgba(brandColor, 0.18)}`,
                           } : undefined}
                           className={`text-xs px-3.5 py-2 rounded-xl font-medium transition-all duration-150 flex items-center gap-1.5 active:scale-95 cursor-pointer ${
                             isSelected
-                              ? 'text-white font-bold ring-1 ring-white/30 border'
+                              ? 'text-white font-bold ring-1 ring-white/20 border'
                               : 'bg-slate-800/80 text-slate-300 border border-slate-700/80 hover:bg-slate-700 hover:border-slate-600'
                           }`}
                         >
@@ -1089,11 +1089,11 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                   disabled={isSubmitting || !reviewText.trim()}
                   onClick={handlePostOnGoogle}
                   style={{
-                    background: `linear-gradient(135deg, ${brandColor} 0%, ${brandDarker} 100%)`,
-                    boxShadow: `0 12px 28px -4px ${hexToRgba(brandColor, 0.45)}`,
-                    borderColor: hexToRgba(brandColor, 0.4),
+                    background: `linear-gradient(180deg, ${brandColor} 0%, ${brandDarker} 100%)`,
+                    boxShadow: `inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 14px -2px ${hexToRgba(brandColor, 0.22)}, 0 2px 6px rgba(0, 0, 0, 0.3)`,
+                    borderColor: 'rgba(255, 255, 255, 0.15)',
                   }}
-                  className="w-full group relative overflow-hidden rounded-2xl p-3.5 sm:p-4 font-extrabold text-white transition-all hover:brightness-110 active:scale-[0.99] cursor-pointer border disabled:opacity-50"
+                  className="w-full group relative overflow-hidden rounded-2xl p-3.5 sm:p-4 font-bold text-white transition-all hover:brightness-105 active:scale-[0.99] cursor-pointer border disabled:opacity-50"
                 >
                   <div className="flex items-center justify-center gap-2">
                     {isSubmitting ? (
@@ -1208,10 +1208,11 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                   type="submit"
                   disabled={isSubmitting}
                   style={{
-                    background: `linear-gradient(135deg, ${brandColor} 0%, ${brandDarker} 100%)`,
-                    boxShadow: `0 8px 20px -4px ${hexToRgba(brandColor, 0.4)}`,
+                    background: `linear-gradient(180deg, ${brandColor} 0%, ${brandDarker} 100%)`,
+                    boxShadow: `inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 12px -2px ${hexToRgba(brandColor, 0.18)}, 0 2px 6px rgba(0, 0, 0, 0.3)`,
+                    borderColor: 'rgba(255, 255, 255, 0.15)',
                   }}
-                  className="w-full rounded-xl text-white p-3 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-[0.99] hover:brightness-110"
+                  className="w-full rounded-xl text-white p-3 text-xs font-bold border flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-[0.99] hover:brightness-105"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Send Privately to Management</span>
@@ -1282,10 +1283,11 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
             <a
               href={finalGoogleUrl}
               style={{
-                background: `linear-gradient(135deg, ${brandColor} 0%, ${brandDarker} 100%)`,
-                boxShadow: `0 8px 20px -4px ${hexToRgba(brandColor, 0.45)}`,
+                background: `linear-gradient(180deg, ${brandColor} 0%, ${brandDarker} 100%)`,
+                boxShadow: `inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 4px 12px -2px ${hexToRgba(brandColor, 0.2)}, 0 2px 6px rgba(0, 0, 0, 0.3)`,
+                borderColor: 'rgba(255, 255, 255, 0.15)',
               }}
-              className="inline-flex items-center justify-center gap-2 w-full py-3 text-white font-bold rounded-xl text-xs hover:brightness-110 shadow-lg"
+              className="inline-flex items-center justify-center gap-2 w-full py-3 text-white font-bold rounded-xl text-xs hover:brightness-105 border"
             >
               <span>{hasDirectGoogleReviewUrl ? 'Opening Google Review...' : `Opening ${business.name} on Maps...`} (Click if not redirected)</span>
               <ExternalLink className="w-3.5 h-3.5" />
