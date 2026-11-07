@@ -438,6 +438,15 @@ function DashboardContent() {
     }
   }, [searchParams]);
 
+  // Scroll to top whenever tab changes so the user is never stuck at the bottom
+  const prevTabRef = useRef(activeTab);
+  useEffect(() => {
+    if (prevTabRef.current !== activeTab) {
+      prevTabRef.current = activeTab;
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [activeTab]);
+
   // Multi-location helper handlers
   const maxLocations = data?.business?.activePlan === 'enterprise' ? 10 : data?.business?.activePlan === 'pro' ? 3 : 1;
   const currentLocCount = data?.userBusinesses?.length || 1;
@@ -1057,6 +1066,7 @@ function DashboardContent() {
                     onClick={() => {
                       setActiveTab(tab.id as typeof activeTab);
                       router.replace(`/dashboard?tab=${tab.id}`, { scroll: false });
+                      window.scrollTo({ top: 0, behavior: 'instant' });
                     }}
                     className={`relative flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap cursor-pointer shrink-0 ${isActive
                       ? 'bg-blue-600/15 text-blue-400 border border-blue-500/30 shadow-sm shadow-blue-500/10'
@@ -1201,6 +1211,7 @@ function DashboardContent() {
                   onClick={() => {
                     setActiveTab(tab.id as typeof activeTab);
                     router.replace(`/dashboard?tab=${tab.id}`, { scroll: false });
+                    window.scrollTo({ top: 0, behavior: 'instant' });
                   }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition-all whitespace-nowrap cursor-pointer shrink-0 ${isActive
                     ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30 shadow-sm shadow-blue-500/10'
@@ -1222,6 +1233,9 @@ function DashboardContent() {
           const isPaidActive = business.subscriptionStatus === 'active';
 
           if (isPaidActive) {
+            // Only display the Subscription Active banner when on the Billing tab
+            if (activeTab !== 'billing') return null;
+
             return (
               <div className="rounded-2xl p-4 bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
                 <div className="flex items-center gap-3">
@@ -1248,13 +1262,11 @@ function DashboardContent() {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('billing')}
-                  className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 text-xs font-semibold transition-all shadow-sm cursor-pointer shrink-0"
-                >
-                  Manage Billing
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
+                    Plan Active
+                  </span>
+                </div>
               </div>
             );
           }

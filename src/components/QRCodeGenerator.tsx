@@ -77,7 +77,14 @@ export default function QRCodeGenerator({
 
   // Directly update business brand theme color from QR Studio
   const handleUpdateBrandColor = async (newColor: string, alsoSetQrColor: boolean = false) => {
-    if (!newColor || newColor === business.primaryColor || isUpdatingBrandColor) return;
+    if (!newColor) return;
+
+    // Immediately switch standee preview to 'Brand Accent' so user sees live visual feedback
+    if (frameStyle !== 'accent') {
+      setFrameStyle('accent');
+    }
+
+    if (newColor === business.primaryColor || isUpdatingBrandColor) return;
     setIsUpdatingBrandColor(true);
 
     try {
@@ -91,7 +98,7 @@ export default function QRCodeGenerator({
       });
 
       if (res.ok) {
-        toast.success(`Brand color updated to ${newColor.toUpperCase()}!`, 'Brand Color Saved');
+        toast.success(`Brand color updated to ${newColor.toUpperCase()} (Switched standee to Brand Accent)`, 'Brand Color Saved');
         if (onUpdateBusiness) {
           await onUpdateBusiness({ primaryColor: newColor });
         }
@@ -1058,7 +1065,7 @@ export default function QRCodeGenerator({
                     )}
                   </div>
                   <p className="text-[11px] text-slate-400">
-                    Powers your Brand Accent standee gradient, background card glow, and customer portal theme.
+                    Powers your Brand Accent standee gradient, background card glow, and customer portal theme. Changing color auto-switches preview to <span className="text-blue-300 font-semibold">Brand Accent</span>.
                   </p>
                 </div>
               </div>

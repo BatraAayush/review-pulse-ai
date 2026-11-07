@@ -135,6 +135,21 @@ export default function SuperAdminPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const isFirstPageMountRef = useRef(true);
+
+  // Scroll to table when page changes so user is at the top of the table
+  useEffect(() => {
+    if (isFirstPageMountRef.current) {
+      isFirstPageMountRef.current = false;
+      return;
+    }
+    const el = document.getElementById('tenants-directory-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [currentPage]);
 
   // New business form state
   const [newName, setNewName] = useState('');
@@ -717,7 +732,7 @@ export default function SuperAdminPage() {
         </div>
 
         {/* Business Tenants Table */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 overflow-hidden shadow-xl backdrop-blur-xl flex flex-col">
+        <div id="tenants-directory-section" className="rounded-2xl border border-slate-800 bg-slate-900/70 overflow-hidden shadow-xl backdrop-blur-xl flex flex-col">
           {/* Table Header Info Bar */}
           <div className="px-5 py-4 border-b border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950/40">
             <div className="flex items-center gap-3">
