@@ -232,7 +232,9 @@ export default function RazorpayPaymentModal({
         currency: orderData.currency,
         name: 'ReviewPulse AI',
         description: `${planConfig.name} (${isAnnual ? 'Annual' : 'Monthly'})`,
-        image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=128&q=80',
+        image: typeof window !== 'undefined' && window.location.protocol === 'https:'
+          ? `${window.location.origin}/icon-512.png`
+          : 'https://review-pulse-ai-ab.vercel.app/icon-512.png',
         order_id: orderData.orderId,
         handler: async function (response: any) {
           await handleVerifyPayment({
