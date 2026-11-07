@@ -100,10 +100,44 @@ function addPhraseToReview(text: string, phrase: string, businessName: string): 
   return `${formattedText} ${formattedPhrase}`;
 }
 
+function hexToRgba(hex?: string, alpha: number = 1): string {
+  if (!hex || !hex.startsWith('#')) return `rgba(37, 99, 235, ${alpha})`;
+  let c = hex.slice(1).trim();
+  if (c.length === 3) {
+    c = c.split('').map((char) => char + char).join('');
+  }
+  if (c.length !== 6) return `rgba(37, 99, 235, ${alpha})`;
+  const r = parseInt(c.slice(0, 2), 16);
+  const g = parseInt(c.slice(2, 4), 16);
+  const b = parseInt(c.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function adjustHexBrightness(hex?: string, percent: number = 0): string {
+  if (!hex || !hex.startsWith('#')) return hex || '#2563eb';
+  let c = hex.slice(1).trim();
+  if (c.length === 3) c = c.split('').map((char) => char + char).join('');
+  if (c.length !== 6) return hex;
+  const num = parseInt(c, 16);
+  let r = (num >> 16) + Math.round(255 * (percent / 100));
+  let g = ((num >> 8) & 0x00ff) + Math.round(255 * (percent / 100));
+  let b = (num & 0x0000ff) + Math.round(255 * (percent / 100));
+  r = Math.min(255, Math.max(0, r));
+  g = Math.min(255, Math.max(0, g));
+  b = Math.min(255, Math.max(0, b));
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+}
+
 export default function CustomerReviewClient({ slug, initialDirect }: CustomerReviewClientProps) {
   const { toast } = useToast();
   const fallbackBiz = INITIAL_BUSINESSES.find((b) => b.slug.toLowerCase() === slug.toLowerCase()) || null;
   const [business, setBusiness] = useState<BusinessData | null>(fallbackBiz);
+
+  const brandColor = business?.primaryColor?.startsWith('#') && business.primaryColor.length === 7
+    ? business.primaryColor
+    : '#2563eb';
+  const brandDarker = adjustHexBrightness(brandColor, -25);
+  const brandLighter = adjustHexBrightness(brandColor, 20);
   const [loadingBusiness, setLoadingBusiness] = useState(!fallbackBiz);
   const [notFound, setNotFound] = useState(false);
   const [pendingActivation, setPendingActivation] = useState<{ businessName?: string } | null>(null);
@@ -694,10 +728,13 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
         )}
         {/* Background ambient lighting */}
         <div
-          className="absolute -top-32 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-[140px] pointer-events-none opacity-30"
-          style={{ backgroundColor: business.primaryColor || '#2563eb' }}
+          className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[360px] rounded-full blur-[140px] pointer-events-none opacity-45 transition-all"
+          style={{ backgroundColor: brandColor }}
         />
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-amber-500/10 blur-[130px] rounded-full pointer-events-none" />
+        <div
+          className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full blur-[130px] pointer-events-none opacity-20 transition-all"
+          style={{ backgroundColor: brandColor }}
+        />
 
         {/* Top bar with verified badge */}
         <header className="relative z-10 max-w-md mx-auto w-full flex items-center justify-between text-xs text-slate-400">
@@ -715,7 +752,13 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
         <main className="relative z-10 max-w-md mx-auto w-full my-auto py-6">
           <div className="rounded-3xl border border-slate-800 bg-slate-900/90 p-7 backdrop-blur-xl shadow-2xl text-center space-y-6">
             {/* Logo or Emoji */}
-            <div className="relative mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border-2 border-slate-700/80 p-1 shadow-xl flex items-center justify-center">
+            <div
+              className="relative mx-auto w-20 h-20 rounded-2xl p-1 shadow-xl flex items-center justify-center transition-all"
+              style={{
+                background: `linear-gradient(135deg, ${brandColor} 0%, ${brandLighter} 100%)`,
+                boxShadow: `0 10px 25px -5px ${hexToRgba(brandColor, 0.45)}`,
+              }}
+            >
               {isImageLogo(business.logoUrl) ? (
                 <img
                   src={business.logoUrl!}
@@ -725,7 +768,10 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
               ) : (
                 <span className="text-3xl">{business.logoUrl || getCategoryEmoji(business.category)}</span>
               )}
-              <div className="absolute -bottom-2 -right-2 w-7 h-7 rounded-full bg-blue-600 border-2 border-slate-900 flex items-center justify-center shadow-md">
+              <div
+                className="absolute -bottom-2 -right-2 w-7 h-7 rounded-full border-2 border-slate-900 flex items-center justify-center shadow-md text-white"
+                style={{ backgroundColor: brandColor }}
+              >
                 <CheckCircle2 className="w-4 h-4 text-white" />
               </div>
             </div>
@@ -764,7 +810,12 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                 onClick={() => {
                   window.location.href = finalGoogleUrl;
                 }}
-                className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-blue-600/30 transition-all active:scale-[0.98] cursor-pointer"
+                style={{
+                  background: `linear-gradient(135deg, ${brandColor} 0%, ${brandDarker} 100%)`,
+                  boxShadow: `0 10px 25px -5px ${hexToRgba(brandColor, 0.45)}`,
+                  borderColor: hexToRgba(brandColor, 0.4),
+                }}
+                className="w-full flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl text-white font-bold text-sm transition-all active:scale-[0.98] cursor-pointer border hover:brightness-110"
               >
                 <span>Continue to Google Review</span>
                 <ExternalLink className="w-4 h-4" />
@@ -798,17 +849,27 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
           <span>Merchant Preview Mode: Scans &amp; tests are not counted in live analytics</span>
         </div>
       )}
-      {/* Background ambient glow */}
+      {/* Background ambient glow powered by business brand theme color */}
       <div
-        className="absolute -top-32 left-1/2 -translate-x-1/2 w-96 h-96 rounded-full blur-[120px] pointer-events-none opacity-25"
-        style={{ backgroundColor: business.primaryColor || '#2563eb' }}
+        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[520px] h-[380px] rounded-full blur-[130px] pointer-events-none opacity-40 transition-all duration-500"
+        style={{ backgroundColor: brandColor }}
+      />
+      <div
+        className="absolute top-1/2 -left-20 w-80 h-80 rounded-full blur-[140px] pointer-events-none opacity-20 transition-all duration-500"
+        style={{ backgroundColor: brandColor }}
       />
 
       <div className="max-w-md w-full mx-auto space-y-6 relative z-10">
         {/* Business Branding Card */}
         <div className="rounded-3xl p-5 sm:p-6 bg-slate-900/90 border border-slate-800 shadow-2xl backdrop-blur-xl text-center space-y-3">
           <div className="relative inline-block">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-400 p-0.5 shadow-lg shadow-blue-500/20 mx-auto flex items-center justify-center text-3xl overflow-hidden">
+            <div
+              className="w-16 h-16 rounded-2xl p-0.5 mx-auto flex items-center justify-center text-3xl overflow-hidden transition-all duration-300"
+              style={{
+                background: `linear-gradient(135deg, ${brandColor} 0%, ${brandLighter} 100%)`,
+                boxShadow: `0 8px 24px -4px ${hexToRgba(brandColor, 0.45)}`,
+              }}
+            >
               <div className="bg-slate-950 w-full h-full rounded-[14px] flex items-center justify-center overflow-hidden">
                 {isImageLogo(business.logoUrl) ? (
                   <img
@@ -827,8 +888,14 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
           </div>
 
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800 text-[11px] font-medium text-slate-300 mb-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <div
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium text-slate-300 mb-1 border"
+              style={{
+                backgroundColor: hexToRgba(brandColor, 0.1),
+                borderColor: hexToRgba(brandColor, 0.25),
+              }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: brandColor }} />
               <span>Official Review Hub</span>
             </div>
             <h1 className="text-xl font-extrabold text-white tracking-tight">
@@ -876,7 +943,10 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
             })}
           </div>
 
-          <div className="text-sm font-bold text-blue-400 tracking-wide transition-all h-6">
+          <div
+            className="text-sm font-bold tracking-wide transition-all h-6"
+            style={{ color: brandColor }}
+          >
             {getRatingLabel(activeRating)}
           </div>
         </div>
@@ -929,14 +999,19 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                           key={chip.id}
                           type="button"
                           onClick={() => toggleChip(chip.id)}
+                          style={isSelected ? {
+                            backgroundColor: brandColor,
+                            borderColor: brandColor,
+                            boxShadow: `0 4px 14px ${hexToRgba(brandColor, 0.35)}`,
+                          } : undefined}
                           className={`text-xs px-3.5 py-2 rounded-xl font-medium transition-all duration-150 flex items-center gap-1.5 active:scale-95 cursor-pointer ${
                             isSelected
-                              ? 'bg-blue-600 text-white font-bold shadow-md shadow-blue-600/30 border border-blue-500 ring-1 ring-blue-400/50'
+                              ? 'text-white font-bold ring-1 ring-white/30 border'
                               : 'bg-slate-800/80 text-slate-300 border border-slate-700/80 hover:bg-slate-700 hover:border-slate-600'
                           }`}
                         >
                           <span>{chip.label}</span>
-                          {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-blue-200" />}
+                          {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white/90" />}
                         </button>
                       );
                     })}
@@ -962,10 +1037,15 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                       type="button"
                       disabled={isAIGenerating || !reviewText.trim()}
                       onClick={() => handleAIPolish('polish')}
-                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 px-2.5 py-1 rounded-lg border border-blue-500/20 transition-all cursor-pointer disabled:opacity-50"
+                      style={{
+                        color: brandColor,
+                        backgroundColor: hexToRgba(brandColor, 0.12),
+                        borderColor: hexToRgba(brandColor, 0.28),
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all cursor-pointer disabled:opacity-50 hover:brightness-125"
                       title="Polish and blend added chips smoothly with Gemini AI"
                     >
-                      <Sparkles className="w-3 h-3 text-blue-400" />
+                      <Sparkles className="w-3 h-3" style={{ color: brandColor }} />
                       <span>AI Polish</span>
                     </button>
                     <button
@@ -1008,7 +1088,12 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                   type="button"
                   disabled={isSubmitting || !reviewText.trim()}
                   onClick={handlePostOnGoogle}
-                  className="w-full group relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 p-3.5 sm:p-4 font-extrabold text-white shadow-xl shadow-blue-600/30 transition-all hover:brightness-110 active:scale-[0.99] cursor-pointer border border-blue-400/30 disabled:opacity-50"
+                  style={{
+                    background: `linear-gradient(135deg, ${brandColor} 0%, ${brandDarker} 100%)`,
+                    boxShadow: `0 12px 28px -4px ${hexToRgba(brandColor, 0.45)}`,
+                    borderColor: hexToRgba(brandColor, 0.4),
+                  }}
+                  className="w-full group relative overflow-hidden rounded-2xl p-3.5 sm:p-4 font-extrabold text-white transition-all hover:brightness-110 active:scale-[0.99] cursor-pointer border disabled:opacity-50"
                 >
                   <div className="flex items-center justify-center gap-2">
                     {isSubmitting ? (
@@ -1020,11 +1105,11 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                       <>
                         <Copy className="w-4 h-4 sm:w-5 sm:h-5 transition-transform group-hover:scale-110 shrink-0" />
                         <span className="text-sm sm:text-base tracking-wide font-extrabold">Copy Review &amp; Post on Google</span>
-                        <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-200 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                        <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/80 group-hover:translate-x-0.5 transition-transform shrink-0" />
                       </>
                     )}
                   </div>
-                  <p className="text-[11px] text-blue-100/90 font-medium mt-1 text-center">
+                  <p className="text-[11px] text-white/90 font-medium mt-1 text-center">
                     Copies review to clipboard &amp; auto-opens Google Maps review box
                   </p>
                 </button>
@@ -1122,7 +1207,11 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full rounded-xl bg-blue-600 hover:bg-blue-500 text-white p-3 text-xs font-bold shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-[0.99]"
+                  style={{
+                    background: `linear-gradient(135deg, ${brandColor} 0%, ${brandDarker} 100%)`,
+                    boxShadow: `0 8px 20px -4px ${hexToRgba(brandColor, 0.4)}`,
+                  }}
+                  className="w-full rounded-xl text-white p-3 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-[0.99] hover:brightness-110"
                 >
                   <Send className="w-3.5 h-3.5" />
                   <span>Send Privately to Management</span>
@@ -1176,11 +1265,11 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
               <p className="text-xs text-slate-300 mt-1">
                 {hasDirectGoogleReviewUrl ? (
                   <>
-                    Redirecting to Google now. When the review box opens, simply <strong className="text-blue-400">Paste</strong> and tap <strong className="text-blue-400">Post</strong>!
+                    Redirecting to Google now. When the review box opens, simply <strong style={{ color: brandColor }}>Paste</strong> and tap <strong style={{ color: brandColor }}>Post</strong>!
                   </>
                 ) : (
                   <>
-                    Opening <strong className="text-blue-400">{business.name}</strong> on Google Maps. Tap <strong className="text-emerald-400">&quot;Write a review&quot;</strong>, then <strong className="text-blue-400">Paste</strong>!
+                    Opening <strong style={{ color: brandColor }}>{business.name}</strong> on Google Maps. Tap <strong className="text-emerald-400">&quot;Write a review&quot;</strong>, then <strong style={{ color: brandColor }}>Paste</strong>!
                   </>
                 )}
               </p>
@@ -1192,7 +1281,11 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
 
             <a
               href={finalGoogleUrl}
-              className="inline-flex items-center justify-center gap-2 w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs hover:brightness-110 shadow-lg shadow-blue-600/30"
+              style={{
+                background: `linear-gradient(135deg, ${brandColor} 0%, ${brandDarker} 100%)`,
+                boxShadow: `0 8px 20px -4px ${hexToRgba(brandColor, 0.45)}`,
+              }}
+              className="inline-flex items-center justify-center gap-2 w-full py-3 text-white font-bold rounded-xl text-xs hover:brightness-110 shadow-lg"
             >
               <span>{hasDirectGoogleReviewUrl ? 'Opening Google Review...' : `Opening ${business.name} on Maps...`} (Click if not redirected)</span>
               <ExternalLink className="w-3.5 h-3.5" />

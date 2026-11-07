@@ -2910,7 +2910,7 @@ function DashboardContent() {
                         <span>Brand Theme Color</span>
                       </label>
                       <p className="text-[11px] text-slate-400 mt-0.5">
-                        Powers your customer review portal accent glow and the &quot;Use Brand Color&quot; preset in the QR &amp; Standee studio.
+                        Powers your customer review portal (primary CTA buttons, selected chips, logo glow, atmosphere) and the QR &amp; Standee studio.
                       </p>
                     </div>
                     <span className="font-mono text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 text-slate-200">
