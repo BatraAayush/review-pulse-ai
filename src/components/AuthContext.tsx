@@ -22,9 +22,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
-  refreshAuth: async () => {},
-  logout: async () => {},
-  setAuthUser: () => {},
+  refreshAuth: async () => { },
+  logout: async () => { },
+  setAuthUser: () => { },
 });
 
 const AUTH_STORAGE_KEY = 'rp_auth_user_session';
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(data.user);
           try {
             localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data.user));
-          } catch {}
+          } catch { }
           return;
         }
       }
@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       try {
         localStorage.removeItem(AUTH_STORAGE_KEY);
-      } catch {}
+      } catch { }
     } catch {
       // Network failure: retain current state if offline
     } finally {
@@ -87,7 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         localStorage.removeItem(AUTH_STORAGE_KEY);
       }
-    } catch {}
+    } catch { }
   }, []);
 
   const logout = useCallback(async () => {
@@ -99,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       try {
         localStorage.removeItem(AUTH_STORAGE_KEY);
-      } catch {}
+      } catch { }
     }
   }, []);
 
