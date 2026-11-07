@@ -268,8 +268,8 @@ export default function ContactPage() {
                           }}
                           placeholder="Jane Doe"
                           className={`w-full bg-slate-950/70 border rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-all ${fieldErrors.name
-                              ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
-                              : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                            ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                            : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
                             }`}
                         />
                         {fieldErrors.name && (
@@ -294,8 +294,8 @@ export default function ContactPage() {
                           }}
                           placeholder="jane@company.com"
                           className={`w-full bg-slate-950/70 border rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-all ${fieldErrors.email
-                              ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
-                              : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                            ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                            : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
                             }`}
                         />
                         {fieldErrors.email && (
@@ -355,8 +355,8 @@ export default function ContactPage() {
                         }}
                         placeholder="Tell us about your business, number of locations, or specific questions..."
                         className={`w-full bg-slate-950/70 border rounded-xl p-3.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-all resize-y min-h-[110px] ${fieldErrors.message
-                            ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
-                            : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                          ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
+                          : 'border-slate-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
                           }`}
                       />
                       {fieldErrors.message && (
@@ -526,11 +526,10 @@ export default function ContactPage() {
               return (
                 <div
                   key={index}
-                  className={`rounded-2xl border transition-all duration-150 ease-out overflow-hidden ${
-                    isOpen
+                  className={`rounded-2xl border transition-all duration-150 ease-out overflow-hidden ${isOpen
                       ? 'bg-gradient-to-b from-slate-900 via-slate-900/95 to-blue-950/20 border-blue-500/40 shadow-xl shadow-blue-500/5 ring-1 ring-blue-500/20'
                       : 'bg-slate-900/60 border-slate-800/80 hover:border-slate-700/80 hover:bg-slate-900/80'
-                  }`}
+                    }`}
                 >
                   <button
                     type="button"
@@ -540,20 +539,18 @@ export default function ContactPage() {
                   >
                     <span>{faq.q}</span>
                     <div
-                      className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border transition-all duration-150 ease-out ${
-                        isOpen
+                      className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border transition-all duration-150 ease-out ${isOpen
                           ? 'bg-blue-600 text-white border-blue-500 shadow-sm shadow-blue-500/20 rotate-180'
                           : 'bg-slate-800/80 text-slate-400 border-slate-700/60 group-hover:text-white group-hover:border-slate-600 rotate-0'
-                      }`}
+                        }`}
                     >
                       <ChevronDown className="w-4 h-4 transition-transform duration-150 ease-out" />
                     </div>
                   </button>
 
                   <div
-                    className={`grid transition-[grid-template-rows] duration-150 ease-out ${
-                      isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-                    }`}
+                    className={`grid transition-[grid-template-rows] duration-150 ease-out ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                      }`}
                   >
                     <div className="overflow-hidden">
                       <div className="px-4 pb-4 sm:px-5 sm:pb-5 text-xs text-slate-300 leading-relaxed border-t border-slate-800/60 pt-3 transition-opacity duration-150 ease-out">
