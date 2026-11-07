@@ -348,8 +348,10 @@ export async function generateReviewWithGemini(
 
       const candidateModels = [
         process.env.GEMINI_MODEL?.trim(),
-        'gemini-3.5-flash-lite',
-        'gemini-3.8-flash',
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash',
+        'gemini-2.5-flash-lite',
       ].filter(Boolean) as string[];
 
       for (const model of candidateModels) {
@@ -372,7 +374,8 @@ export async function generateReviewWithGemini(
               const displayModel = model
                 .replace('gemini-', 'Gemini ')
                 .replace('-flash-lite', ' Flash Lite')
-                .replace('-flash', ' Flash');
+                .replace('-flash', ' Flash')
+                .replace('-pro', ' Pro');
 
               return {
                 reviewText: cleanedReview,
