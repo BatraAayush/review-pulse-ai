@@ -31,6 +31,7 @@ import CustomSelect from '@/components/CustomSelect';
 import GoogleReviewGuideModal from '@/components/GoogleReviewGuideModal';
 import ConfirmModal from '@/components/ConfirmModal';
 import { useToast } from '@/components/ToastContext';
+import { useAuth } from '@/components/AuthContext';
 import { validatePassword } from '@/lib/passwordValidation';
 import PasswordRequirements from '@/components/PasswordRequirements';
 
@@ -89,6 +90,7 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const { setAuthUser } = useAuth();
 
   const planParam = searchParams.get('plan') as PlanTier;
   const initialPlan: PlanTier = ['starter', 'pro', 'enterprise'].includes(planParam) ? planParam : 'starter';
@@ -272,6 +274,17 @@ function RegisterForm() {
 
       if (!res.ok) {
         throw new Error(data.error || 'Failed to create business account');
+      }
+
+      if (data.user) {
+        setAuthUser({
+          id: data.user.userId || data.user.id,
+          email: data.user.email,
+          name: data.user.name,
+          role: data.user.role,
+          businessName: data.user.businessName,
+          businessSlug: data.user.businessSlug,
+        });
       }
 
       toast.success(

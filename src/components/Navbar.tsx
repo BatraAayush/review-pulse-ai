@@ -16,44 +16,16 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/components/ToastContext';
 import ConfirmModal from '@/components/ConfirmModal';
-
-interface AuthUser {
-  id: string;
-  email: string;
-  name: string;
-  role: 'SUPER_ADMIN' | 'OWNER';
-}
+import { useAuth } from '@/components/AuthContext';
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const { user, isLoading, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-
-  // Check auth session on route change
-  useEffect(() => {
-    let isMounted = true;
-    async function checkAuth() {
-      try {
-        const res = await fetch('/api/auth/me');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.authenticated && data.user && isMounted) {
-            setUser(data.user);
-          } else if (isMounted) {
-            setUser(null);
-          }
-        }
-      } catch {
-        // Safe fallback
-      }
-    }
-    checkAuth();
-    return () => { isMounted = false; };
-  }, [pathname]);
 
   const handleOpenLogoutModal = () => {
     setMobileMenuOpen(false);
@@ -63,8 +35,7 @@ export default function Navbar() {
   const handleConfirmLogout = async () => {
     setIsLoggingOut(true);
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      setUser(null);
+      await logout();
       setShowLogoutModal(false);
       toast.info('You have been signed out successfully.', 'Signed Out');
       window.location.href = '/login';
@@ -184,8 +155,10 @@ export default function Navbar() {
             </nav>
 
             {/* Zone 3: Auth & Action CTAs */}
-            <div className="hidden md:flex items-center gap-2.5 shrink-0">
-              {user ? (
+            <div className="hidden md:flex items-center gap-2.5 shrink-0 min-h-[38px]">
+              {isLoading && !user ? (
+                <div className="w-28 h-9 rounded-xl bg-slate-900/40 border border-slate-800/40 animate-pulse" />
+              ) : user ? (
                 <div className="flex items-center gap-2.5">
                   {user.role === 'SUPER_ADMIN' ? (
                     <Link
@@ -251,8 +224,10 @@ export default function Navbar() {
             </div>
 
             {/* Mobile menu button */}
-            <div className="flex md:hidden items-center gap-2">
-              {!user ? (
+            <div className="flex md:hidden items-center gap-2 min-h-[36px]">
+              {isLoading && !user ? (
+                <div className="w-16 h-8 rounded-lg bg-slate-900/40 border border-slate-800/40 animate-pulse" />
+              ) : !user ? (
                 <div className="flex items-center gap-1.5">
                   <Link
                     href="/login"

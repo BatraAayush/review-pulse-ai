@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { useAuth } from '@/components/AuthContext';
 import {
   ShieldCheck,
   Check,
@@ -16,13 +17,6 @@ import {
   Zap,
   Calculator
 } from 'lucide-react';
-
-interface AuthUser {
-  id: string;
-  email: string;
-  name: string;
-  role: 'SUPER_ADMIN' | 'OWNER';
-}
 
 const FAQS = [
   {
@@ -48,9 +42,9 @@ const FAQS = [
 ];
 
 export default function PricingPage() {
+  const { user } = useAuth();
   const [billingAnnual, setBillingAnnual] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
-  const [user, setUser] = useState<AuthUser | null>(null);
 
   // ROI Calculator interactive state
   const [monthlyFootfall, setMonthlyFootfall] = useState(800);
@@ -60,24 +54,6 @@ export default function PricingPage() {
   const estimatedScans = Math.round(monthlyFootfall * 0.18);
   const estimatedReviews = Math.round(estimatedScans * 0.65);
   const estimatedNewRevenue = Math.round(estimatedReviews * averageTicket * 0.4);
-
-  // Check auth status
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        const res = await fetch('/api/auth/me');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.authenticated && data.user) {
-            setUser(data.user);
-          }
-        }
-      } catch {
-        // Fallback silently
-      }
-    }
-    checkAuth();
-  }, []);
 
   const getPlanActionUrl = (planKey: 'starter' | 'pro' | 'enterprise') => {
     if (user) {

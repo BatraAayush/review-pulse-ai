@@ -18,10 +18,12 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import { useToast } from '@/components/ToastContext';
+import { useAuth } from '@/components/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { setAuthUser } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -90,6 +92,17 @@ export default function LoginPage() {
 
       if (!res.ok) {
         throw new Error(data.error || 'Failed to sign in');
+      }
+
+      if (data.user) {
+        setAuthUser({
+          id: data.user.userId || data.user.id,
+          email: data.user.email,
+          name: data.user.name,
+          role: data.user.role,
+          businessName: data.user.businessName,
+          businessSlug: data.user.businessSlug,
+        });
       }
 
       toast.success('Welcome back! Signing you in...', 'Login Successful');
