@@ -375,34 +375,41 @@ function RegisterForm() {
       {/* Background Ambient Glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-blue-600/10 blur-[130px] rounded-full pointer-events-none" />
 
-      {/* Floating Top-Left Return to Website Link (Sticky on Desktop, Natural Scroll on Mobile) */}
-      <div className="absolute sm:fixed top-4 left-4 sm:top-6 sm:left-6 z-30">
+      {/* Top Bar Navigation */}
+      <header className="relative z-30 max-w-xl mx-auto w-full px-4 pt-4 sm:pt-6 flex items-center justify-between">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/70 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold backdrop-blur-md transition-all shadow-sm group cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold backdrop-blur-md transition-all shadow-sm group cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-400 group-hover:-translate-x-0.5 transition-all" />
           <span>Back to Website</span>
         </Link>
-      </div>
+
+        <Link
+          href="/login"
+          className="text-xs text-slate-400 hover:text-slate-200 font-medium transition-colors"
+        >
+          Have an account? <span className="text-blue-400 font-bold hover:underline">Log In</span>
+        </Link>
+      </header>
 
       {/* Main Registration Container */}
-      <main className="flex-1 flex flex-col justify-center py-12 sm:py-16 sm:px-6 lg:px-8 relative z-10">
-        <div className="sm:mx-auto sm:w-full sm:max-w-xl text-center px-4">
+      <main className="flex-1 flex flex-col justify-center pt-3 pb-8 sm:py-10 px-3 sm:px-6 lg:px-8 relative z-10">
+        <div className="sm:mx-auto sm:w-full sm:max-w-xl text-center px-1 sm:px-4">
           {/* Centered Brand Logo */}
-          <div className="mb-6 flex justify-center">
+          <div className="mb-3 sm:mb-4 flex justify-center">
             <Link
               href="/"
               className="inline-flex items-center gap-2.5 group cursor-pointer focus:outline-none"
               title="Return to ReviewPulse AI Homepage"
             >
-              <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-400 p-[1px] shadow-xl shadow-blue-500/25 group-hover:scale-105 transition-transform">
+              <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-sky-400 p-[1px] shadow-xl shadow-blue-500/25 group-hover:scale-105 transition-transform">
                 <div className="h-full w-full bg-slate-950 rounded-[15px] flex items-center justify-center">
-                  <QrCode className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-colors" />
+                  <QrCode className="h-5 w-5 sm:h-6 sm:w-6 text-blue-400 group-hover:text-blue-300 transition-colors" />
                 </div>
               </div>
               <div className="flex items-center gap-1.5 text-left">
-                <span className="font-extrabold text-xl sm:text-2xl tracking-tight text-white">
+                <span className="font-extrabold text-lg sm:text-2xl tracking-tight text-white">
                   Review<span className="text-blue-400">Pulse</span>
                 </span>
                 <span className="text-[10px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400">
@@ -412,28 +419,22 @@ function RegisterForm() {
             </Link>
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-400 text-xs font-semibold mb-3">
-            <Sparkles className="w-3.5 h-3.5 fill-current" />
-            <span>Instant Setup • Direct Plan Activation</span>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-400 text-[11px] font-semibold mb-2">
+            <Sparkles className="w-3 h-3 fill-current" />
+            <span>Instant Setup • Cancel Anytime</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          <h1 className="text-xl sm:text-3xl font-black text-white tracking-tight">
             {step === 'otp' ? 'Verify Email Address' : 'Create Business Account'}
           </h1>
-          <p className="mt-2 text-xs sm:text-sm text-slate-400">
+          <p className="mt-1 text-xs sm:text-sm text-slate-400 max-w-sm mx-auto">
             {step === 'otp'
               ? 'Enter the 6-digit verification code sent to your inbox'
-              : 'Set up your account details and activate your review funnel in under 2 minutes'}
+              : 'Launch your high-converting review funnel in under 2 minutes'}
           </p>
-
-          {/* Feature Pill */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold mt-3">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Instant Activation • Razorpay UPI &amp; Cards • Cancel Anytime</span>
-          </div>
         </div>
 
-        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-xl relative z-10 px-4">
-          <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800/80 py-8 px-6 shadow-2xl rounded-2xl sm:px-10">
+        <div className="mt-4 sm:mt-6 sm:mx-auto sm:w-full sm:max-w-xl relative z-10 px-0 sm:px-4">
+          <div className="bg-slate-900/85 backdrop-blur-xl border border-slate-800/80 p-4 sm:p-8 shadow-2xl rounded-2xl sm:rounded-3xl">
             {error && (
               <div className="mb-6 p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm flex items-start gap-2.5">
                 <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-400 mt-0.5" />
@@ -530,7 +531,7 @@ function RegisterForm() {
                     <button
                       type="submit"
                       disabled={loading || otp.length !== 6}
-                      className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-bold text-sm shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-3 sm:py-3.5 px-3 sm:px-4 rounded-xl bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading ? (
                         <>
@@ -539,9 +540,9 @@ function RegisterForm() {
                         </>
                       ) : (
                         <>
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>Verify &amp; Create Account ({currentPlanInfo.name})</span>
-                          <ArrowRight className="w-4 h-4" />
+                          <CheckCircle2 className="w-4 h-4 shrink-0" />
+                          <span className="truncate">Verify &amp; Create Account ({currentPlanInfo.name})</span>
+                          <ArrowRight className="w-4 h-4 shrink-0" />
                         </>
                       )}
                     </button>
@@ -561,7 +562,7 @@ function RegisterForm() {
                   </span>
                 </div>
 
-                <div className="space-y-2.5">
+                <div className="space-y-2 sm:space-y-2.5">
                   {(['starter', 'pro', 'enterprise'] as PlanTier[]).map((tierKey) => {
                     const tier = PLAN_DETAILS[tierKey];
                     const isSelected = selectedPlan === tierKey;
@@ -570,17 +571,17 @@ function RegisterForm() {
                         key={tierKey}
                         type="button"
                         onClick={() => setSelectedPlan(tierKey)}
-                        className={`w-full p-3.5 sm:p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col gap-2 relative ${isSelected
+                        className={`w-full p-2.5 sm:p-4 rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer flex flex-col gap-1.5 relative ${isSelected
                             ? 'bg-blue-600/15 border-blue-500 text-white shadow-lg shadow-blue-500/15 ring-1 ring-blue-500'
                             : 'bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-900/60'
                           }`}
                       >
                         {/* Top row: Radio + Plan Name + Badge & Price */}
-                        <div className="flex items-center justify-between gap-3 flex-wrap">
-                          <div className="flex items-center gap-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
                             {/* Radio indicator */}
                             <div
-                              className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${isSelected
+                              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${isSelected
                                   ? 'border-blue-400 bg-blue-500 ring-2 ring-blue-500/30'
                                   : 'border-slate-600 bg-slate-900'
                                 }`}
@@ -588,41 +589,40 @@ function RegisterForm() {
                               {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                             </div>
 
-                            <span className="text-sm font-bold tracking-tight text-white">
+                            <span className="text-xs sm:text-sm font-bold tracking-tight text-white truncate">
                               {tier.name}
                             </span>
 
                             {tier.badge && (
-                              <span className="px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-full bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-sm">
+                              <span className="px-1.5 py-0.5 text-[9px] sm:text-[10px] font-black uppercase tracking-wider rounded-full bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-sm shrink-0">
                                 {tier.badge}
                               </span>
                             )}
                           </div>
 
                           {/* Price */}
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="text-base sm:text-lg font-black font-mono text-white">
+                          <div className="flex items-baseline gap-1 shrink-0">
+                            <span className="text-sm sm:text-base font-black font-mono text-white">
                               ₹{tier.price.toLocaleString('en-IN')}
                             </span>
-                            <span className="text-xs text-slate-400">/mo</span>
-                            <span className="text-[10px] text-slate-400 font-medium ml-1">
-                              · Billed Monthly
-                            </span>
+                            <span className="text-[10px] sm:text-xs text-slate-400">/mo</span>
                           </div>
                         </div>
 
-                        {/* Feature Badges Checklist */}
-                        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                          {tier.features.map((feat) => (
+                        {/* Feature Badges Checklist (compact on mobile, full on desktop) */}
+                        <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 pt-0.5">
+                          {tier.features.slice(0, 3).map((feat, fIdx) => (
                             <span
                               key={feat}
-                              className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-lg border transition-colors ${isSelected
+                              className={`inline-flex items-center gap-1 text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded-md sm:rounded-lg border transition-colors ${
+                                fIdx === 2 ? 'hidden sm:inline-flex' : ''
+                              } ${isSelected
                                   ? 'bg-blue-500/15 border-blue-500/30 text-blue-200'
                                   : 'bg-slate-900/90 border-slate-800 text-slate-400'
                                 }`}
                             >
-                              <Check className={`w-3 h-3 shrink-0 ${isSelected ? 'text-blue-300' : 'text-emerald-400'}`} />
-                              <span>{feat}</span>
+                              <Check className={`w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0 ${isSelected ? 'text-blue-300' : 'text-emerald-400'}`} />
+                              <span className="truncate max-w-[140px] sm:max-w-none">{feat}</span>
                             </span>
                           ))}
                         </div>
@@ -734,61 +734,59 @@ function RegisterForm() {
                 </div>
               </div>
 
-              {/* Direct Google Review URL - prominent and guided */}
-              <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2.5">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2">
-                    <label className="block text-xs font-semibold text-slate-200 uppercase tracking-wider">
-                      Direct Google Review URL
+              {/* Direct Google Review URL - prominent, uncluttered, and mobile optimized */}
+              <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <label className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+                      Google Review Link
                     </label>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                      Important
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                      Required
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     <button
                       type="button"
                       onClick={handleOpenMapsSearch}
-                      className="text-slate-300 hover:text-white font-medium inline-flex items-center gap-1 hover:underline cursor-pointer"
+                      className="text-blue-400 hover:text-blue-300 font-medium inline-flex items-center gap-1 text-[11px] hover:underline cursor-pointer"
                     >
-                      <Search className="w-3.5 h-3.5 text-blue-400" />
-                      <span>Find on Google Maps ↗</span>
+                      <Search className="w-3 h-3" />
+                      <span>Find on Maps ↗</span>
                     </button>
-                    <span className="text-slate-600">•</span>
+                    <span className="text-slate-600 hidden sm:inline">•</span>
                     <button
                       type="button"
                       onClick={() => setShowGuideModal(true)}
-                      className="text-blue-400 hover:text-blue-300 font-medium inline-flex items-center gap-1 hover:underline cursor-pointer"
+                      className="text-slate-400 hover:text-slate-200 font-medium inline-flex items-center gap-1 text-[11px] hover:underline cursor-pointer"
                     >
-                      <HelpCircle className="w-3.5 h-3.5" />
-                      <span>Guide & Place ID</span>
+                      <HelpCircle className="w-3 h-3" />
+                      <span>Guide</span>
                     </button>
                   </div>
                 </div>
 
                 <div className="relative">
-                  <Link2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                  <Link2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                   <input
                     type="text"
                     value={googleReviewUrl}
                     onChange={(e) => handleUrlChange(e.target.value)}
-                    placeholder="https://g.page/r/.../review or paste Place ID (ChIJ...)"
-                    className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    placeholder="Paste Google review link or Place ID (ChIJ...)"
+                    className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                   />
                 </div>
 
                 {googleReviewUrl.trim() ? (
                   <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 bg-emerald-500/10 px-2.5 py-1.5 rounded-xl border border-emerald-500/20">
                     <Check className="w-3.5 h-3.5 shrink-0" />
-                    <span>Google review link configured for {businessName || 'your location'}</span>
+                    <span className="truncate">Google review link configured for {businessName || 'your location'}</span>
                   </div>
                 ) : (
-                  <div className="flex items-start gap-1.5 text-[11px] text-amber-300/90 bg-amber-500/10 p-2.5 rounded-xl border border-amber-500/20 leading-tight">
+                  <p className="text-[11px] text-amber-300/80 flex items-start gap-1.5 leading-relaxed">
                     <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-400 mt-0.5" />
-                    <span>
-                      Please provide your link or Place ID so your exact cafe or business appears. We will not generate a fake or incorrect URL on your behalf.
-                    </span>
-                  </div>
+                    <span>Paste your official Google Maps review link or Place ID to route customer reviews directly.</span>
+                  </p>
                 )}
               </div>
 
@@ -835,7 +833,7 @@ function RegisterForm() {
                 <button
                   type="submit"
                   disabled={sendingOtp}
-                  className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-bold text-sm shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 hover:opacity-95 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="w-full py-3 sm:py-3.5 px-3 sm:px-4 rounded-xl bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 hover:opacity-95 active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {sendingOtp ? (
                     <>
@@ -844,22 +842,22 @@ function RegisterForm() {
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4" />
-                      <span>
+                      <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                      <span className="truncate">
                         Verify Email &amp; Continue (₹{currentPlanInfo.price}/mo)
                       </span>
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                     </>
                   )}
                 </button>
-                <p className="text-[11px] text-slate-400 text-center mt-2.5">
-                  Instant plan activation via Razorpay UPI &amp; Cards. Cancel anytime with zero contracts.
+                <p className="text-[11px] text-slate-400 text-center mt-2">
+                  Instant plan activation via Razorpay UPI &amp; Cards. Cancel anytime.
                 </p>
               </div>
             </form>
             )}
 
-            <div className="mt-6 text-center text-xs text-slate-400">
+            <div className="mt-5 mb-2 text-center text-xs text-slate-400">
               Already have an account?{' '}
               <Link href="/login" className="text-blue-400 hover:text-blue-300 font-bold underline underline-offset-4">
                 Sign in here
