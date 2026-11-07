@@ -3246,7 +3246,7 @@ function DashboardContent() {
                   </button>
 
                   <Link
-                    href={`/forgot-password${user?.email ? `?email=${encodeURIComponent(user.email)}` : ''}`}
+                    href={`/forgot-password?from=portal${user?.email ? `&email=${encodeURIComponent(user.email)}` : ''}`}
                     className="text-xs text-blue-400 hover:underline cursor-pointer"
                   >
                     Forgot current password? Reset with OTP →

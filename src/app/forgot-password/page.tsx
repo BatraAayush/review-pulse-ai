@@ -27,9 +27,35 @@ import PasswordRequirements from '@/components/PasswordRequirements';
 function ForgotPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const fromParam = searchParams.get('from');
   const initialEmail = searchParams.get('email') || '';
   const { toast } = useToast();
   const [step, setStep] = useState<'email' | 'otp' | 'new-password' | 'success'>('email');
+
+  const [detectedSource, setDetectedSource] = useState<'portal' | 'admin' | 'website'>(() => {
+    if (fromParam === 'admin') return 'admin';
+    if (fromParam === 'portal' || fromParam === 'dashboard') return 'portal';
+    return 'website';
+  });
+
+  useEffect(() => {
+    if (fromParam) return;
+    if (typeof document !== 'undefined' && document.referrer) {
+      try {
+        const refUrl = new URL(document.referrer);
+        if (refUrl.pathname.startsWith('/admin')) {
+          setDetectedSource('admin');
+        } else if (refUrl.pathname.startsWith('/dashboard')) {
+          setDetectedSource('portal');
+        }
+      } catch {
+        // safe fallback
+      }
+    }
+  }, [fromParam]);
+
+  const backHref = detectedSource === 'admin' ? '/admin' : detectedSource === 'portal' ? '/dashboard' : '/';
+  const backLabel = detectedSource === 'admin' ? 'Back to Admin Portal' : detectedSource === 'portal' ? 'Back to Portal' : 'Back to Website';
 
   // Form values
   const [email, setEmail] = useState(initialEmail);
@@ -334,14 +360,14 @@ function ForgotPasswordForm() {
       {/* Background Ambient Glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-blue-600/10 blur-[130px] rounded-full pointer-events-none" />
 
-      {/* Floating Top-Left Return to Website Link (Sticky on Desktop, Natural Scroll on Mobile) */}
+      {/* Floating Top-Left Return Link (Sticky on Desktop, Natural Scroll on Mobile) */}
       <div className="absolute sm:fixed top-4 left-4 sm:top-6 sm:left-6 z-30">
         <Link
-          href="/"
+          href={backHref}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/70 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold backdrop-blur-md transition-all shadow-sm group cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-400 group-hover:-translate-x-0.5 transition-all" />
-          <span>Back to Website</span>
+          <span>{backLabel}</span>
         </Link>
       </div>
 
@@ -481,11 +507,11 @@ function ForgotPasswordForm() {
 
                 <div className="pt-2 text-center text-xs text-slate-400">
                   <Link
-                    href="/login"
+                    href={detectedSource !== 'website' ? backHref : '/login'}
                     className="inline-flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
-                    <span>Back to Sign In</span>
+                    <span>{detectedSource !== 'website' ? (detectedSource === 'admin' ? 'Back to Admin Portal' : 'Back to Dashboard') : 'Back to Sign In'}</span>
                   </Link>
                 </div>
               </form>
@@ -715,19 +741,19 @@ function ForgotPasswordForm() {
                 <div className="space-y-2.5 pt-2">
                   <button
                     type="button"
-                    onClick={() => router.push('/login')}
+                    onClick={() => router.push(detectedSource !== 'website' ? backHref : '/login')}
                     className="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm shadow-lg shadow-blue-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span>Proceed to Sign In</span>
+                    <span>{detectedSource !== 'website' ? (detectedSource === 'admin' ? 'Return to Admin Portal' : 'Return to Dashboard') : 'Proceed to Sign In'}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => router.push('/dashboard')}
+                    onClick={() => router.push(detectedSource !== 'website' ? '/login' : '/dashboard')}
                     className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 font-medium text-xs transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    <span>Return to Dashboard</span>
+                    <span>{detectedSource !== 'website' ? 'Sign In Again' : 'Return to Dashboard'}</span>
                   </button>
                 </div>
               </div>
