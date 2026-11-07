@@ -7,7 +7,24 @@ export async function POST(
 ) {
   try {
     const { slug } = await params;
-    const { rating, feedbackText, customerName, customerContact, scanId } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const { rating, feedbackText, customerName, customerContact, scanId, isPreview } = body;
+
+    const isPreviewMode =
+      Boolean(isPreview) ||
+      scanId === 'preview-scan' ||
+      req.nextUrl.searchParams.get('preview') === 'true' ||
+      req.nextUrl.searchParams.get('preview') === '1';
+
+    // In merchant preview mode, simulate feedback submission without writing to database
+    if (isPreviewMode) {
+      return NextResponse.json({
+        success: true,
+        feedbackId: 'preview-feedback',
+        message: 'Feedback received in preview mode (simulated).',
+        isPreview: true,
+      });
+    }
 
     if (!rating || !feedbackText) {
       return NextResponse.json(

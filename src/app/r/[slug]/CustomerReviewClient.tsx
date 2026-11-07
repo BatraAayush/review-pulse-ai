@@ -111,6 +111,15 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const hasRecordedScanRef = React.useRef(false);
 
+  const checkIsPreview = () => {
+    if (isPreviewMode) return true;
+    if (typeof window !== 'undefined') {
+      const sp = new URLSearchParams(window.location.search);
+      return sp.get('preview') === '1' || sp.get('preview') === 'true';
+    }
+    return false;
+  };
+
   // Direct Bypass state
   const [forceShowAiFunnel, setForceShowAiFunnel] = useState(false);
   const [clientHasDirectParam, setClientHasDirectParam] = useState(false);
@@ -463,6 +472,7 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
           rating,
           selectedChips: [],
           reviewLength: 0,
+          isPreview: checkIsPreview(),
         }),
       });
     } catch {
@@ -512,6 +522,7 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
           rating,
           selectedChips: chipLabels,
           reviewLength: reviewText.length,
+          isPreview: checkIsPreview(),
         }),
       });
     } catch {
@@ -550,6 +561,7 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
           feedbackText: reviewText,
           customerName,
           customerContact,
+          isPreview: checkIsPreview(),
         }),
       });
     } catch {
@@ -579,6 +591,7 @@ export default function CustomerReviewClient({ slug, initialDirect }: CustomerRe
           actionTaken: 'BYPASS_TO_GOOGLE',
           selectedChips: [],
           reviewLength: reviewText.length,
+          isPreview: checkIsPreview(),
         }),
       });
     } catch {

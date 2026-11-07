@@ -28,7 +28,9 @@ export async function POST(
     }
 
     let actionTaken = 'scanned';
-    let isPreview = req.nextUrl.searchParams.get('preview') === 'true';
+    let isPreview =
+      req.nextUrl.searchParams.get('preview') === 'true' ||
+      req.nextUrl.searchParams.get('preview') === '1';
 
     try {
       const body = await req.json().catch(() => ({}));

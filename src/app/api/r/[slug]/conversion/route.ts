@@ -7,7 +7,26 @@ export async function POST(
 ) {
   try {
     const { slug } = await params;
-    const { rating, selectedChips = [], reviewLength = 0, scanId, actionTaken = 'copied_to_google' } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const {
+      rating,
+      selectedChips = [],
+      reviewLength = 0,
+      scanId,
+      actionTaken = 'copied_to_google',
+      isPreview,
+    } = body;
+
+    const isPreviewMode =
+      Boolean(isPreview) ||
+      scanId === 'preview-scan' ||
+      req.nextUrl.searchParams.get('preview') === 'true' ||
+      req.nextUrl.searchParams.get('preview') === '1';
+
+    // In merchant preview mode, do not record real customer conversion events
+    if (isPreviewMode) {
+      return NextResponse.json({ success: true, isPreview: true });
+    }
 
     const business = await prisma.business.findUnique({
       where: { slug: slug.toLowerCase() },
@@ -20,7 +39,7 @@ export async function POST(
 
     const resolvedAction = String(actionTaken || 'copied_to_google');
 
-    if (scanId) {
+    if (scanId && scanId !== 'preview-scan') {
       await prisma.scanEvent.updateMany({
         where: { id: scanId },
         data: {
