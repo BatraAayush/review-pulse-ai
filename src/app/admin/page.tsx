@@ -61,9 +61,9 @@ function formatRelativeTime(dateString: string): string {
   if (diffSecs < 60) return `${diffSecs}s ago`;
   const diffMins = Math.floor(diffSecs / 60);
   if (diffMins < 60) return `${diffMins}m ago`;
-  const diffHours = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffSecs / 3600);
   if (diffHours < 24) return `${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
+  const diffDays = Math.floor(diffSecs / 86400);
   return `${diffDays}d ago`;
 }
 
