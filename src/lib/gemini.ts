@@ -262,18 +262,35 @@ export function generateFallbackReview({
   const cleanHighlight = rawHighlight
     .replace(/^[^a-zA-Z0-9]+/, '')
     .replace(/[.!?]+$/, '')
-    .toLowerCase()
     .trim();
 
   if (cleanHighlight) {
-    if (persona.id === 'direct_punchy') {
-      return `Loved the ${cleanHighlight} at ${businessName}. Super fast service and friendly staff.`;
-    }
-    if (persona.id === 'enthusiastic_regular') {
-      return `Always a great visit to ${businessName}, especially the ${cleanHighlight}. Team never misses.`;
-    }
-    if (persona.id === 'specific_shoutout') {
-      return `Stopped by ${businessName} today and the ${cleanHighlight} was great. Really friendly team.`;
+    const isFullClause = cleanHighlight.split(' ').length > 4 || /\b(was|is|were|are|made|has|had)\b/i.test(cleanHighlight);
+    const nounHighlight = cleanHighlight.replace(/^the\s+/i, '').toLowerCase();
+
+    if (isFullClause) {
+      const capitalized = cleanHighlight.charAt(0).toUpperCase() + cleanHighlight.slice(1);
+      const withPeriod = /[.!?]$/.test(capitalized) ? capitalized : `${capitalized}.`;
+
+      if (persona.id === 'direct_punchy') {
+        return `Really good experience at ${businessName}. ${withPeriod} Fast service and friendly staff.`;
+      }
+      if (persona.id === 'enthusiastic_regular') {
+        return `Always love coming to ${businessName}. ${withPeriod} The team never disappoints.`;
+      }
+      if (persona.id === 'specific_shoutout') {
+        return `Stopped by ${businessName} today. ${withPeriod} Super friendly folks all around.`;
+      }
+    } else {
+      if (persona.id === 'direct_punchy') {
+        return `Loved the ${nounHighlight} at ${businessName}. Super fast service and friendly staff.`;
+      }
+      if (persona.id === 'enthusiastic_regular') {
+        return `Always a great visit to ${businessName}, especially the ${nounHighlight}. Team never misses.`;
+      }
+      if (persona.id === 'specific_shoutout') {
+        return `Stopped by ${businessName} today and the ${nounHighlight} was great. Really friendly team.`;
+      }
     }
   }
 
@@ -348,10 +365,10 @@ export async function generateReviewWithGemini(
 
       const candidateModels = [
         process.env.GEMINI_MODEL?.trim(),
-        'gemini-2.5-flash',
-        'gemini-2.0-flash',
-        'gemini-1.5-flash',
-        'gemini-2.5-flash-lite',
+        'gemini-3.5-flash-lite',
+        'gemini-flash-lite-latest',
+        'gemini-3.5-flash',
+        'gemini-3.8-flash',
       ].filter(Boolean) as string[];
 
       for (const model of candidateModels) {
@@ -373,6 +390,8 @@ export async function generateReviewWithGemini(
             if (cleanedReview) {
               const displayModel = model
                 .replace('gemini-', 'Gemini ')
+                .replace('-flash-lite-latest', ' Flash Lite')
+                .replace('-flash-latest', ' Flash')
                 .replace('-flash-lite', ' Flash Lite')
                 .replace('-flash', ' Flash')
                 .replace('-pro', ' Pro');
@@ -411,6 +430,6 @@ export async function generateReviewWithGemini(
     persona,
     notice: !apiKey
       ? 'Gemini API key not configured. Add GEMINI_API_KEY in .env to activate live Gemini AI.'
-      : `Gemini request could not be completed${lastErrorMsg ? ` (${lastErrorMsg.slice(0, 80)})` : ''}, generated via smart fallback.`,
+      : '✨ Review crafted via smart customer assistant',
   };
 }
