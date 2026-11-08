@@ -800,11 +800,14 @@ export default function QRCodeGenerator({
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-400 mb-1">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Smart QR Studio</span>
+              <span>Smart QR & NFC Studio</span>
+              <span className="text-[10px] font-semibold tracking-normal normal-case px-2 py-0.5 rounded-full bg-blue-500/15 border border-blue-500/30 text-blue-300">
+                QR + NFC Tap Plate
+              </span>
             </div>
-            <h2 className="text-xl font-bold text-white">Your Live Google Review QR Kit</h2>
+            <h2 className="text-xl font-bold text-white">Your Live Google Review Standee & NFC Kit</h2>
             <p className="text-sm text-slate-400 mt-1">
-              Place this QR on table tents, front counters, receipt slips, or checkout stands. Customers scan directly with their phone camera.
+              Place this QR on table tents, front counters, or program into NFC tap plates. Customers scan or tap directly with their phone.
             </p>
           </div>
 
@@ -814,10 +817,10 @@ export default function QRCodeGenerator({
               <div>
                 <label className="text-xs font-bold text-white flex items-center gap-1.5 uppercase tracking-wider">
                   <Zap className="w-3.5 h-3.5 text-amber-400" />
-                  <span>QR Scan Routing</span>
+                  <span>QR & NFC Scan Routing</span>
                 </label>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  Choose where customers land when scanning your QR code. Saved instantly to the cloud.
+                  Choose where customers land when scanning your QR code or tapping your NFC plate. Saved instantly to the cloud.
                 </p>
               </div>
 
@@ -918,10 +921,10 @@ export default function QRCodeGenerator({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-800 text-xs">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <span className="font-semibold text-slate-200">Cloud-Synced Dynamic QR</span>
+                <span className="font-semibold text-slate-200">Cloud-Synced Dynamic QR &amp; NFC Link</span>
               </div>
               <span className="text-[11px] text-slate-400">
-                Any mode change updates all printed table stands immediately in real-time
+                Any mode change updates all printed table stands and NFC plates immediately in real-time
               </span>
             </div>
 
@@ -965,7 +968,7 @@ export default function QRCodeGenerator({
           <div className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2">
             <div className="flex items-center justify-between text-xs font-medium text-slate-400">
               <span className="flex items-center gap-1.5">
-                <span>Dynamic Review Link (Encoded in QR):</span>
+                <span>Dynamic Review Link (QR &amp; NFC Tap):</span>
                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                   isDirectBypass
                     ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
@@ -1011,7 +1014,7 @@ export default function QRCodeGenerator({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-slate-400">
                   <span className="text-emerald-400/90 flex items-center gap-1">
                     <Check className="w-3 h-3 text-emerald-400 shrink-0" />
-                    <span>Customer scans verify instantly and redirect straight to your Google Review page.</span>
+                    <span>Customer scans or NFC taps redirect straight to your Google Review page.</span>
                   </span>
                   {resolvedGoogleDestination && (
                     <button
@@ -1025,7 +1028,7 @@ export default function QRCodeGenerator({
                 </div>
               ) : (
                 <p className="text-slate-400">
-                  Customers scan this QR code to access your interactive AI review assistant with smart tags and private feedback routing.
+                  Customers scan this QR code or tap your NFC stand to access your interactive AI review assistant with smart tags and private feedback routing.
                 </p>
               )}
             </div>

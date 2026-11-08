@@ -9,21 +9,20 @@
 [![Google Gemini AI](https://img.shields.io/badge/Google%20Gemini-GenAI%20SDK-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
 
 🌐 **Live Production Application:** [https://review-pulse-ai-ab.vercel.app](https://review-pulse-ai-ab.vercel.app)  
-📂 **Source Code Repository:** [https://github.com/BatraAayush/review-pulse-ai](https://github.com/BatraAayush/review-pulse-ai)
 
 ---
 
 ## 📌 Problem & Solution
 
 * **The Problem:** Over 90% of satisfied customers in local walk-in businesses (restaurants, clinics, salons, gyms, automotive shops) leave without submitting a Google review due to mobile typing friction, difficult search navigation, or lack of inspiration. Conversely, dissatisfied customers actively seek out public forums to leave damaging 1-star reviews.
-* **The Solution:** ReviewPulse AI creates a seamless physical-to-digital bridge via custom table standee QR codes and NFC tap plates. Happy patrons (4–5★) build keyword-rich, authentic reviews in under 15 seconds through interactive Smart Chips and Google Gemini AI persona synthesis, then post with one click to Google Maps. Dissatisfied patrons (1–3★) are automatically routed into a private resolution inbox.
+* **The Solution:** ReviewPulse AI creates a seamless physical-to-digital bridge via custom table standee QR codes and contactless NFC tap plates. Happy patrons (4–5★) build keyword-rich, authentic reviews in under 15 seconds through interactive Smart Chips and Google Gemini AI persona synthesis, then post with one click to Google Maps. Dissatisfied patrons (1–3★) are automatically routed into a private resolution inbox.
 
 ---
 
 ## 🏗️ Architecture & Review Funnel Flow
 
 ```
-   [Customer Scans QR Code / Taps NFC Plate]
+   [Customer Scans Table QR Code or Taps NFC Plate]
                       │
                       ▼
              [/r/:slug Review Portal]

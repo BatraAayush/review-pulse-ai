@@ -399,7 +399,7 @@ export default function LandingPage() {
                     <h3 className="text-lg font-bold text-white">Scan at Table or Counter</h3>
                   </div>
                   <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                    Place your custom QR stand or NFC tap card at the point of sale. Customers simply scan with any phone camera—no app download or registration needed.
+                    Place your custom QR standee or contactless NFC tap plate at tables or checkout counters. Customers simply scan or tap with any smartphone—no app download or registration needed.
                   </p>
                 </div>
               </div>

@@ -2817,11 +2817,10 @@ function DashboardContent() {
                           }
                         }}
                         placeholder="https://search.google.com/local/writereview?placeid=... or g.page/r/..."
-                        className={`w-full bg-slate-900 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none font-mono transition-all ${
-                          businessFieldErrors.googleReviewUrl
+                        className={`w-full bg-slate-900 border rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none font-mono transition-all ${businessFieldErrors.googleReviewUrl
                             ? 'border-rose-500/80 focus:border-rose-500 focus:ring-1 focus:ring-rose-500'
                             : 'border-slate-700/80 focus:border-blue-500'
-                        }`}
+                          }`}
                       />
                     </div>
 
