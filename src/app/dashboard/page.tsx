@@ -52,7 +52,8 @@ import {
   Search,
   LogOut,
   Palette,
-  Globe
+  Globe,
+  RotateCw
 } from 'lucide-react';
 import GoogleReviewGuideModal from '@/components/GoogleReviewGuideModal';
 import ConfirmModal from '@/components/ConfirmModal';
@@ -114,6 +115,8 @@ function DashboardContent() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: string; email: string; name: string; role: string } | null>(null);
   const [data, setData] = useState<DashboardStatsData | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date | null>(null);
   const tabParam = searchParams.get('tab');
   const validTabs = ['overview', 'qr', 'chips', 'feedback', 'billing', 'settings'] as const;
   const initialTab = tabParam && (validTabs as readonly string[]).includes(tabParam)
@@ -409,6 +412,24 @@ function DashboardContent() {
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
   }, []);
+
+  // Manual telemetry & metrics refresh handler
+  const handleRefreshData = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await loadDashboardData(undefined, false);
+      setLastRefreshedAt(new Date());
+      toast.success('Dashboard metrics & live telemetry updated', 'Refreshed');
+    } catch (err) {
+      console.error('Failed to refresh dashboard data:', err);
+      toast.error('Failed to refresh data. Please try again.', 'Error');
+    } finally {
+      setTimeout(() => {
+        setIsRefreshing(false);
+      }, 500);
+    }
+  };
 
   // Auto-launch Razorpay Checkout if coming from signup (?activate=true) or business is pending payment
   useEffect(() => {
@@ -1080,8 +1101,20 @@ function DashboardContent() {
               })}
             </nav>
 
-            {/* Right: User Profile Dropdown */}
-            <div className="flex items-center shrink-0">
+            {/* Right: Quick Refresh & User Profile Dropdown */}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={handleRefreshData}
+                disabled={isRefreshing}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-xs font-semibold text-slate-300 hover:text-white transition-all cursor-pointer shadow-sm disabled:opacity-60 group"
+                title={lastRefreshedAt ? `Last refreshed: ${lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}` : 'Refresh live telemetry & metrics'}
+                aria-label="Refresh dashboard data"
+              >
+                <RotateCw className={`w-3.5 h-3.5 text-blue-400 group-hover:text-blue-300 transition-colors ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">{isRefreshing ? 'Updating...' : 'Refresh'}</span>
+              </button>
+
               {user && (
                 <div className="relative shrink-0" ref={profileDropdownRef}>
                   <button
@@ -1380,7 +1413,23 @@ function DashboardContent() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2.5 shrink-0">
+              <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleRefreshData}
+                  disabled={isRefreshing}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-800 text-slate-200 hover:text-white text-xs font-semibold border border-slate-700/80 transition-all cursor-pointer group disabled:opacity-60 shadow-sm"
+                  title="Fetch latest scans, conversions, and customer feedback"
+                >
+                  <RotateCw className={`w-3.5 h-3.5 text-blue-400 group-hover:text-blue-300 transition-colors ${isRefreshing ? 'animate-spin' : ''}`} />
+                  <span>{isRefreshing ? 'Syncing...' : 'Refresh Telemetry'}</span>
+                  {lastRefreshedAt && !isRefreshing && (
+                    <span className="text-[10px] text-slate-400 font-normal hidden sm:inline ml-0.5">
+                      ({lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
+                    </span>
+                  )}
+                </button>
+
                 <Link
                   href={`/r/${business.slug}?preview=true`}
                   target="_blank"
