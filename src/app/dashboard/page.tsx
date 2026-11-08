@@ -1101,20 +1101,8 @@ function DashboardContent() {
               })}
             </nav>
 
-            {/* Right: Quick Refresh & User Profile Dropdown */}
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={handleRefreshData}
-                disabled={isRefreshing}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 text-xs font-semibold text-slate-300 hover:text-white transition-all cursor-pointer shadow-sm disabled:opacity-60 group"
-                title={lastRefreshedAt ? `Last refreshed: ${lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}` : 'Refresh live telemetry & metrics'}
-                aria-label="Refresh dashboard data"
-              >
-                <RotateCw className={`w-3.5 h-3.5 text-blue-400 group-hover:text-blue-300 transition-colors ${isRefreshing ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">{isRefreshing ? 'Updating...' : 'Refresh'}</span>
-              </button>
-
+            {/* Right: User Profile Dropdown */}
+            <div className="flex items-center shrink-0">
               {user && (
                 <div className="relative shrink-0" ref={profileDropdownRef}>
                   <button
