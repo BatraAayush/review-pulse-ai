@@ -146,7 +146,7 @@ export default function LandingPage() {
             <div className="pt-4 flex flex-wrap items-center justify-center gap-6 text-xs text-slate-400">
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Google Places API Integrated</span>
+                <span>Google Business Profile Ready</span>
               </span>
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -256,7 +256,7 @@ export default function LandingPage() {
                     </div>
 
                     <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 gap-2">
-                      <span className="shrink-0">Google Places URL:</span>
+                      <span className="shrink-0">Google Review Link:</span>
                       <span className="font-mono text-blue-400 truncate max-w-[180px] sm:max-w-none">search.google.com/local/writereview...</span>
                     </div>
                   </div>
